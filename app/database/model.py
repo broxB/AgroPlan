@@ -1,6 +1,9 @@
+import enum
+
 from sqlalchemy import (
     Boolean,
     Column,
+    Enum,
     Float,
     ForeignKey,
     Integer,
@@ -10,6 +13,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
+
+
+class CropType(enum.Enum):
+    catch_crop = 0  # Zwischenfrucht
+    main_crop = 1  # Hauptfrucht
+    second_crop = 2  # Zweitfrucht
+
 
 Base = declarative_base()
 
@@ -78,7 +88,7 @@ class CultivatedCrop(Base):
     cultivation_id = Column(
         "cultivation_id", Integer, ForeignKey("cultivation.cultivation_id")
     )
-    crop_type = Column("crop_type", String)
+    crop_type = Column("crop_type", Enum(CropType))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
     crop_yield = Column("yield", Float(asdecimal=True))
     remains = Column("remains", Boolean)
