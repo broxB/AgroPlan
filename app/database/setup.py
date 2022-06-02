@@ -85,7 +85,7 @@ def _seed_database(db_path: str):
         remains=RemainsType.no_remains,
     )
     cultivation.crop = crop
-    cultivation.field.append(field)
+    cultivation.fields.append(field)
     _add_table_data(session, cultivation)
 
     fertilization = Fertilization(amount=10, measure=MeasureType.fall, month=10)
