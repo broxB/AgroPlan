@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from app.database.model import Base, Field
+from app.database.model import Base, Field, FieldType
 
 
 @pytest.fixture(scope="session")
@@ -51,12 +51,12 @@ def db_session(setup_database, connection):
 
 def test_field_created(db_session):
     db_session.add(
-        Field(prefix=1, suffix=1, name="Am Hof 1", area=12.34, type="Grünland")
+        Field(prefix=1, suffix=1, name="Am Hof 1", area=12.34, type=FieldType.grassland)
     )
     db_session.commit()
     field = db_session.query(Field).all()[0]
-    assert field.prefix == 2
+    assert field.prefix == 1
     assert field.suffix == 1
     assert field.name == "Am Hof 1"
     assert f"{field.area:.2f}" == "12.34"
-    assert field.type == "Grünland"
+    assert field.type.name == "grassland"
