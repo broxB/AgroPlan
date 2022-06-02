@@ -1,9 +1,6 @@
-from decimal import Decimal, getcontext
-
 from sqlalchemy import (
     Boolean,
     Column,
-    Date,
     Float,
     ForeignKey,
     Integer,
@@ -39,12 +36,14 @@ class Field(Base):
     name = Column("name", String)
     area = Column("area", Float(asdecimal=True))
     type = Column("type", String)
-    # cultivations = relationship(
-    #     "Cultivation", secondary=field_cultivation, back_populates="field"
-    # )
+    field_cult = relationship(
+        "Cultivation",
+        secondary=field_cultivation,
+        back_populates="cult_field",
+    )
 
     def __repr__(self):
-        return f"Field(id='{self.id}', name='{self.prefix}-{self.suffix} {self.name}', ha='{self.area:.2f}')"
+        return f"Field(id='{self.id}', name='{self.prefix}-{self.suffix} {self.name}', ha='{self.area:.2f}', cultivations='{[cult.year for cult in self.field_cult]}')"
 
 
 class Cultivation(Base):
@@ -58,7 +57,11 @@ class Cultivation(Base):
         secondary=cultivation_fertilization,
         back_populates="cultivations",
     )
-    field = relationship("Field", backref=backref("cultivation"))
+    cult_field = relationship(
+        "Field",
+        secondary=field_cultivation,
+        back_populates="field_cult",
+    )
     __table_args__ = (
         UniqueConstraint(
             "cultivation_id", "field_id", "year", name="active_cultivations"
@@ -66,7 +69,7 @@ class Cultivation(Base):
     )
 
     def __repr__(self):
-        return f"Cultivation(id='{self.id}', year='{self.year}', field='{self.field.name}')"
+        return f"Cultivation(id='{self.id}', year='{self.year}', field='{[field.name for field in self.cult_field]}', crops='{[crop.crop.name for crop in self.crops]}')"
 
 
 class CultivatedCrop(Base):
@@ -80,10 +83,10 @@ class CultivatedCrop(Base):
     crop_yield = Column("yield", Float(asdecimal=True))
     remains = Column("remains", Boolean)
     legume_rate = Column("legume_rate", String)
-    crops = relationship("Crop", backref=backref("cultivated_crop"))
+    crop = relationship("Crop", backref=backref("cultivated_crop"))
 
     def __repr__(self):
-        return f"CultivatedCrop(id='{self.id}', type='{self.crop_type}', name='{self.crops.name}')"
+        return f"CultivatedCrop(id='{self.id}', type='{self.crop_type}', name='{self.crop.name}', yield='{self.crop_yield:.2f}')"
 
 
 class Crop(Base):
@@ -112,10 +115,11 @@ class Fertilization(Base):
         secondary=cultivation_fertilization,
         back_populates="fertilizations",
     )
+    crop = relationship("CultivatedCrop", backref=backref("fertilization"))
     name = relationship("Fertilizer", backref=backref("fertilization"))
 
     def __repr__(self):
-        return f"Fertilization(id='{self.id}', name='{self.name.name}', amount='{self.amount:.2f}', measure='{self.measure}', month='{self.month}')"
+        return f"Fertilization(id='{self.id}', name='{self.name.name}', amount='{self.amount:.2f}', measure='{self.measure}', month='{self.month}', crop='{self.crop.crop.name}')"
 
 
 class Fertilizer(Base):
