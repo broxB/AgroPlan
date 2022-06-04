@@ -1,27 +1,53 @@
-from datetime import datetime
+from datetime import date
 from decimal import Decimal, getcontext
 from importlib import resources
 
-from sqlalchemy import and_, asc, create_engine, desc, func
+from database.model import (
+    Crop,
+    Cultivation,
+    Fertilization,
+    Fertilizer,
+    Field,
+    SoilSample,
+    field_cultivation,
+    field_fertilization,
+)
+from sqlalchemy import asc, create_engine, desc, func, or_
 from sqlalchemy.orm import sessionmaker
-
-from database.model import (Crop, CultivatedCrop, Cultivation, Fertilization,
-                            Fertilizer, Field)
 
 
 def main():
     """Main entry point of program"""
     # Connect to the database using SQLAlchemy
-    with resources.path("database", "database.db") as sqlite_filepath:
+    with resources.path("database", "database-v2.0.db") as sqlite_filepath:
         engine = create_engine(f"sqlite:///{sqlite_filepath}", echo=False, future=True)
     Session = sessionmaker()
     Session.configure(bind=engine)
     session = Session()
 
-    tables = [Field, Cultivation, CultivatedCrop, Crop, Fertilization, Fertilizer]
-    # tables = [Cultivation, Fertilization]
-    for table in tables:
-        print(get_table(session, table))
+    # print(session.query(Field).get(1).area)
+
+    print(
+        session.query(Field)
+        .join(field_cultivation)
+        .join(Cultivation)
+        .join(Crop)
+        .filter(Cultivation.year == 2023, Crop.name == "ZF-Senf")
+        .all()
+    )
+    print(
+        session.query(Cultivation)
+        .join(Crop)
+        .filter(Cultivation.year == 2023, Crop.name == "ZF-Senf")
+        .all()
+    )
+
+    # print(session.query(Field).all())
+    # print(session.query(Cultivation).all())
+    # print(session.query(Fertilization).all())
+    # print(session.query(Crop).all())
+    # print(session.query(Fertilizer).all())
+    # print(session.query(SoilSample).all())
 
     # add_new_field(
     #     session,

@@ -250,6 +250,7 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
                <bold>true</bold>
               </font>
              </property>
@@ -263,6 +264,7 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
                <bold>true</bold>
               </font>
              </property>
@@ -328,6 +330,7 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
                <bold>true</bold>
               </font>
              </property>
@@ -341,6 +344,7 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
                <bold>true</bold>
               </font>
              </property>
@@ -377,6 +381,7 @@
            <property name="font">
             <font>
              <family>System</family>
+             <pointsize>12</pointsize>
              <bold>true</bold>
             </font>
            </property>
@@ -7173,8 +7178,14 @@
      <x>0</x>
      <y>0</y>
      <width>897</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <pointsize>9</pointsize>
+    </font>
    </property>
    <widget class="QMenu" name="menuDatei">
     <property name="title">

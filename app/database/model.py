@@ -132,7 +132,11 @@ class Field(Base):
         back_populates="fields",
     )
 
-    __table_args__ = (UniqueConstraint("prefix", "suffix", "name", "area", "type", name="active_fields"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "prefix", "suffix", "name", "area", "type", name="active_fields"
+        ),
+    )
 
     def __repr__(self):
         return (
