@@ -1,15 +1,15 @@
 import sys
 
 from gui.view import MainWindow
-from gui.view_py import MainWindowPy
+from loguru import logger
 from PyQt6.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton
 
 
 def main():
     app = QApplication(sys.argv)
+    logger.debug("Post creating app")
     # app.setStyle("Fusion")
     window = MainWindow()
-    # window = MainWindowPy()
     window.show()
     sys.exit(app.exec())
 

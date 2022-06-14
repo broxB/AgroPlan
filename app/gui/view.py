@@ -1,7 +1,18 @@
+from gui.tableview_model import MyTableView
+from gui.treeview_model import MyTreeView
+from gui.views import dialog, mainwindow
+from loguru import logger
+from modules.utils import get_fields_list, load_data
 from PyQt6 import uic
-from PyQt6.QtCore import QEvent, QPoint, Qt
+from PyQt6.QtCore import QEvent, Qt
 from PyQt6.QtCore import pyqtSlot as Slot
-from PyQt6.QtGui import QAction, QContextMenuEvent, QCursor, QFocusEvent, QMouseEvent
+from PyQt6.QtGui import (
+    QAction,
+    QContextMenuEvent,
+    QFocusEvent,
+    QMouseEvent,
+    QStandardItemModel,
+)
 from PyQt6.QtWidgets import (
     QComboBox,
     QCompleter,
@@ -9,84 +20,51 @@ from PyQt6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListView,
+    QListWidget,
     QMainWindow,
     QMenu,
     QPushButton,
-    QTextEdit,
+    QTableView,
+    QTreeView,
+    QTreeWidget,
 )
 
 
-class MyLineEdit(QLineEdit):
+class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
     def __init__(self, parent=None):
-        super(MyLineEdit, self).__init__(parent)
-
-    def mousePressEvent(self, e):
-        self.selectAll()
-
-    def focusOutEvent(self, e):
-        self.parent().setCurrentText(
-            self.parent().itemText(self.parent().currentIndex())
-        )
-        QLineEdit.focusOutEvent(self, e)
-
-
-class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
+        logger.debug("Init {}", self.__class__.__name__)
         super().__init__(parent)
-        uic.loadUi("qtdesigner/mainwindow_2.ui", self)
-        # self.pushButton.clicked.connect(self.on_pushButton_clicked)
+        logger.debug("Init uic.loadUi")
+        uic.loadUi("qtdesigner/AgroPlan/mainwindow.ui", self)
+        # self.setupUi(self)
+        logger.debug("Post uic.loadUi")
         self.pushButton: QPushButton
         self.comboBox: QComboBox
-        fields = [
-            [
-                "1-0 Am Hof 1 (3,32 ha)",
-                "33-0 Hinter den Häusern (32,23 ha)",
-                "72-0 Hänschen (0,89 ha)",
-            ]
-            * 10
-        ]
-        self.comboBox.addItems(*fields)
-        # self.comboBox.addItems([f"{i}-0 Feld {i}" for i in range(15)])
-        self.comboBox.setEditable(True)
-        # self.combo_lineEdit = MyLineEdit(self.comboBox)
-        self.combo_lineEdit = QLineEdit()
+        self.comboBox.addItems(get_fields_list("2022"))
+        self.combo_lineEdit = MyLineEdit(self.comboBox)
+        self.combo_lineEdit.setClearButtonEnabled(True)
         self.comboBox.setLineEdit(self.combo_lineEdit)
+        self.comboBox.setEditable(True)
         self.comboBox.completer().setFilterMode(Qt.MatchFlag.MatchContains)
-        self.comboBox.completer().setCompletionMode(
-            QCompleter.CompletionMode.PopupCompletion
-        )
+        self.comboBox.completer().setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
         self.comboBox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.comboBox.currentIndexChanged.connect(self.change_comboBox_item)
-        self.combo_lineEdit.setClearButtonEnabled(True)
-        self.combo_lineEdit.mousePressEvent = self.click_comboBox_editText
-        self.combo_lineEdit.focusOutEvent = self.leave_comboBox_editText
-        self.listView: QListView
-        self.listView.contextMenuEvent = self.listView_contextMenuEvent
+        self.comboBox.setFocus()
+        self.treeView: MyTreeView
+        self.treeView.insert_data(self.comboBox.currentText())
+        self.treeView.doubleClicked.connect(self.getValue)
+        self.tableView: MyTableView
 
-    def click_comboBox_editText(self, e: QMouseEvent) -> None:
-        QLineEdit.mousePressEvent(self.combo_lineEdit, e)
-        if e.button() == Qt.MouseButton.LeftButton:
-            if self.combo_lineEdit.selectedText() == self.combo_lineEdit.text():
-                # self.combo_lineEdit.deselect()
-                ...
-            else:
-                # self.combo_lineEdit.selectAll()
-                print("Edited:", self.combo_lineEdit.text())
-
-    def leave_comboBox_editText(self, e) -> None:
-        if e.reason() == Qt.FocusReason.MouseFocusReason:
-            QLineEdit.focusOutEvent(self.combo_lineEdit, e)
-            self.comboBox.setCurrentText(
-                self.comboBox.itemText(self.comboBox.currentIndex())
-            )
+    def getValue(self, val):
+        logger.info(f"{val.data()=}, {val.row()=}, {val.column()=}")
 
     @Slot(name="on_comboBox_currentIndexChanged")
     def change_comboBox_item(self) -> None:
-        print(
-            "Selected:",
-            self.comboBox.currentText(),
-            "Index:",
-            self.comboBox.currentIndex(),
+        self.treeView.insert_data(self.comboBox.currentText())
+        self.combo_lineEdit.first_click = True
+        self.tableView.setFocus()
+        logger.info(
+            f"Selected: {self.comboBox.currentText()}, " f"Index: {self.comboBox.currentIndex()}"
         )
 
     @Slot(name="on_pushButton_3_clicked")
@@ -109,20 +87,20 @@ class MainWindow(QMainWindow):
         dialog = UIDialog(self)
         dialog.exec()
 
-    def listView_contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        context = QMenu(self)
-        context.addAction(QAction("test 1", self))
-        context.exec(event.globalPos())
+    @Slot(name="on_actionDemo_triggered")
+    def demo_treeview(self):
+        self.treeView.setup_demo()
 
 
-class UIDialog(QDialog):
+class UIDialog(QDialog, dialog.Ui_Dialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        uic.loadUi("qtdesigner/dialog.ui", self)
+        # self.setupUi(self)
+        uic.loadUi("qtdesigner/AgroPlan/dialog.ui", self)
         # self.pushButton_3.clicked.connect(self.on_pushButton_clicked)
         self.pushButton_3: QPushButton
         self.pushButton_3.setChecked(True)
-        self.pushButton_3.setText("Checked")
+        # self.pushButton_3.setText("Checked")
         self.label: QLabel
         self.label.installEventFilter(self)
         self.setMouseTracking(True)
@@ -132,7 +110,7 @@ class UIDialog(QDialog):
         text = "Checked" if checked else "Unchecked"
         self.pushButton_3.setText(text)
         self.setWindowTitle(text)
-        print(text)
+        logger.debug(text)
 
     def eventFilter(self, source, event):
         if event.type() == QEvent.Type.MouseButtonPress and source is self.label:
@@ -160,3 +138,22 @@ def check_mouse_button(element, event: QMouseEvent) -> None:
             element.label.setText("mousePressEvent RIGHT")
         case Qt.MouseButton.NoButton:
             element.label.setText("mousePressEvent NONE")
+
+
+class MyLineEdit(QLineEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.first_click = True  # trigger mousePress only on entering for the first time
+
+    def mousePressEvent(self, e):
+        super().mousePressEvent(e)
+        if e.button() == Qt.MouseButton.LeftButton and self.first_click:
+            # self.selectAll()
+            self.parent().showPopup()
+            self.first_click = False
+
+    def focusOutEvent(self, e):
+        super().focusOutEvent(e)
+        if e.reason() == Qt.FocusReason.MouseFocusReason:
+            self.parent().setCurrentText(self.parent().itemText(self.parent().currentIndex()))
+            self.first_click = True
