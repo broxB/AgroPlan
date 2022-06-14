@@ -1,61 +1,59 @@
 import json
-from typing import Any, Dict
+import re
 
 
-def dataclass_from_dict(dclass: Any, data_dict: Dict) -> Any:
+def dataclass_from_dict(dclass, data_dict: dict):
     """Create dataclass from dictionary.
 
     Args:
         dclass (dataclass): Dataclass to use for creation.
-        data_dict (Dict): Dictionary to feed to dataclass.
+        data_dict (dict): Dictionary to feed to dataclass.
 
     Returns:
         dataclass: Dataclass with dictionary data.
     """
     try:
         fieldtypes = dclass.__annotations__
-        return dclass(
-            **{f: dataclass_from_dict(fieldtypes[f], data_dict[f]) for f in data_dict}
-        )
+        return dclass(**{f: dataclass_from_dict(fieldtypes[f], data_dict[f]) for f in data_dict})
     except AttributeError:
         if isinstance(data_dict, (tuple, list)):
             return [dataclass_from_dict(dclass.__args__[0], f) for f in data_dict]
         return data_dict
 
 
-def load_data(filename: str) -> Dict:
+def load_data(filename: str) -> dict:
     """Load data from ``filename``. Has to be a JSON file.
 
     Args:
         filename (str): Relative path to json file.
 
     Returns:
-        Dict: Data in dict form.
+        dict: Data in dict form.
     """
     with open(filename, "r", encoding="utf-8") as file:
         data = json.load(file)
     return data
 
 
-def save_data(data: Dict, filename: str) -> None:
+def save_data(data: dict, filename: str) -> None:
     """Save data to ``filename```. Has to be a JSON file.
 
     Args:
-        data (Dict): Dictonary that should be saved.
+        data (dict): Dictonary that should be saved.
         filename (str): Relative path to json file.
     """
     with open(filename, "w", encoding="utf-8") as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
 
-def renew_dict(schlag_data: Dict) -> Dict:
+def renew_dict(schlag_data: dict) -> dict:
     """Add column names to nested dictionary.
 
     Args:
-        schlag_data (Dict): Standard dictionary without column names.
+        schlag_data (dict): Standard dictionary without column names.
 
     Returns:
-        Dict: Dictionary with column names.
+        dict: Dictionary with column names.
     """
     COL_NAMES = [
         "Änderungsdatum",
@@ -214,6 +212,56 @@ def renew_dict(schlag_data: Dict) -> Dict:
     return schlag_dict
 
 
+def get_fields_list(year: str) -> list[str]:
+    """Creates a list of all fields in a specified ``year``.
+
+    Args:
+        year (str): ``year`` of cultivation.
+
+    Returns:
+        list[str]: List of fields in metaform (e.g. ["01-1 Am Hof 1 (3.33 ha)", ...])
+    """
+    fields = load_data("data/schläge.json")[year]
+    return [
+        f"{field['Prefix']:02d}-{field['Suffix']} {field['Name']} ({field['Ha']:,}ha)"
+        for field in fields
+    ]
+
+
+def get_field_cultivation(field_name: str) -> dict[list[str]]:
+    """Collects cultivation info for a specified ``field``.
+
+    Args:
+        field (str): Field name in metaform (e.g. "01-1 Am Hof 1 (3.33 ha)")
+
+    Returns:
+        dict[list[str]]: Nested dict with crops of the years (e.g. {"2022": ["Haupfrucht", "Zweitfrucht"], "2021": ...})
+    """
+    all_data = load_data("data/schläge.json")
+    pattern = f"(\d+)-(\d+)\s(.+)\s\("
+    matches = re.findall(pattern, field_name)[0]
+    prefix, suffix, name = int(matches[0]), int(matches[1]), matches[2]
+
+    field_crops = {}
+    for year in all_data:
+        all_fields = all_data[year]
+        for field in all_fields:
+            if (
+                field.get("Prefix") == int(prefix)
+                and field.get("Suffix") == int(suffix)
+                and field.get("Name") == name
+            ):
+                field_data = [v for k, v in field.items() if k.startswith("Frucht_") and v]
+                crops = []
+                for i, x in enumerate(field_data):
+                    if x in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"]:
+                        crops.append(str(field_data[i + 1]))
+                field_crops[year] = crops
+    return field_crops
+
+
 if __name__ == "__main__":
-    new_dict = renew_dict(load_data("schläge.json"))
-    save_data(new_dict, "data/new_schläge2.json")
+
+    print(get_field_cultivation("21-0 Bresegard 2 (3.13 ha)"))
+    # new_dict = renew_dict(load_data("schläge.json"))
+    # save_data(new_dict, "data/new_schläge2.json")
