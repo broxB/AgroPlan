@@ -51,7 +51,7 @@
        <item>
         <widget class="QPushButton" name="pushButton_3">
          <property name="text">
-          <string>checkable</string>
+          <string>check</string>
          </property>
          <property name="checkable">
           <bool>true</bool>

@@ -14,6 +14,14 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="font">
+    <font>
+     <family>System</family>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout_5">
     <property name="leftMargin">
      <number>0</number>
@@ -233,6 +241,14 @@
           </disabled>
          </palette>
         </property>
+        <property name="font">
+         <font>
+          <family>System</family>
+          <pointsize>12</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="autoFillBackground">
          <bool>true</bool>
         </property>
@@ -250,6 +266,8 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -263,6 +281,8 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -294,7 +314,8 @@
              <property name="font">
               <font>
                <family>System</family>
-               <pointsize>11</pointsize>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -318,6 +339,7 @@
               <font>
                <family>System</family>
                <pointsize>12</pointsize>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -328,6 +350,8 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -341,6 +365,8 @@
              <property name="font">
               <font>
                <family>System</family>
+               <pointsize>12</pointsize>
+               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -356,6 +382,14 @@
       </item>
       <item row="1" column="0">
        <widget class="QGroupBox" name="groupBox_2">
+        <property name="font">
+         <font>
+          <family>System</family>
+          <pointsize>12</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
         <property name="title">
          <string/>
         </property>
@@ -377,6 +411,8 @@
            <property name="font">
             <font>
              <family>System</family>
+             <pointsize>12</pointsize>
+             <weight>75</weight>
              <bold>true</bold>
             </font>
            </property>
@@ -394,7 +430,7 @@
                 <number>6</number>
                </property>
                <item>
-                <widget class="QListView" name="listView_2">
+                <widget class="MyTreeView" name="treeView">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
                    <horstretch>0</horstretch>
@@ -413,6 +449,14 @@
                    <height>16777215</height>
                   </size>
                  </property>
+                 <property name="font">
+                  <font>
+                   <family>System</family>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -427,7 +471,7 @@
              <item>
               <layout class="QVBoxLayout" name="verticalLayout_2">
                <item>
-                <widget class="QListView" name="listView"/>
+                <widget class="MyTableView" name="tableView"/>
                </item>
                <item>
                 <layout class="QGridLayout" name="gridLayout">
@@ -442,7 +486,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -459,7 +504,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -476,7 +522,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -493,7 +540,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -510,7 +558,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -527,7 +576,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -544,7 +594,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -806,6 +857,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1079,6 +1131,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1352,6 +1405,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1625,6 +1679,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -1898,6 +1953,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -2171,6 +2227,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -2196,7 +2253,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -2458,6 +2516,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -2731,6 +2790,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -3004,6 +3064,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -3277,6 +3338,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -3550,6 +3612,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -3823,6 +3886,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -3848,7 +3912,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -4110,6 +4175,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -4383,6 +4449,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -4656,6 +4723,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -4929,6 +4997,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -5202,6 +5271,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -5475,6 +5545,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -5500,7 +5571,8 @@
                    <property name="font">
                     <font>
                      <family>System</family>
-                     <pointsize>8</pointsize>
+                     <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -5762,6 +5834,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -6035,6 +6108,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -6308,6 +6382,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -6581,6 +6656,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -6854,6 +6930,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -7127,6 +7204,7 @@
                     <font>
                      <family>System</family>
                      <pointsize>12</pointsize>
+                     <weight>75</weight>
                      <bold>true</bold>
                     </font>
                    </property>
@@ -7173,7 +7251,7 @@
      <x>0</x>
      <y>0</y>
      <width>897</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDatei">
@@ -7197,6 +7275,18 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyTreeView</class>
+   <extends>QTreeView</extends>
+   <header>gui.treeview_model</header>
+  </customwidget>
+  <customwidget>
+   <class>MyTableView</class>
+   <extends>QTableView</extends>
+   <header>gui.tableview_model</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

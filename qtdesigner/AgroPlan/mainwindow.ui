@@ -247,14 +247,6 @@
            </property>
            <item row="0" column="0">
             <widget class="QLabel" name="label_2">
-             <property name="font">
-              <font>
-               <family>System</family>
-               <pointsize>12</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#000080;&quot;&gt;&amp;amp;Planungsjahr&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -265,14 +257,6 @@
            </item>
            <item row="0" column="1">
             <widget class="QLabel" name="label_39">
-             <property name="font">
-              <font>
-               <family>System</family>
-               <pointsize>12</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#000080;&quot;&gt;Sch&amp;amp;lag&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -301,14 +285,6 @@
                <height>16777215</height>
               </size>
              </property>
-             <property name="font">
-              <font>
-               <family>System</family>
-               <pointsize>11</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="alignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
              </property>
@@ -329,7 +305,6 @@
               <font>
                <family>System</family>
                <pointsize>12</pointsize>
-               <weight>75</weight>
                <bold>true</bold>
               </font>
              </property>
@@ -349,14 +324,6 @@
                <height>0</height>
               </size>
              </property>
-             <property name="font">
-              <font>
-               <family>System</family>
-               <pointsize>12</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
              <property name="text">
               <string>&lt;</string>
              </property>
@@ -375,14 +342,6 @@
                <width>50</width>
                <height>0</height>
               </size>
-             </property>
-             <property name="font">
-              <font>
-               <family>System</family>
-               <pointsize>12</pointsize>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
              </property>
              <property name="text">
               <string>&gt;</string>
@@ -418,14 +377,20 @@
             <font>
              <family>System</family>
              <pointsize>12</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
+             <bold>false</bold>
             </font>
            </property>
            <property name="currentIndex">
             <number>0</number>
            </property>
            <widget class="QWidget" name="tab">
+            <property name="font">
+             <font>
+              <family>System</family>
+              <pointsize>12</pointsize>
+              <bold>false</bold>
+             </font>
+            </property>
             <attribute name="title">
              <string>Nährstoffbedarf</string>
             </attribute>
@@ -438,7 +403,7 @@
                <item>
                 <widget class="MyTreeView" name="treeView">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -455,16 +420,24 @@
                    <height>16777215</height>
                   </size>
                  </property>
-                 <property name="selectionBehavior">
-                  <enum>QAbstractItemView::SelectRows</enum>
-                 </property>
-                 <property name="headerHidden">
-                  <bool>true</bool>
+                 <property name="font">
+                  <font>
+                   <family>System</family>
+                   <pointsize>12</pointsize>
+                   <bold>false</bold>
+                  </font>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="pushButton">
+                 <property name="font">
+                  <font>
+                   <family>System</family>
+                   <pointsize>12</pointsize>
+                   <bold>false</bold>
+                  </font>
+                 </property>
                  <property name="text">
                   <string>Show Dialog</string>
                  </property>
@@ -490,6 +463,13 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="font">
+                    <font>
+                     <family>System</family>
+                     <pointsize>12</pointsize>
+                     <bold>false</bold>
+                    </font>
+                   </property>
                    <property name="text">
                     <string>+</string>
                    </property>
@@ -502,6 +482,13 @@
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>System</family>
+                     <pointsize>12</pointsize>
+                     <bold>false</bold>
+                    </font>
                    </property>
                    <property name="text">
                     <string>-</string>
@@ -519,6 +506,13 @@
                      <verstretch>0</verstretch>
                     </sizepolicy>
                    </property>
+                   <property name="font">
+                    <font>
+                     <family>System</family>
+                     <pointsize>12</pointsize>
+                     <bold>false</bold>
+                    </font>
+                   </property>
                    <property name="text">
                     <string>Accept</string>
                    </property>
@@ -534,6 +528,13 @@
                      <horstretch>0</horstretch>
                      <verstretch>0</verstretch>
                     </sizepolicy>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <family>System</family>
+                     <pointsize>12</pointsize>
+                     <bold>false</bold>
+                    </font>
                    </property>
                    <property name="text">
                     <string>Deny</string>
@@ -576,9 +577,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -594,9 +594,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -612,9 +611,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -630,9 +628,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -648,9 +645,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -666,9 +662,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -684,9 +679,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -947,8 +941,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -1221,8 +1214,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -1495,8 +1487,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -1769,8 +1760,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -2043,8 +2033,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -2317,8 +2306,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -2343,9 +2331,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -2606,8 +2593,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -2880,8 +2866,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -3154,8 +3139,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -3428,8 +3412,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -3702,8 +3685,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -3976,8 +3958,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -4002,9 +3983,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -4265,8 +4245,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -4539,8 +4518,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -4813,8 +4791,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -5087,8 +5064,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -5361,8 +5337,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -5635,8 +5610,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -5658,6 +5632,13 @@
                    </item>
                    <item row="4" column="0" colspan="7">
                     <widget class="Line" name="line">
+                     <property name="font">
+                      <font>
+                       <family>System</family>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
+                      </font>
+                     </property>
                      <property name="frameShadow">
                       <enum>QFrame::Plain</enum>
                      </property>
@@ -5674,9 +5655,8 @@
                      <property name="font">
                       <font>
                        <family>System</family>
-                       <pointsize>8</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <pointsize>12</pointsize>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="text">
@@ -5937,8 +5917,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -6211,8 +6190,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -6485,8 +6463,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -6759,8 +6736,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -7033,8 +7009,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -7307,8 +7282,7 @@
                       <font>
                        <family>System</family>
                        <pointsize>12</pointsize>
-                       <weight>75</weight>
-                       <bold>true</bold>
+                       <bold>false</bold>
                       </font>
                      </property>
                      <property name="cursor">
@@ -7352,6 +7326,13 @@
              </item>
              <item>
               <widget class="Line" name="line_2">
+               <property name="font">
+                <font>
+                 <family>System</family>
+                 <pointsize>12</pointsize>
+                 <bold>false</bold>
+                </font>
+               </property>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -7438,14 +7419,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>MyTreeView</class>
-   <extends>QTreeView</extends>
-   <header>gui.treeview_model</header>
-  </customwidget>
-  <customwidget>
    <class>MyTableView</class>
    <extends>QTableView</extends>
    <header>gui.tableview_model</header>
+  </customwidget>
+  <customwidget>
+   <class>MyTreeView</class>
+   <extends>QTreeView</extends>
+   <header>gui.treeview_model</header>
   </customwidget>
  </customwidgets>
  <resources/>
