@@ -15,85 +15,118 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 
 
-class CropType(enum.IntEnum):
-    catch_crop = 1  # Zwischenfrucht
-    main_crop = 2  # Hauptfrucht
-    second_crop = 3  # Zweitfrucht
+class CropType(enum.Enum):
+    # Zwischenfrüchte
+    non_legume = "Nichtleguminosen"
+    legume = "Leguminosen"
+    other_catch_crop = "andere Zwischenfrüchte"
+    # Hauptfrüchte
+    rotating_fallow_with_legume = "Rotationsbrache mit Leguminosen"
+    rotating_fallow = "Rotationsbrache ohne Leguminosen"
+    permanent_fallow = "Dauerbrache"
+    permanent_grassland = "Dauergrünland"
+    alfalfa = "Luzerne"
+    alfalfa_grass = "Luzernegras"
+    clover = "Klee"
+    clover_grass = "Kleegras"
+    sugar_beets = "Zuckerrüben"
+    canola = "Raps"
+    legume_grain = "Körnerleguminosen"
+    cabbage = "Kohlgemüse"
+    field_grass = "Acker-/Saatgras"
+    grain = "Getreide"
+    corn = "Mais"
+    potato = "Kartoffel"
+    vegetable = "Gemüse ohne Kohlarten"
 
 
-class RemainsType(enum.IntEnum):
-    remains = 1
-    no_remains = 2
-    frozen = 3
-    not_frozen_fall = 4
-    not_frozen_spring = 5
+class CropClass(enum.Enum):
+    catch_crop = "Zwischenfrucht"
+    main_crop = "Hauptfrucht"
+    second_crop = "Zweitfrucht"
+    first_cut = "1. Schnitt"
+    second_cut = "2. Schnitt"
+    third_cut = "3. Schnitt"
+    fourth_cut = "4. Schnitt"
 
 
-class FieldType(enum.IntEnum):
-    grassland = 1
-    cropland = 2
-    grass_fallowland = 3
-    crop_fallowland = 4
+class RemainsType(enum.Enum):
+    # Hauptfrüchte
+    remains = "verbleibt"
+    no_remains = "abgefahren"
+    # Zwischenfrüchte
+    frozen = "abgefroren"
+    not_frozen_fall = "nicht abgf., eing. Herbst"
+    not_frozen_spring = "nicht abgf., eing. Frühjahr"
 
 
-class MeasureType(enum.IntEnum):
-    fall = 1
-    spring = 2
-    first_first_n_fert = 10
-    first_second_n_fert = 11
-    first_n_fert = 12
-    second_n_fert = 13
-    third_n_fert = 14
-    fourth_n_fert = 15
-    first_base_fert = 16
-    second_base_fert = 17
-    third_base_fert = 18
-    fourth_base_fert = 19
-    lime_fert = 20
-    misc_fert = 21
+class FieldType(enum.Enum):
+    grassland = "Grünland"
+    cropland = "Ackerland"
+    exchanged_land = "Tauschfläche"
+    fallow_grassland = "Ackerland-Brache"
+    fallow_cropland = "Grünland-Brache"
 
 
-class SoilType(enum.IntEnum):
-    sand = 1
-    light_loamy_sand = 2
-    strong_loamy_sand = 3
-    sandy_to_silty_loam = 4
-    clayey_loam_to_clay = 5
-    moor = 6
+class MeasureType(enum.Enum):
+    fall = "Herbst"
+    spring = "Frühjahr"
+    first_first_n_fert = "1.1 N-Gabe"
+    first_second_n_fert = "1.2 N-Gabe"
+    first_n_fert = "1. N-Gabe"
+    second_n_fert = "2. N-Gabe"
+    third_n_fert = "3. N-Gabe"
+    fourth_n_fert = "4. N-Gabe"
+    first_base_fert = "1. Grundd."
+    second_base_fert = "2. Grundd."
+    third_base_fert = "3. Grundd."
+    fourth_base_fert = "4. Grundd."
+    lime_fert = "Kalkung"
+    misc_fert = "Sonstige"
 
 
-class HumusType(enum.IntEnum):
-    less_4 = 1
-    less_8 = 2
-    less_15 = 3
-    less_30 = 4
-    more_30 = 5
+class SoilType(enum.Enum):
+    sand = "Sand"
+    light_loamy_sand = "schwach lehmiger Sand"
+    strong_loamy_sand = "stark lehmiger Sand"
+    sandy_to_silty_loam = "sand. bis schluff. Lehm"
+    clayey_loam_to_clay = "toniger Lehm bis Ton"
+    moor = "Niedermoor"
 
 
-class FertClass(enum.IntEnum):
-    organic = 1
-    mineral = 2
+class HumusType(enum.Enum):
+    less_4 = r"< 4%"
+    less_8 = r"4% bis < 8%"
+    less_15 = r"8% bis < 15%"
+    less_30 = r"15% bis < 30%"
+    more_30 = r">= 30%"
 
 
-class FertType(enum.IntEnum):
+class FertClass(enum.Enum):
+    organic = "Wirtschaftsdünger"
+    mineral = "Mineraldünger"
+
+
+class FertType(enum.Enum):
     # organic
-    digestate = 1
-    slurry = 2
-    manure = 3
-    dry_manure = 4
-    compost = 5
+    digestate = "Gärrest"
+    slurry = "Gülle"
+    manure = "Festmist"
+    dry_manure = "Trockenmist"
+    compost = "Kompost"
     # mineral
-    K = 10
-    N = 11
-    N_K = 12
-    N_P = 13
-    N_S = 14
-    N_P_K = 15
-    N_P_K_S = 16
-    P = 17
-    P_K = 18
-    lime = 19  # Kalk
-    misc = 20  # Sonstige
+    k = "K"
+    n = "N"
+    n_k = "N/K"
+    n_p = "N/P"
+    n_s = "N+S"
+    n_p_k = "NPK"
+    n_p_k_s = "NPKS"
+    p = "P"
+    p_k = "P/K"
+    lime = "Kalk"
+    misc = "Sonstige"
+    auxiliary = "Hilfsstoffe"
 
 
 Base = declarative_base()
@@ -120,6 +153,7 @@ class Field(Base):
     suffix = Column("suffix", Integer)
     name = Column("name", String)
     area = Column("area", Float(asdecimal=True))
+    year = Column("year", Integer)
     type = Column("type", Enum(FieldType))
     cultivations = relationship(
         "Cultivation",
@@ -132,17 +166,13 @@ class Field(Base):
         back_populates="fields",
     )
 
-    __table_args__ = (
-        UniqueConstraint(
-            "prefix", "suffix", "name", "area", "type", name="active_fields"
-        ),
-    )
+    __table_args__ = (UniqueConstraint("prefix", "suffix", "year", name="active_fields"),)
 
     def __repr__(self):
         return (
             f"Field(id='{self.id}', name='{self.prefix:02d}-{self.suffix} {self.name}', "
             f"ha='{self.area:.2f}', type='{self.type.name}', "
-            f"cultivations={[f'{cult.crop_type.name}: {cult.crop.name}' for cult in self.cultivations]}, "
+            f"cultivations={[f'{cult.crop_class.name}: {cult.crop.name}' for cult in self.cultivations]}, "
             f"fertilizations={[f'{fert.measure.name} -> {fert.cultivation.crop.name}: {fert.fertilizer.name}' for fert in self.fertilizations]})"
         )
 
@@ -151,7 +181,7 @@ class Cultivation(Base):
     __tablename__ = "cultivation"
     id = Column("cultivation_id", Integer, primary_key=True)
     year = Column("year", Integer)
-    crop_type = Column("crop_type", Enum(CropType))
+    crop_class = Column("crop_class", Enum(CropClass))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
     crop_yield = Column("yield", Float(asdecimal=True))
     remains = Column("remains", Enum(RemainsType))
@@ -163,7 +193,7 @@ class Cultivation(Base):
     )
     crop = relationship("Crop", backref=backref("cultivation"))
 
-    __table_args__ = (UniqueConstraint("year", "crop_type", name="active_crops"),)
+    # __table_args__ = (UniqueConstraint("year", "crop_class", name="active_crops"),)
 
     def __repr__(self):
         return (
@@ -175,12 +205,8 @@ class Cultivation(Base):
 class Fertilization(Base):
     __tablename__ = "fertilization"
     id = Column("fertilization_id", Integer, primary_key=True)
-    cultivation_id = Column(
-        "cultivation_id", Integer, ForeignKey("cultivation.cultivation_id")
-    )
-    fertilizer_id = Column(
-        "fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id")
-    )
+    cultivation_id = Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id"))
+    fertilizer_id = Column("fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id"))
     amount = Column("amount", Float(asdecimal=True))
     measure = Column("measure", Enum(MeasureType))
     month = Column("month", Integer)
@@ -203,7 +229,7 @@ class Crop(Base):
     __tablename__ = "crop"
     id = Column("crop_id", Integer, primary_key=True)
     name = Column("name", String, unique=True)
-    crop_type = Column("type", String)
+    crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
 
     def __repr__(self):
         return f"Crop(id='{self.id}', name='{self.name}', type='{self.crop_type}')"
@@ -212,11 +238,15 @@ class Crop(Base):
 class Fertilizer(Base):
     __tablename__ = "fertilizer"
     id = Column("fertilizer_id", Integer, primary_key=True)
-    name = Column("name", String, unique=True)
+    name = Column("name", String)
     year = Column("year", Integer)
     fert_class = Column("class", Enum(FertClass))
     fert_type = Column("type", Enum(FertType))
+    # active is for mineral ferts only, specifies if it can be used
     active = Column("active", Boolean, nullable=True)
+    amount = Column("amount", Float(asdecimal=True))
+
+    __table_args__ = (UniqueConstraint("name", "year", name="fertilizers"),)
 
     def __repr__(self):
         return (
