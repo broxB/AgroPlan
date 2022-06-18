@@ -1,7 +1,7 @@
-from pathlib import Path
+from collections import namedtuple
 from decimal import Decimal
+from pathlib import Path
 
-from utils import load_data
 from database.model import (
     Base,
     Crop,
@@ -22,18 +22,14 @@ from database.model import (
 )
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-
-def _connection(db_path: Path):
-    engine = create_engine(f"sqlite:///{db_path}")
-    return engine
+from utils import load_data
 
 
 def setup_database(db_name: str, seed: dict) -> None:
     """Setup or Rebuild database based on model.
 
     Args:
-        db_name (str): Name of the db, not the path. Will be created in database directory.
+        db_name (str): File name of the db, NOT the path! Will be created in database directory.
         seed (dict, optional): Sample data to seed into database.
     """
     db_path = Path(__file__).parent / db_name
@@ -51,11 +47,15 @@ def setup_database(db_name: str, seed: dict) -> None:
         _seed_database(db_path, seed)
 
 
+def _connection(db_path: Path):
+    engine = create_engine(f"sqlite:///{db_path}")
+    return engine
+
+
 def _seed_database(db_path: str, data_dict: dict) -> None:
     Session = sessionmaker()
     Session.configure(bind=_connection(db_path))
-    session = Session()
-
+    session: sessionmaker = Session()
 
     def update_session(db_session: sessionmaker, data: Base) -> None:
         db_session.add(data)
@@ -95,24 +95,6 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             case _:
                 raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
-    def get_remains_type(remains: str) -> RemainsType:
-        try:
-            return RemainsType(remains)
-        except ValueError:
-            return None
-
-    def get_soil_type(soil: str) -> SoilType:
-        try:
-            return SoilType(soil)
-        except ValueError:
-            return None
-
-    def get_humus_type(humus: str) -> HumusType:
-        try:
-            return HumusType(humus)
-        except ValueError:
-            return None
-
     def get_fert_type(fert_name: str) -> FertType:
         if fert_name.startswith("Gärrest"):
             return FertType.digestate
@@ -142,41 +124,66 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
         else:
             raise ValueError(f"FertType nicht vorhanden für {fert_name=}")
 
-    def field_cultivation(field_data: dict) -> dict:
+    def get_remains_type(remains: str) -> RemainsType:
+        try:
+            return RemainsType(remains)
+        except ValueError:
+            return None
+
+    def get_soil_type(soil: str) -> SoilType:
+        try:
+            return SoilType(soil)
+        except ValueError:
+            return None
+
+    def get_humus_type(humus: str) -> HumusType:
+        try:
+            return HumusType(humus)
+        except ValueError:
+            return None
+
+    def field_cultivation(field_data: dict) -> list:
         cult_data = [v for k, v in field_data.items() if k.startswith("Frucht_")]
-        cultivations = {}
-        for i, crop_data in enumerate(cult_data):
-            if crop_data in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"]:
-                cultivations[crop_data] = [cult_data[i + j] for j in [1, 2, 4, 5]]
+        cultivations = []
+        Cultivation = namedtuple("Cultivation", "class_, name, yield_, remains, legume")
+        for i, crop in enumerate(cult_data):
+            if crop in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"]:
+                cult = Cultivation(crop, *[cult_data[i + j] for j in [1, 2, 4, 5]])
+                cultivations.append(cult)
         return cultivations
 
     def field_fertilization(field_data: dict) -> list:
         org_data = [v for k, v in field_data.items() if k.startswith("OrgDüngung_")]
         min_data = [v for k, v in field_data.items() if k.startswith("MinDüngung_")]
         fertilizations = []
+        Fertilizer = namedtuple("Fertilizer", "class_, crop, measure, name, month, amount")
         fert_data = org_data + min_data
-        for i, x in enumerate(fert_data):
-            if x in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"] or str(x).endswith("Schnitt"):
-                fert = []
+        for i, fert in enumerate(fert_data):
+            if fert in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"] or str(fert).endswith(
+                "Schnitt"
+            ):
                 if i < len(org_data):
                     fert_class = FertClass.organic
                     fert_month = fert_data[i + 3]
-                    o = 0
+                    offset = 0
                 else:
                     fert_class = FertClass.mineral
                     fert_month = None
-                    o = -1
+                    offset = -1
                 fert_crop = fert_data[i]
                 fert_measure = fert_data[i + 1]
                 fert_name = fert_data[i + 2]
-                fert_amount = fert_data[i + o + 4]
-                fert = [fert_class, fert_crop, fert_measure, fert_name, fert_month, fert_amount]
+                fert_amount = fert_data[i + offset + 4]
+                fert = Fertilizer(
+                    fert_class, fert_crop, fert_measure, fert_name, fert_month, fert_amount
+                )
                 fertilizations.append(fert)
         return fertilizations
 
     for year in data_dict:
         for field_dict in data_dict[year]:
-
+            cult_data = field_cultivation(field_dict)
+            fert_data = field_fertilization(field_dict)
             field = Field(
                 prefix=field_dict["Prefix"],
                 suffix=field_dict["Suffix"],
@@ -187,65 +194,48 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             )
             update_session(session, field)
 
-            crop_data = field_cultivation(field_dict)
-            fert_data = field_fertilization(field_dict)
-            for crop_class, (
-                crop_name,
-                crop_yield,
-                crop_remains,
-                crop_legume,
-            ) in crop_data.items():
-
-                crop = session.query(Crop).filter(Crop.name == crop_name).one_or_none()
+            for cult in cult_data:
+                crop = session.query(Crop).filter(Crop.name == cult.name).one_or_none()
                 if crop is None:
-                    crop = Crop(name=crop_name, crop_type=get_crop_type(crop_name))
+                    crop = Crop(name=cult.name, crop_type=get_crop_type(cult.name))
                     update_session(session, crop)
-
                 cultivation = Cultivation(
-                    year=year,
-                    crop_class=CropClass(crop_class),
-                    crop_yield=crop_yield,
-                    remains=get_remains_type(crop_remains),
-                    legume_rate=crop_legume if crop_legume else None,
+                    field_id=field,
+                    crop_class=CropClass(cult.class_),
+                    crop_yield=cult.yield_,
+                    remains=get_remains_type(cult.remains),
+                    legume_rate=cult.legume if cult.legume else None,
                 )
+                cultivation.field = field
                 cultivation.crop = crop
-                cultivation.fields.append(field)
                 update_session(session, cultivation)
 
-                for (
-                    fert_class,
-                    fert_crop,
-                    fert_measure,
-                    fert_name,
-                    fert_month,
-                    fert_amount,
-                ) in fert_data:
-                    if fert_crop != crop_class and "Schnitt" not in fert_crop:
+                for fert in fert_data:
+                    if fert.crop != cult.class_ and "Schnitt" not in fert.crop:
                         continue
-
                     fertilizer = (
                         session.query(Fertilizer)
-                        .filter(Fertilizer.name == fert_name)
+                        .filter(Fertilizer.name == fert.name)
                         .filter(Fertilizer.year == year)
                         .one_or_none()
                     )
                     if fertilizer is None:
                         fertilizer = Fertilizer(
-                            name=fert_name,
+                            name=fert.name,
                             year=year,
-                            fert_class=fert_class,
-                            fert_type=get_fert_type(fert_name),
+                            fert_class=fert.class_,
+                            fert_type=get_fert_type(fert.name),
                             active=True,
-                            amount=Decimal(field.area * fert_amount),
+                            amount=Decimal(field.area * fert.amount),
                         )
                     else:
-                        fertilizer.amount += Decimal(field.area * fert_amount)
+                        fertilizer.amount += Decimal(field.area * fert.amount)
                     update_session(session, fertilizer)
 
                     fertilization = Fertilization(
-                        measure=MeasureType(fert_measure),
-                        amount=fert_amount,
-                        month=fert_month,
+                        measure=MeasureType(fert.measure),
+                        amount=fert.amount,
+                        month=fert.month,
                     )
                     fertilization.cultivation = cultivation
                     fertilization.fertilizer = fertilizer
@@ -269,5 +259,5 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
 
 
 if __name__ == "__main__":
-    data = load_data("data/schläge_reversed.json")
-    setup_database("database_v3.db", data)
+    seed = load_data("data/schläge_reversed.json")
+    setup_database("database_v3.1.db", seed)

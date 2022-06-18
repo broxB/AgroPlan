@@ -16,10 +16,6 @@ from sqlalchemy.orm import backref, relationship
 
 
 class CropType(enum.Enum):
-    # Zwischenfrüchte
-    non_legume = "Nichtleguminosen"
-    legume = "Leguminosen"
-    other_catch_crop = "andere Zwischenfrüchte"
     # Hauptfrüchte
     rotating_fallow_with_legume = "Rotationsbrache mit Leguminosen"
     rotating_fallow = "Rotationsbrache ohne Leguminosen"
@@ -38,6 +34,10 @@ class CropType(enum.Enum):
     corn = "Mais"
     potato = "Kartoffel"
     vegetable = "Gemüse ohne Kohlarten"
+    # Zwischenfrüchte
+    non_legume = "Nichtleguminosen"
+    legume = "Leguminosen"
+    other_catch_crop = "andere Zwischenfrüchte"
 
 
 class CropClass(enum.Enum):
@@ -131,13 +131,6 @@ class FertType(enum.Enum):
 
 Base = declarative_base()
 
-field_cultivation = Table(
-    "field_cultivation",
-    Base.metadata,
-    Column("field_id", Integer, ForeignKey("field.field_id")),
-    Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id")),
-)
-
 field_fertilization = Table(
     "field_fertilization",
     Base.metadata,
@@ -155,11 +148,7 @@ class Field(Base):
     area = Column("area", Float(asdecimal=True))
     year = Column("year", Integer)
     type = Column("type", Enum(FieldType))
-    cultivations = relationship(
-        "Cultivation",
-        secondary=field_cultivation,
-        back_populates="fields",
-    )
+    cultivation = relationship("Cultivation", back_populates="field")
     fertilizations = relationship(
         "Fertilization",
         secondary=field_fertilization,
@@ -172,7 +161,7 @@ class Field(Base):
         return (
             f"Field(id='{self.id}', name='{self.prefix:02d}-{self.suffix} {self.name}', "
             f"ha='{self.area:.2f}', type='{self.type.name}', "
-            f"cultivations={[f'{cult.crop_class.name}: {cult.crop.name}' for cult in self.cultivations]}, "
+            f"cultivations={[f'{cult.crop_class.name}: {cult.crop.name}' for cult in self.cultivation]}, "
             f"fertilizations={[f'{fert.measure.name} -> {fert.cultivation.crop.name}: {fert.fertilizer.name}' for fert in self.fertilizations]})"
         )
 
@@ -180,24 +169,20 @@ class Field(Base):
 class Cultivation(Base):
     __tablename__ = "cultivation"
     id = Column("cultivation_id", Integer, primary_key=True)
-    year = Column("year", Integer)
+    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     crop_class = Column("crop_class", Enum(CropClass))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
     crop_yield = Column("yield", Float(asdecimal=True))
     remains = Column("remains", Enum(RemainsType))
     legume_rate = Column("legume_rate", String)
-    fields = relationship(
-        "Field",
-        secondary=field_cultivation,
-        back_populates="cultivations",
-    )
+    field = relationship("Field", back_populates="cultivation")
     crop = relationship("Crop", backref=backref("cultivation"))
 
-    # __table_args__ = (UniqueConstraint("year", "crop_class", name="active_crops"),)
+    __table_args__ = (UniqueConstraint("field_id", "crop_class", name="active_crops"),)
 
     def __repr__(self):
         return (
-            f"Cultivation(id='{self.id}', year='{self.year}', type='{self.crop_type.name}', "
+            f"Cultivation(id='{self.id}', field='{self.field.name}', year='{self.year}', type='{self.crop_type.name}', "
             f"name='{self.crop.name}', yield='{self.crop_yield:.2f}', field='{self.fields[0].name}')"
         )
 
@@ -242,7 +227,6 @@ class Fertilizer(Base):
     year = Column("year", Integer)
     fert_class = Column("class", Enum(FertClass))
     fert_type = Column("type", Enum(FertType))
-    # active is for mineral ferts only, specifies if it can be used
     active = Column("active", Boolean, nullable=True)
     amount = Column("amount", Float(asdecimal=True))
 
