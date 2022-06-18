@@ -228,14 +228,30 @@ class Fertilizer(Base):
     fert_class = Column("class", Enum(FertClass))
     fert_type = Column("type", Enum(FertType))
     active = Column("active", Boolean, nullable=True)
-    amount = Column("amount", Float(asdecimal=True))
+    usage = relationship("FertilizerUsage", backref="fertilizer")
 
     __table_args__ = (UniqueConstraint("name", "year", name="fertilizers"),)
 
     def __repr__(self):
         return (
             f"Fertilizer(id='{self.id}', name='{self.name}', year='{self.year}', "
-            f"class='{self.fert_class.name}', type='{self.fert_type.name}', active='{self.active}')"
+            f"class='{self.fert_class.name}', type='{self.fert_type.name}', active='{self.active}', "
+            f"usage={[f'{usage.year}: {usage.amount:.2f}' for usage in self.usage]}')"
+        )
+
+
+class FertilizerUsage(Base):
+    __tablename__ = "fertilizer_usage"
+    id = Column("id", Integer, primary_key=True)
+    name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
+    year = Column("year", Integer)
+    amount = Column("amount", Float(asdecimal=True))
+
+    __table_args__ = (UniqueConstraint("fertilizer_name", "year"),)
+
+    def __repr__(self):
+        return (
+            f"FertilizerUsage(name='{self.name}', year='{self.year}', amount='{self.amount:.2f}')"
         )
 
 

@@ -11,6 +11,7 @@ from database.model import (
     FertClass,
     Fertilization,
     Fertilizer,
+    FertilizerUsage,
     FertType,
     Field,
     FieldType,
@@ -213,24 +214,37 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                 for fert in fert_data:
                     if fert.crop != cult.class_ and "Schnitt" not in fert.crop:
                         continue
+                    fert_year = year if fert.class_ == FertClass.organic else 0
                     fertilizer = (
                         session.query(Fertilizer)
                         .filter(Fertilizer.name == fert.name)
-                        .filter(Fertilizer.year == year)
+                        .filter(Fertilizer.year == fert_year)
                         .one_or_none()
                     )
                     if fertilizer is None:
                         fertilizer = Fertilizer(
                             name=fert.name,
-                            year=year,
+                            year=fert_year,
                             fert_class=fert.class_,
                             fert_type=get_fert_type(fert.name),
                             active=True,
-                            amount=Decimal(field.area * fert.amount),
                         )
-                    else:
-                        fertilizer.amount += Decimal(field.area * fert.amount)
                     update_session(session, fertilizer)
+
+                    fertilizer_usage = (
+                        session.query(FertilizerUsage)
+                        .filter(FertilizerUsage.name == fert.name)
+                        .filter(FertilizerUsage.year == year)
+                        .one_or_none()
+                    )
+                    if fertilizer_usage is None:
+                        fertilizer_usage = FertilizerUsage(
+                            name=fert.name, year=year, amount=Decimal(field.area * fert.amount)
+                        )
+                        fertilizer_usage.fertilizer = fertilizer
+                    else:
+                        fertilizer_usage.amount += Decimal(field.area * fert.amount)
+                    update_session(session, fertilizer_usage)
 
                     fertilization = Fertilization(
                         measure=MeasureType(fert.measure),
