@@ -8,6 +8,12 @@ data/
 *.code-workspace
 *.db
 
+# QtDesigner project files
+AgroPlan.pyproject
+AgroPlan.pyproject.user
+*.qrc
+qtdesigner/AgroPlan/fugue
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
