@@ -138,36 +138,64 @@ field_fertilization = Table(
     Column("fertilization_id", Integer, ForeignKey("fertilization.fertilization_id")),
 )
 
+field_soil_sample = Table(
+    "field_soil_sample",
+    Base.metadata,
+    Column("field_id", Integer, ForeignKey("field.field_id")),
+    Column("sample_id", Integer, ForeignKey("soil_sample.sample_id")),
+)
 
-class Field(Base):
-    __tablename__ = "field"
-    id = Column("field_id", Integer, primary_key=True)
+
+class BaseField(Base):
+    __tablename__ = "base_field"
+    __table_args__ = (UniqueConstraint("prefix", "suffix", name="unique_base_fields"),)
+
+    id = Column("base_id", Integer, primary_key=True)
     prefix = Column("prefix", Integer)
     suffix = Column("suffix", Integer)
     name = Column("name", String)
+    fields = relationship("Field", back_populates="base_field")
+
+    def __repr__(self):
+        return (
+            f"BaseField(id='{self.id}', name='{self.prefix:02d}-{self.suffix} {self.name}', "
+            f"fields='{[f'{field.year}: {field.type.value}, {field.area:.2f}ha' for field in self.fields]}'"
+        )
+
+
+class Field(Base):
+    __tablename__ = "field"
+    __table_args__ = (UniqueConstraint("sub_suffix", "base_id", "year", name="unique_fields"),)
+
+    id = Column("field_id", Integer, primary_key=True)
+    base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
+    sub_suffix = Column("sub_suffix", Integer, default=0)
     area = Column("area", Float(asdecimal=True))
     year = Column("year", Integer)
     type = Column("type", Enum(FieldType))
-    cultivation = relationship("Cultivation", back_populates="field")
+    base_field = relationship("BaseField", back_populates="fields")
+    cultivations = relationship("Cultivation", back_populates="field")
     fertilizations = relationship(
         "Fertilization",
         secondary=field_fertilization,
         back_populates="fields",
     )
-
-    __table_args__ = (UniqueConstraint("prefix", "suffix", "year", name="active_fields"),)
+    soil_samples = relationship("SoilSample", secondary=field_soil_sample, back_populates="fields")
 
     def __repr__(self):
         return (
-            f"Field(id='{self.id}', name='{self.prefix:02d}-{self.suffix} {self.name}', "
-            f"ha='{self.area:.2f}', type='{self.type.name}', "
-            f"cultivations={[f'{cult.crop_class.name}: {cult.crop.name}' for cult in self.cultivation]}, "
-            f"fertilizations={[f'{fert.measure.name} -> {fert.cultivation.crop.name}: {fert.fertilizer.name}' for fert in self.fertilizations]})"
+            f"Field(id='{self.id}', name='{self.base_field.prefix:02d}-{self.base_field.suffix} {self.base_field.name}', "
+            f"year='{self.year}', ha='{self.area:.2f}', type='{self.type.value}', "
+            f"soil_samples='{[f'{sample.year}: {sample.soil_type}' for sample in self.soil_samples]}', "
+            f"cultivations={[f'{cult.crop_class.value}: {cult.crop.name}' for cult in self.cultivations]}, "
+            f"fertilizations={[f'{fert.measure.value} -> {fert.cultivation.crop.name}: {fert.fertilizer.name}' for fert in self.fertilizations]})"
         )
 
 
 class Cultivation(Base):
     __tablename__ = "cultivation"
+    __table_args__ = (UniqueConstraint("field_id", "crop_class", name="unique_cultivations"),)
+
     id = Column("cultivation_id", Integer, primary_key=True)
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     crop_class = Column("crop_class", Enum(CropClass))
@@ -175,10 +203,8 @@ class Cultivation(Base):
     crop_yield = Column("yield", Float(asdecimal=True))
     remains = Column("remains", Enum(RemainsType))
     legume_rate = Column("legume_rate", String)
-    field = relationship("Field", back_populates="cultivation")
+    field = relationship("Field", back_populates="cultivations")
     crop = relationship("Crop", backref=backref("cultivation"))
-
-    __table_args__ = (UniqueConstraint("field_id", "crop_class", name="active_crops"),)
 
     def __repr__(self):
         return (
@@ -189,6 +215,7 @@ class Cultivation(Base):
 
 class Fertilization(Base):
     __tablename__ = "fertilization"
+
     id = Column("fertilization_id", Integer, primary_key=True)
     cultivation_id = Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id"))
     fertilizer_id = Column("fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id"))
@@ -222,6 +249,8 @@ class Crop(Base):
 
 class Fertilizer(Base):
     __tablename__ = "fertilizer"
+    __table_args__ = (UniqueConstraint("name", "year", name="unique_fertilizers"),)
+
     id = Column("fertilizer_id", Integer, primary_key=True)
     name = Column("name", String)
     year = Column("year", Integer)
@@ -229,8 +258,6 @@ class Fertilizer(Base):
     fert_type = Column("type", Enum(FertType))
     active = Column("active", Boolean, nullable=True)
     usage = relationship("FertilizerUsage", backref="fertilizer")
-
-    __table_args__ = (UniqueConstraint("name", "year", name="fertilizers"),)
 
     def __repr__(self):
         return (
@@ -242,12 +269,12 @@ class Fertilizer(Base):
 
 class FertilizerUsage(Base):
     __tablename__ = "fertilizer_usage"
+    __table_args__ = (UniqueConstraint("fertilizer_name", "year", name="unique_fertilizers"),)
+
     id = Column("id", Integer, primary_key=True)
     name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
     year = Column("year", Integer)
     amount = Column("amount", Float(asdecimal=True))
-
-    __table_args__ = (UniqueConstraint("fertilizer_name", "year"),)
 
     def __repr__(self):
         return (
@@ -257,19 +284,22 @@ class FertilizerUsage(Base):
 
 class SoilSample(Base):
     __tablename__ = "soil_sample"
+    __table_args__ = (UniqueConstraint("field_id", "year", name="unique_samples"),)
+
     id = Column("sample_id", Integer, primary_key=True)
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
-    date = Column("date", Integer)
+    year = Column("year", Integer)
     ph = Column("ph", Float(asdecimal=True))
     p2o5 = Column("p2o5", Float(asdecimal=True))
     k2o = Column("k2o", Float(asdecimal=True))
     mg = Column("mg", Float(asdecimal=True))
     soil_type = Column("soil_type", Enum(SoilType))
     humus = Column("humus", Enum(HumusType))
-    field = relationship("Field", backref=backref("soil_sample"))
+    fields = relationship("Field", secondary=field_soil_sample, back_populates="soil_samples")
 
     def __repr__(self):
         return (
-            f"SoilSample(id='{self.id}', fields='{self.field.name}', year='{self.year}', "
-            f"soil_type='{self.soil_type.name}', humus='{self.humus.name}')"
+            f"SoilSample(id='{self.id}', year='{self.year}', "
+            f"soil_type='{self.soil_type.name}', humus='{self.humus.name}', "
+            f"fields='{[f'{field.name}' for field in self.fields]}')"
         )

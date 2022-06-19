@@ -4,6 +4,7 @@ from pathlib import Path
 
 from database.model import (
     Base,
+    BaseField,
     Crop,
     CropClass,
     CropType,
@@ -185,14 +186,29 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
         for field_dict in data_dict[year]:
             cult_data = field_cultivation(field_dict)
             fert_data = field_fertilization(field_dict)
+
+            base_field = (
+                session.query(BaseField)
+                .filter(
+                    BaseField.prefix == field_dict["Prefix"],
+                    BaseField.suffix == field_dict["Suffix"],
+                )
+                .one_or_none()
+            )
+            if base_field is None:
+                base_field = BaseField(
+                    prefix=field_dict["Prefix"],
+                    suffix=field_dict["Suffix"],
+                    name=field_dict["Name"],
+                )
+                update_session(session, base_field)
+
             field = Field(
-                prefix=field_dict["Prefix"],
-                suffix=field_dict["Suffix"],
-                name=field_dict["Name"],
                 area=field_dict["Ha"],
                 year=year,
                 type=get_field_type(field_dict["Nutzungsart"]),
             )
+            field.base_field = base_field
             update_session(session, field)
 
             for cult in cult_data:
@@ -257,7 +273,7 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                     update_session(session, fertilization)
 
             soil_sample = SoilSample(
-                date=year,
+                year=year,
                 ph=field_dict["pH"],
                 p2o5=field_dict["P2O5"],
                 k2o=field_dict["K2O"],
@@ -265,7 +281,7 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                 soil_type=get_soil_type(field_dict["Bodenart"]),
                 humus=get_humus_type(field_dict["Humusgehalt"]),
             )
-            soil_sample.field = field
+            soil_sample.fields.append(field)
             update_session(session, soil_sample)
 
     session.commit()
