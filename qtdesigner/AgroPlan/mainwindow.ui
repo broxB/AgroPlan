@@ -247,6 +247,13 @@
            </property>
            <item row="0" column="0">
             <widget class="QLabel" name="label_2">
+             <property name="font">
+              <font>
+               <family>System</family>
+               <pointsize>12</pointsize>
+               <bold>true</bold>
+              </font>
+             </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#000080;&quot;&gt;&amp;amp;Planungsjahr&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -257,6 +264,13 @@
            </item>
            <item row="0" column="1">
             <widget class="QLabel" name="label_39">
+             <property name="font">
+              <font>
+               <family>System</family>
+               <pointsize>12</pointsize>
+               <bold>true</bold>
+              </font>
+             </property>
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#000080;&quot;&gt;Sch&amp;amp;lag&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -284,6 +298,13 @@
                <width>70</width>
                <height>16777215</height>
               </size>
+             </property>
+             <property name="font">
+              <font>
+               <family>System</family>
+               <pointsize>12</pointsize>
+               <bold>true</bold>
+              </font>
              </property>
              <property name="alignment">
               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -7404,11 +7425,19 @@
    <addaction name="actionDialog"/>
   </widget>
   <action name="actionDialog">
+   <property name="icon">
+    <iconset>
+     <normaloff>fugue/icons/application-form.png</normaloff>fugue/icons/application-form.png</iconset>
+   </property>
    <property name="text">
     <string>Dialog</string>
    </property>
   </action>
   <action name="actionDemo">
+   <property name="icon">
+    <iconset>
+     <normaloff>fugue/icons/android.png</normaloff>fugue/icons/android.png</iconset>
+   </property>
    <property name="text">
     <string>Demo</string>
    </property>

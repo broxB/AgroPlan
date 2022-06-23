@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>800</width>
     <height>300</height>
    </rect>
   </property>
@@ -15,46 +15,36 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string/>
+        <string>Soil samples:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QTextEdit" name="textEdit"/>
+      <widget class="MyTableView" name="tableView"/>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QPushButton" name="pushButton">
-         <property name="text">
-          <string>Clear</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
+        <spacer name="spacer">
          <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+          <enum>Qt::Vertical</enum>
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>40</width>
-           <height>20</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_3">
+        <widget class="QPushButton" name="select_button">
          <property name="text">
-          <string>check</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
+          <string>Select</string>
          </property>
         </widget>
        </item>
@@ -65,14 +55,14 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>40</width>
-           <height>20</height>
+           <width>0</width>
+           <height>0</height>
           </size>
          </property>
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_2">
+        <widget class="QPushButton" name="close_button">
          <property name="text">
           <string>Close</string>
          </property>
@@ -84,37 +74,28 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MyTableView</class>
+   <extends>QTableView</extends>
+   <header>gui.tableview_model</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
-   <sender>pushButton</sender>
-   <signal>clicked()</signal>
-   <receiver>textEdit</receiver>
-   <slot>clear()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>34</x>
-     <y>275</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>284</x>
-     <y>244</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pushButton_2</sender>
+   <sender>close_button</sender>
    <signal>clicked()</signal>
    <receiver>Dialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>345</x>
-     <y>280</y>
+     <x>333</x>
+     <y>282</y>
     </hint>
     <hint type="destinationlabel">
-     <x>293</x>
-     <y>291</y>
+     <x>307</x>
+     <y>345</y>
     </hint>
    </hints>
   </connection>

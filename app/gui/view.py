@@ -3,9 +3,8 @@ from gui.treeview_model import MyTreeView
 from gui.views import dialog, mainwindow
 from loguru import logger
 from PyQt6 import uic
-from PyQt6.QtCore import QEvent, QModelIndex, Qt
+from PyQt6.QtCore import QModelIndex, Qt
 from PyQt6.QtCore import pyqtSlot as Slot
-from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -15,6 +14,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSpinBox,
+    QStyle,
 )
 from utils.utils import get_fields_list
 
@@ -33,7 +33,7 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.setFocus()
         self.pushButton: QPushButton
         self.comboBox: QComboBox
-        self.comboBox.addItems(get_fields_list("2022"))
+        # self.comboBox.addItems(get_fields_list("2022"))
         # self.combo_lineEdit = MyLineEdit(self.comboBox)
         # self.combo_lineEdit.setClearButtonEnabled(True)
         # self.comboBox.setLineEdit(self.combo_lineEdit)
@@ -42,32 +42,33 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         # self.comboBox.completer().setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
         # self.comboBox.completer().popup().clicked.connect(self.select_popup)
         # self.comboBox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        self.comboBox.currentIndexChanged.connect(self.change_comboBox)
-        self.spinBox.valueChanged.connect(self.change_spinBox)
-        self.spin_edit = QLineEdit()
-        self.spinBox.setLineEdit(self.spin_edit)
-        self.spin_edit.setReadOnly(True)
+        self.comboBox.currentIndexChanged.connect(self.changed_comboBox)
+        self.spinBox.valueChanged.connect(self.changed_spinBox)
+        self.spinBox.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.treeView.clicked.connect(self.click_treeview_item)
         self.treeView: MyTreeView
         self.tableView: MyTableView
         self.spinBox: QSpinBox
         self.treeView.insert_data(self.comboBox.currentText())
-        self.tableView.insert_data(self.comboBox.currentText(), self.spinBox.value())
+        self.tableView.cultivation_data(self.comboBox.currentText(), self.spinBox.value())
 
-    @Slot()
-    def select_popup(self):
-        """Remove focus from combo_lineEdit if the completer was clicked"""
-        # self.combo_lineEdit.setFocus()
-        # self.setFocus()
+    # @Slot()
+    # def select_popup(self):
+    #     """Remove focus from combo_lineEdit if the completer was clicked"""
+    #     self.combo_lineEdit.setFocus()
+    #     self.setFocus()
 
-    def change_comboBox(self) -> None:
+    def generate_list(self):
+        self.comboBox.addItems()
+
+    def changed_comboBox(self):
         logger.info(f"Selected: {self.comboBox.currentText()} - {self.spinBox.value()}")
         self.treeView.insert_data(self.comboBox.currentText())
-        self.tableView.insert_data(self.comboBox.currentText(), self.spinBox.value())
+        self.tableView.cultivation_data(self.comboBox.currentText(), self.spinBox.value())
 
-    def change_spinBox(self):
+    def changed_spinBox(self):
         logger.info(f"Selected: {self.comboBox.currentText()} - {self.spinBox.value()}")
-        self.tableView.insert_data(self.comboBox.currentText(), self.spinBox.value())
+        self.tableView.cultivation_data(self.comboBox.currentText(), self.spinBox.value())
         if self.spinBox.hasFocus():
             self.setFocus()
 
@@ -107,50 +108,39 @@ class UIDialog(QDialog, dialog.Ui_Dialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         uic.loadUi("qtdesigner/AgroPlan/dialog.ui", self) if USE_UI else self.setupUi(self)
-        self.pushButton_3: QPushButton
-        self.pushButton_3.setChecked(True)
+        self.select_button: QPushButton
+        self.close_button: QPushButton
+        self.tableView: MyTableView
         self.label: QLabel
-        self.label.installEventFilter(self)
-        self.label.setMouseTracking(True)
+        self.tableView.soil_sample_data(self.parent().comboBox.currentText())
+        self.tableView.resizeColumnsToContents()
+        self.set_window_size()
 
-    @Slot(name="on_pushButton_clicked")
-    def clear_button(self):
-        if self.textEdit.document().isEmpty() and self.pushButton_3.isChecked():
+    def set_window_size(self):
+        margins = self.layout().contentsMargins()
+        self.resize(
+            (
+                margins.left()
+                + margins.right()
+                + self.tableView.frameWidth() * 2
+                + self.tableView.verticalHeader().width()
+                + self.tableView.horizontalHeader().length()
+                + self.tableView.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)
+            ),
+            self.height(),
+        )
+
+    @Slot(name="on_select_button_clicked")
+    def select_sample(self):
+        if not self.tableView.hasFocus():
             QMessageBox.critical(
                 self,
                 "Error dialog",
-                "Can't clear text if there is none!",
-                buttons=QMessageBox.StandardButton.Discard
-                | QMessageBox.StandardButton.NoToAll
-                | QMessageBox.StandardButton.Ignore,
-                defaultButton=QMessageBox.StandardButton.Discard,
+                "Please select a soil sample.",
+                buttons=QMessageBox.StandardButton.Ok,
             )
         else:
-            self.textEdit.clear()
-
-    @Slot(bool)
-    def on_pushButton_3_clicked(self, checked: bool) -> None:
-        text = "Checked" if checked else "Unchecked"
-        self.pushButton_3.setText(text)
-        self.setWindowTitle(text)
-        logger.debug(text)
-
-    def eventFilter(self, source, event):
-        if event.type() == QEvent.Type.MouseButtonPress and source is self.label:
-            self.label.setText(self.check_mouse_button(self, event))
-        return super(UIDialog, self).eventFilter(source, event)
-
-    def check_mouse_button(self, element, event: QMouseEvent) -> None:
-        match event.button():
-            case Qt.MouseButton.LeftButton:
-                txt = "mousePressEvent LEFT"
-            case Qt.MouseButton.MiddleButton:
-                txt = "mousePressEvent MIDDLE"
-            case Qt.MouseButton.RightButton:
-                txt = "mousePressEvent RIGHT"
-            case Qt.MouseButton.NoButton:
-                txt = "mousePressEvent NONE"
-        return txt
+            self.reject()
 
 
 class ComboLineEdit(QLineEdit):

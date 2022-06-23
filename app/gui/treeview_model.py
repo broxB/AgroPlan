@@ -1,7 +1,7 @@
 from loguru import logger
-from modules.utils import get_field_cultivation
 from PyQt6.QtGui import QColor, QFont, QStandardItem, QStandardItemModel
 from PyQt6.QtWidgets import QTreeView
+from utils.utils import get_field_cultivation
 
 
 class StandardItem(QStandardItem):
@@ -26,7 +26,7 @@ class MyTreeView(QTreeView):
         for year in field_data:
             year_item = StandardItem(year)
             for crop in field_data[year]:
-                crop_item = StandardItem(crop, checkable=True)
+                crop_item = StandardItem(crop, checkable=False)
                 year_item.appendRow(crop_item)
             root_node.appendRow(year_item)
 
