@@ -1,5 +1,4 @@
-import enum
-
+from database.types import *
 from sqlalchemy import (
     Boolean,
     Column,
@@ -14,120 +13,18 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 
-
-class CropType(enum.Enum):
-    # Hauptfrüchte
-    rotating_fallow_with_legume = "Rotationsbrache mit Leguminosen"
-    rotating_fallow = "Rotationsbrache ohne Leguminosen"
-    permanent_fallow = "Dauerbrache"
-    permanent_grassland = "Dauergrünland"
-    alfalfa = "Luzerne"
-    alfalfa_grass = "Luzernegras"
-    clover = "Klee"
-    clover_grass = "Kleegras"
-    sugar_beets = "Zuckerrüben"
-    canola = "Raps"
-    legume_grain = "Körnerleguminosen"
-    cabbage = "Kohlgemüse"
-    field_grass = "Acker-/Saatgras"
-    grain = "Getreide"
-    corn = "Mais"
-    potato = "Kartoffel"
-    vegetable = "Gemüse ohne Kohlarten"
-    # Zwischenfrüchte
-    non_legume = "Nichtleguminosen"
-    legume = "Leguminosen"
-    other_catch_crop = "andere Zwischenfrüchte"
-
-
-class CropClass(enum.Enum):
-    catch_crop = "Zwischenfrucht"
-    main_crop = "Hauptfrucht"
-    second_crop = "Zweitfrucht"
-    first_cut = "1. Schnitt"
-    second_cut = "2. Schnitt"
-    third_cut = "3. Schnitt"
-    fourth_cut = "4. Schnitt"
-
-
-class RemainsType(enum.Enum):
-    # Hauptfrüchte
-    remains = "verbleibt"
-    no_remains = "abgefahren"
-    # Zwischenfrüchte
-    frozen = "abgefroren"
-    not_frozen_fall = "nicht abgf., eing. Herbst"
-    not_frozen_spring = "nicht abgf., eing. Frühjahr"
-
-
-class FieldType(enum.Enum):
-    grassland = "Grünland"
-    cropland = "Ackerland"
-    exchanged_land = "Tauschfläche"
-    fallow_grassland = "Ackerland-Brache"
-    fallow_cropland = "Grünland-Brache"
-
-
-class MeasureType(enum.Enum):
-    fall = "Herbst"
-    spring = "Frühjahr"
-    first_first_n_fert = "1.1 N-Gabe"
-    first_second_n_fert = "1.2 N-Gabe"
-    first_n_fert = "1. N-Gabe"
-    second_n_fert = "2. N-Gabe"
-    third_n_fert = "3. N-Gabe"
-    fourth_n_fert = "4. N-Gabe"
-    first_base_fert = "1. Grundd."
-    second_base_fert = "2. Grundd."
-    third_base_fert = "3. Grundd."
-    fourth_base_fert = "4. Grundd."
-    lime_fert = "Kalkung"
-    misc_fert = "Sonstige"
-
-
-class SoilType(enum.Enum):
-    sand = "Sand"
-    light_loamy_sand = "schwach lehmiger Sand"
-    strong_loamy_sand = "stark lehmiger Sand"
-    sandy_to_silty_loam = "sand. bis schluff. Lehm"
-    clayey_loam_to_clay = "toniger Lehm bis Ton"
-    moor = "Niedermoor"
-
-
-class HumusType(enum.Enum):
-    less_4 = r"< 4%"
-    less_8 = r"4% bis < 8%"
-    less_15 = r"8% bis < 15%"
-    less_30 = r"15% bis < 30%"
-    more_30 = r">= 30%"
-
-
-class FertClass(enum.Enum):
-    organic = "Wirtschaftsdünger"
-    mineral = "Mineraldünger"
-
-
-class FertType(enum.Enum):
-    # organic
-    digestate = "Gärrest"
-    slurry = "Gülle"
-    manure = "Festmist"
-    dry_manure = "Trockenmist"
-    compost = "Kompost"
-    # mineral
-    k = "K"
-    n = "N"
-    n_k = "N/K"
-    n_p = "N/P"
-    n_s = "N+S"
-    n_p_k = "NPK"
-    n_p_k_s = "NPKS"
-    p = "P"
-    p_k = "P/K"
-    lime = "Kalk"
-    misc = "Sonstige"
-    auxiliary = "Hilfsstoffe"
-
+__all__ = [
+    "field_fertilization",
+    "field_soil_sample",
+    "BaseField",
+    "Field",
+    "Cultivation",
+    "Crop",
+    "Fertilization",
+    "Fertilizer",
+    "FertilizerUsage",
+    "SoilSample",
+]
 
 Base = declarative_base()
 
@@ -213,6 +110,16 @@ class Cultivation(Base):
         )
 
 
+class Crop(Base):
+    __tablename__ = "crop"
+    id = Column("crop_id", Integer, primary_key=True)
+    name = Column("name", String, unique=True)
+    crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
+
+    def __repr__(self):
+        return f"Crop(id='{self.id}', name='{self.name}', type='{self.crop_type}')"
+
+
 class Fertilization(Base):
     __tablename__ = "fertilization"
 
@@ -235,16 +142,6 @@ class Fertilization(Base):
             f"Fertilization(id='{self.id}', name='{self.fertilizer.name}', amount='{self.amount:.2f}', "
             f"measure='{self.measure.name}', month='{self.month}', crop='{self.cultivation.crop.name}')"
         )
-
-
-class Crop(Base):
-    __tablename__ = "crop"
-    id = Column("crop_id", Integer, primary_key=True)
-    name = Column("name", String, unique=True)
-    crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
-
-    def __repr__(self):
-        return f"Crop(id='{self.id}', name='{self.name}', type='{self.crop_type}')"
 
 
 class Fertilizer(Base):
@@ -284,10 +181,10 @@ class FertilizerUsage(Base):
 
 class SoilSample(Base):
     __tablename__ = "soil_sample"
-    __table_args__ = (UniqueConstraint("field_id", "year", name="unique_samples"),)
+    __table_args__ = (UniqueConstraint("base_id", "year", name="unique_samples"),)
 
     id = Column("sample_id", Integer, primary_key=True)
-    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
+    base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
     year = Column("year", Integer)
     ph = Column("ph", Float(asdecimal=True))
     p2o5 = Column("p2o5", Float(asdecimal=True))
@@ -301,5 +198,5 @@ class SoilSample(Base):
         return (
             f"SoilSample(id='{self.id}', year='{self.year}', "
             f"soil_type='{self.soil_type.name}', humus='{self.humus.name}', "
-            f"fields='{[f'{field.name}' for field in self.fields]}')"
+            f"fields={f'{self.fields[0].base_field.name}', [f'{field.year}' for field in self.fields]})"
         )

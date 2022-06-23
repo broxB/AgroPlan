@@ -23,8 +23,8 @@ from database.model import (
     SoilType,
 )
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from utils import load_data
+from sqlalchemy.orm import Session, sessionmaker
+from utils import load_json
 
 
 def setup_database(db_name: str, seed: dict) -> None:
@@ -57,7 +57,7 @@ def _connection(db_path: Path):
 def _seed_database(db_path: str, data_dict: dict) -> None:
     Session = sessionmaker()
     Session.configure(bind=_connection(db_path))
-    session: sessionmaker = Session()
+    session = Session()  # type: Session
 
     def update_session(db_session: sessionmaker, data: Base) -> None:
         db_session.add(data)
@@ -150,7 +150,7 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
         Cultivation = namedtuple("Cultivation", "class_, name, yield_, remains, legume")
         for i, crop in enumerate(cult_data):
             if crop in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"]:
-                cult = Cultivation(crop, *[cult_data[i + j] for j in [1, 2, 4, 5]])
+                cult = Cultivation(str(crop), *[cult_data[i + j] for j in [1, 2, 4, 5]])
                 cultivations.append(cult)
         return cultivations
 
@@ -175,7 +175,7 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                 fert_crop = fert_data[i]
                 fert_measure = fert_data[i + 1]
                 fert_name = fert_data[i + 2]
-                fert_amount = fert_data[i + offset + 4]
+                fert_amount = str(fert_data[i + offset + 4])
                 fert = Fertilizer(
                     fert_class, fert_crop, fert_measure, fert_name, fert_month, fert_amount
                 )
@@ -255,11 +255,13 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                     )
                     if fertilizer_usage is None:
                         fertilizer_usage = FertilizerUsage(
-                            name=fert.name, year=year, amount=Decimal(field.area * fert.amount)
+                            name=fert.name,
+                            year=year,
+                            amount=Decimal(field.area) * Decimal(fert.amount),
                         )
                         fertilizer_usage.fertilizer = fertilizer
                     else:
-                        fertilizer_usage.amount += Decimal(field.area * fert.amount)
+                        fertilizer_usage.amount += Decimal(field.area) * Decimal(fert.amount)
                     update_session(session, fertilizer_usage)
 
                     fertilization = Fertilization(
@@ -272,15 +274,25 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                     fertilization.fields.append(field)
                     update_session(session, fertilization)
 
-            soil_sample = SoilSample(
-                year=year,
-                ph=field_dict["pH"],
-                p2o5=field_dict["P2O5"],
-                k2o=field_dict["K2O"],
-                mg=field_dict["Mg"],
-                soil_type=get_soil_type(field_dict["Bodenart"]),
-                humus=get_humus_type(field_dict["Humusgehalt"]),
+            soil_sample = (
+                session.query(SoilSample)
+                .filter(
+                    SoilSample.base_id == base_field.id,
+                    SoilSample.year == field_dict["Probedatum"],
+                )
+                .one_or_none()
             )
+            if soil_sample is None:
+                soil_sample = SoilSample(
+                    year=field_dict["Probedatum"],
+                    ph=field_dict["pH"],
+                    p2o5=field_dict["P2O5"],
+                    k2o=field_dict["K2O"],
+                    mg=field_dict["Mg"],
+                    soil_type=get_soil_type(field_dict["Bodenart"]),
+                    humus=get_humus_type(field_dict["Humusgehalt"]),
+                )
+                soil_sample.base_id = base_field.id
             soil_sample.fields.append(field)
             update_session(session, soil_sample)
 
@@ -289,5 +301,5 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
 
 
 if __name__ == "__main__":
-    seed = load_data("data/schläge_reversed.json")
+    seed = load_json("data/schläge_reversed.json")
     setup_database("database_v3.1.db", seed)
