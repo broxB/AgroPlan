@@ -1,1 +1,1 @@
-from .utils import load_data, save_data
+from .utils import load_json, save_json

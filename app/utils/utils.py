@@ -21,7 +21,7 @@ def dataclass_from_dict(dclass, data_dict: dict):
         return data_dict
 
 
-def load_data(filename: str) -> dict:
+def load_json(filename: str) -> dict:
     """Load data from ``filename``. Has to be a JSON file.
 
     Args:
@@ -35,7 +35,7 @@ def load_data(filename: str) -> dict:
     return data
 
 
-def save_data(data: dict, filename: str) -> None:
+def save_json(data: dict, filename: str) -> None:
     """Save data to ``filename```. Has to be a JSON file.
 
     Args:
@@ -221,7 +221,7 @@ def get_fields_list(year: str) -> list[str]:
     Returns:
         list[str]: List of fields in metaform (e.g. ["01-1 Am Hof 1 (3.33 ha)", ...])
     """
-    fields = load_data("data/schläge.json")[year]
+    fields = load_json("data/schläge.json")[year]
     return [
         f"{field['Prefix']:02d}-{field['Suffix']} {field['Name']} ({field['Ha']:,}ha)"
         for field in fields
@@ -237,7 +237,7 @@ def get_field_cultivation(field_name: str) -> dict[list[str]]:
     Returns:
         dict[list[str]]: Nested dict with crops of the years (e.g. {"2022": ["Haupfrucht", "Zweitfrucht"], "2021": ...})
     """
-    all_data = load_data("data/schläge.json")
+    all_data = load_json("data/schläge.json")
     pattern = f"(\d+)-(\d+)\s(.+)\s\("
     matches = re.findall(pattern, field_name)[0]
     prefix, suffix, name = int(matches[0]), int(matches[1]), matches[2]

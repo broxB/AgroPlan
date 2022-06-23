@@ -153,9 +153,9 @@ class Schlag:
 
 if __name__ == "__main__":
     from schlag import Schlag
-    from utils import dataclass_from_dict, load_data
+    from utils import dataclass_from_dict, load_json
 
-    schläge = load_data("data/schläge.json")["2022"]
+    schläge = load_json("data/schläge.json")["2022"]
     for schlag_dict in schläge:
         Feldschlag = dataclass_from_dict(Schlag, schlag_dict)
         print(Feldschlag.Name)
