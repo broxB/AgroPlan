@@ -16,7 +16,8 @@ def create_session(*, path: str = None, use_echo: bool = False) -> Session:
     Returns:
         Session: Session object which interacts with database.
     """
-    path = "app/database/database.db" if path is None else path
+    if path is None:
+        path = "app/database/anbauplanung.db"
     db_path = Path().absolute() / path
     if not db_path.exists():
         raise ValueError(f"Database '{db_path}' does not exist")
