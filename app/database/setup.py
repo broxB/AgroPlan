@@ -6,20 +6,23 @@ from database.model import (
     Base,
     BaseField,
     Crop,
-    CropClass,
-    CropType,
     Cultivation,
-    FertClass,
     Fertilization,
     Fertilizer,
     FertilizerUsage,
-    FertType,
     Field,
+    SoilSample,
+)
+from database.types import (
+    CropClass,
+    CropType,
+    FertClass,
+    FertType,
     FieldType,
     HumusType,
+    LegumeType,
     MeasureType,
     RemainsType,
-    SoilSample,
     SoilType,
 )
 from sqlalchemy import create_engine
@@ -97,6 +100,18 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             case _:
                 raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
+    def get_remains_type(remains: str) -> RemainsType:
+        try:
+            return RemainsType(remains)
+        except ValueError:
+            return RemainsType(None)
+
+    def get_legume_type(legume: str) -> LegumeType:
+        try:
+            return LegumeType(legume)
+        except ValueError:
+            return LegumeType(None)
+
     def get_fert_type(fert_name: str) -> FertType:
         if fert_name.startswith("Gärrest"):
             return FertType.digestate
@@ -125,12 +140,6 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             return FertType.misc
         else:
             raise ValueError(f"FertType nicht vorhanden für {fert_name=}")
-
-    def get_remains_type(remains: str) -> RemainsType:
-        try:
-            return RemainsType(remains)
-        except ValueError:
-            return None
 
     def get_soil_type(soil: str) -> SoilType:
         try:
@@ -221,7 +230,7 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                     crop_class=CropClass(cult.class_),
                     crop_yield=cult.yield_,
                     remains=get_remains_type(cult.remains),
-                    legume_rate=cult.legume if cult.legume else None,
+                    legume_rate=get_legume_type(cult.legume),
                 )
                 cultivation.field = field
                 cultivation.crop = crop

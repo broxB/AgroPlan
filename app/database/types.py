@@ -7,6 +7,7 @@ __all__ = [
     "CropType",
     "CropClass",
     "RemainsType",
+    "LegumeType",
     "FertClass",
     "FertType",
     "MeasureType",
@@ -75,12 +76,33 @@ class CropClass(enum.Enum):
 
 class RemainsType(enum.Enum):
     # Hauptfrüchte
-    remains = "verbleibt"
-    no_remains = "abgefahren"
+    stayed = "verbleibt"
+    removed = "abgefahren"
+    no_remains = None
     # Zwischenfrüchte
     frozen = "abgefroren"
     not_frozen_fall = "nicht abgf., eing. Herbst"
     not_frozen_spring = "nicht abgf., eing. Frühjahr"
+
+
+class LegumeType(enum.Enum):
+    # Grünland
+    grass_less_5 = "< 5%"
+    grass_less_10 = r"5% bis 10%"
+    grass_less_20 = r"> 10% bis 20%"
+    grass_greater_20 = r"> 20%"
+    # Ackerland
+    crop_10 = r"< 10%"
+    crop_20 = r"> 10% bis 20%"
+    crop_30 = r"> 20% bis 30%"
+    crop_40 = r"> 30% bis 40%"
+    crop_50 = r"> 40% bis 50%"
+    crop_60 = r"> 50% bis 60%"
+    crop_70 = r"> 60% bis 70%"
+    crop_80 = r"> 70% bis 80%"
+    crop_90 = r"> 80% bis 90%"
+    crop_100 = r"> 90% bis 100%"
+    no_legume = None
 
 
 class FertClass(enum.Enum):

@@ -1,4 +1,15 @@
-from database.types import *
+from database.types import (
+    CropClass,
+    CropType,
+    FertClass,
+    FertType,
+    FieldType,
+    HumusType,
+    LegumeType,
+    MeasureType,
+    RemainsType,
+    SoilType,
+)
 from sqlalchemy import (
     Boolean,
     Column,
@@ -99,7 +110,7 @@ class Cultivation(Base):
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
     crop_yield = Column("yield", Float(asdecimal=True))
     remains = Column("remains", Enum(RemainsType))
-    legume_rate = Column("legume_rate", String)
+    legume_rate = Column("legume_rate", Enum(LegumeType))
     field = relationship("Field", back_populates="cultivations")
     crop = relationship("Crop", backref=backref("cultivation"))
 
