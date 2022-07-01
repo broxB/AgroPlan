@@ -48,7 +48,6 @@ class Ui_Dialog(object):
         self.verticalLayout_2.addLayout(self.verticalLayout)
 
         self.retranslateUi(Dialog)
-        self.pushButton.clicked.connect(self.textEdit.clear)  # type: ignore
         self.pushButton_2.clicked.connect(Dialog.reject)  # type: ignore
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
@@ -56,5 +55,5 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.pushButton.setText(_translate("Dialog", "Clear"))
-        self.pushButton_3.setText(_translate("Dialog", "checkable"))
+        self.pushButton_3.setText(_translate("Dialog", "check"))
         self.pushButton_2.setText(_translate("Dialog", "Close"))
