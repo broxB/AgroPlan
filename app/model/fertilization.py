@@ -1,40 +1,49 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from database.types import CropClass, FertClass, FertType, FieldType, MeasureType
+import database.model as db
+from database.types import CropClass, FieldType, MeasureType
 from model.crop import Crop
 from model.fertilizer import Fertilizer
-from model.field import Field
-from utils import load_json
 
 
 @dataclass
 class Fertilization:
-    measure: MeasureType  # Herbst
-    amount: Decimal
-    field: Field
+    fertilization: db.Fertilization
     fertilizer: Fertilizer
-    crop: Crop
 
-    # def __post_init__(self):
-    # self.factors = load_json("data/Richtwerte/wirkungsfaktoren.json")
+    def __post_init__(self):
+        self.amount = self.fertilization.amount
+        self.measure = self.fertilization.measure
+        self.crop: Crop = Crop(
+            self.fertilization.cultivation.crop, self.fertilization.cultivation.crop_class
+        )
 
-    def nges(self, *, measure: MeasureType, crop_class: CropClass, netto: bool = False) -> Decimal:
+    def n_ges(self, measure: MeasureType, crop_class: CropClass, netto: bool) -> Decimal:
+        if self.fertilizer.is_organic:
+            if self._is_measure(measure) and self.crop.is_class(crop_class):
+                return self.amount * self.fertilizer.n_ges(netto)
+        return Decimal()
 
-        sum_nges = Decimal()
-        if (
-            self.fertilizer.fert_class == FertClass.organic
-            and self.measure == measure
-            and self.crop.crop_class == crop_class
-        ):
-            sum_nges += Decimal(self.amount) * self.fertilizer.nges(netto)
-        return sum_nges
+    def nutrients(self, field_type, fert_class) -> list[Decimal]:
+        if self.fertilizer.is_class(fert_class):
+            return [
+                self.amount * self._n_verf(field_type),
+                self.amount * self.fertilizer.p2o5,
+                self.amount * self.fertilizer.k2o,
+                self.amount * self.fertilizer.mgo,
+                self.amount * self.fertilizer.s,
+                self.amount * self.fertilizer.cao,
+            ]
+        return [Decimal() for _ in range(6)]
 
-    def sum_organic(self):
-        pass
+    def _n_verf(self, field_type: FieldType) -> Decimal:
+        if self.crop.class_ == CropClass.catch_crop and self.fertilizer.is_organic:
+            return self.fertilizer.n * Decimal("0.1")
+        if self.crop.feedable:
+            return self.fertilizer.n_verf(FieldType.grassland)
+        return self.fertilizer.n_verf(field_type)
 
-    def sum_mineral(self):
-        pass
-
-    def sum_lime(self):
-        pass
+    def _is_measure(self, measure) -> bool:
+        match = self.measure == measure if measure else True
+        return match
