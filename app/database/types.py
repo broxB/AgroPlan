@@ -11,6 +11,8 @@ __all__ = [
     "FertClass",
     "FertType",
     "MeasureType",
+    "UnitType",
+    "DemandType",
 ]
 
 
@@ -147,3 +149,14 @@ class MeasureType(enum.Enum):
     fourth_base_fert = "4. Grundd."
     lime_fert = "Kalkung"
     misc_fert = "Sonstige"
+
+
+class UnitType(enum.Enum):
+    dt = "dt"
+    to = "to"
+    cbm = "m³"
+
+
+class DemandType(enum.Enum):
+    removal = "Abfuhr"
+    demand = "Bedarf"

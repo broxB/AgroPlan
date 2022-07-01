@@ -9,6 +9,7 @@ from database.types import (
     MeasureType,
     RemainsType,
     SoilType,
+    UnitType,
 )
 from sqlalchemy import (
     Boolean,
@@ -86,7 +87,7 @@ class Field(Base):
     fertilizations = relationship(
         "Fertilization",
         secondary=field_fertilization,
-        back_populates="fields",
+        back_populates="field",
     )
     soil_samples = relationship("SoilSample", secondary=field_soil_sample, back_populates="fields")
 
@@ -96,7 +97,7 @@ class Field(Base):
             f"year='{self.year}', ha='{self.area:.2f}', type='{self.type.value}', "
             f"soil_samples='{[f'{sample.year}: {sample.soil_type}' for sample in self.soil_samples]}', "
             f"cultivations={[f'{cult.crop_class.value}: {cult.crop.name}' for cult in self.cultivations]}, "
-            f"fertilizations={[f'{fert.measure.value} -> {fert.cultivation.crop.name}: {fert.fertilizer.name}' for fert in self.fertilizations]})"
+            f"fertilizations={[f'{fert.cultivation.crop.name}: {fert.measure.value} -> {fert.fertilizer.name}' for fert in self.fertilizations]})"
         )
 
 
@@ -112,7 +113,7 @@ class Cultivation(Base):
     remains = Column("remains", Enum(RemainsType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
     field = relationship("Field", back_populates="cultivations")
-    crop = relationship("Crop", backref=backref("cultivation"))
+    crop = relationship("Crop", back_populates="cultivations")
 
     def __repr__(self):
         return (
@@ -125,7 +126,27 @@ class Crop(Base):
     __tablename__ = "crop"
     id = Column("crop_id", Integer, primary_key=True)
     name = Column("name", String, unique=True)
+    group = Column("group", String)
     crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
+    feedable = Column("feedable", Boolean, nullable=False)
+    remains = Column("remains", Enum(RemainsType), nullable=False)
+    nmin_depth = Column("nmin_depth", Integer, nullable=False)
+    target_demand = Column("target_demand", Float(asdecimal=True), nullable=False)
+    target_yield = Column("target_yield", Float(asdecimal=True), nullable=False)
+    var_yield = Column("var_yield", Float(asdecimal=True), nullable=False)
+    target_protein = Column("target_protein", Float(asdecimal=True), nullable=False)
+    var_protein = Column("var_protein", Float(asdecimal=True), nullable=False)
+    n = Column("n", Float(asdecimal=True), nullable=False)
+    p2o5 = Column("p2o5", Float(asdecimal=True), nullable=False)
+    k2o = Column("k2o", Float(asdecimal=True), nullable=False)
+    mgo = Column("mgo", Float(asdecimal=True), nullable=False)
+    byproduct = Column("byproduct", String)
+    byp_ratio = Column("byp_ratio", Float(asdecimal=True), nullable=False)
+    byp_n = Column("byp_n", Float(asdecimal=True), nullable=False)
+    byp_p2o5 = Column("byp_p2o5", Float(asdecimal=True), nullable=False)
+    byp_k2o = Column("byp_k2o", Float(asdecimal=True), nullable=False)
+    byp_mgo = Column("byp_mgo", Float(asdecimal=True), nullable=False)
+    cultivations = relationship("Cultivation", back_populates="crop")
 
     def __repr__(self):
         return f"Crop(id='{self.id}', name='{self.name}', type='{self.crop_type}')"
@@ -140,7 +161,7 @@ class Fertilization(Base):
     amount = Column("amount", Float(asdecimal=True))
     measure = Column("measure", Enum(MeasureType))
     month = Column("month", Integer)
-    fields = relationship(
+    field = relationship(
         "Field",
         secondary=field_fertilization,
         back_populates="fertilizations",
@@ -151,7 +172,8 @@ class Fertilization(Base):
     def __repr__(self):
         return (
             f"Fertilization(id='{self.id}', name='{self.fertilizer.name}', amount='{self.amount:.2f}', "
-            f"measure='{self.measure.name}', month='{self.month}', crop='{self.cultivation.crop.name}')"
+            f"measure='{self.measure.value}', month='{self.month}', crop='{self.cultivation.crop.name}', "
+            f"field='{self.fields[0].base_field.name}')"
         )
 
 
@@ -160,11 +182,19 @@ class Fertilizer(Base):
     __table_args__ = (UniqueConstraint("name", "year", name="unique_fertilizers"),)
 
     id = Column("fertilizer_id", Integer, primary_key=True)
-    name = Column("name", String)
+    name = Column("name", String, nullable=False)
     year = Column("year", Integer)
-    fert_class = Column("class", Enum(FertClass))
-    fert_type = Column("type", Enum(FertType))
+    fert_class = Column("class", Enum(FertClass), nullable=False)
+    fert_type = Column("type", Enum(FertType), nullable=False)
     active = Column("active", Boolean, nullable=True)
+    unit = Column("unit", Enum(UnitType), nullable=False)
+    n = Column("n", Float(asdecimal=True), nullable=False)
+    p2o5 = Column("p2o5", Float(asdecimal=True), nullable=False)
+    k2o = Column("k2o", Float(asdecimal=True), nullable=False)
+    mgo = Column("mgo", Float(asdecimal=True), nullable=False)
+    s = Column("s", Float(asdecimal=True), nullable=False)
+    cao = Column("cao", Float(asdecimal=True), nullable=False)
+    nh4 = Column("nh4", Float(asdecimal=True), nullable=False)
     usage = relationship("FertilizerUsage", backref="fertilizer")
 
     def __repr__(self):
