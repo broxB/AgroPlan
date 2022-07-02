@@ -25,17 +25,15 @@ class Fertilization:
                 return self.amount * self.fertilizer.n_ges(netto)
         return Decimal()
 
-    def nutrients(self, field_type, fert_class) -> list[Decimal]:
-        if self.fertilizer.is_class(fert_class):
-            return [
-                self.amount * self._n_verf(field_type),
-                self.amount * self.fertilizer.p2o5,
-                self.amount * self.fertilizer.k2o,
-                self.amount * self.fertilizer.mgo,
-                self.amount * self.fertilizer.s,
-                self.amount * self.fertilizer.cao,
-            ]
-        return [Decimal() for _ in range(6)]
+    def nutrients(self, field_type) -> list[Decimal]:
+        return [
+            self.amount * self._n_verf(field_type),
+            self.amount * self.fertilizer.p2o5,
+            self.amount * self.fertilizer.k2o,
+            self.amount * self.fertilizer.mgo,
+            self.amount * self.fertilizer.s,
+            self.amount * self.fertilizer.cao,
+        ]
 
     def _n_verf(self, field_type: FieldType) -> Decimal:
         if self.crop.class_ == CropClass.catch_crop and self.fertilizer.is_organic:

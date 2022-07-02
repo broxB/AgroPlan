@@ -4,7 +4,9 @@ from decimal import Decimal
 
 import database.model as db
 from database.types import CropClass, FertClass, MeasureType
-from model import Crop, Fertilization, Field
+from model.crop import Crop
+from model.fertilization import Fertilization
+from model.field import Field
 
 
 @dataclass
@@ -26,7 +28,8 @@ class Cultivation:
     def sum_fertilizations(self, fert_class: FertClass = None):
         nutrients = []
         for fertilization in self.fertilizations:
-            nutrients.append(fertilization.nutrients(self.field.type_, fert_class))
+            if fertilization.fertilizer.is_class(fert_class):
+                nutrients.append(fertilization.nutrients(self.field.type_))
         return [sum(nutrient) for nutrient in zip(*nutrients)]
 
     # summe bedarf
