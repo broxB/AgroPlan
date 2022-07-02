@@ -16,6 +16,7 @@ from database.model import (
 from database.types import (
     CropClass,
     CropType,
+    DemandType,
     FertClass,
     FertType,
     FieldType,
@@ -24,6 +25,7 @@ from database.types import (
     MeasureType,
     RemainsType,
     SoilType,
+    UnitType,
 )
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -57,7 +59,7 @@ def _connection(db_path: Path):
     return engine
 
 
-def _seed_database(db_path: str, data_dict: dict) -> None:
+def _seed_database(db_path: str, data: list[dict]) -> None:
     Session = sessionmaker()
     Session.configure(bind=_connection(db_path))
     session = Session()  # type: Session
@@ -79,6 +81,12 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             case _:
                 raise ValueError(f"FieldType nicht vorhanden für {short_name=}")
 
+    def get_demand_type(demand_type: str) -> DemandType:
+        try:
+            return DemandType(demand_type)
+        except ValueError:
+            return None
+
     def get_crop_type(crop_name: str) -> CropType:
         match crop_name:
             case "Silomais 32%":
@@ -87,7 +95,7 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                 return CropType.grain
             case ("Ackergras 3 Schnitte" | "Ackergras 1 Schnitt" | "Grassamen"):
                 return CropType.field_grass
-            case "Kleegras (30:70)":
+            case "Kleegras 1 Schnitt":
                 return CropType.clover_grass
             case ("Wiese 3 Schnitte" | "Weide int. (4-5 Nutz.)" | "Mähweide intensiv 20%"):
                 return CropType.permanent_grassland
@@ -99,6 +107,12 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                 return CropType.rotating_fallow
             case _:
                 raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
+
+    def get_crop_class(class_: str) -> CropClass:
+        try:
+            return CropClass(class_)
+        except ValueError:
+            return None
 
     def get_remains_type(remains: str) -> RemainsType:
         try:
@@ -140,6 +154,12 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             return FertType.misc
         else:
             raise ValueError(f"FertType nicht vorhanden für {fert_name=}")
+
+    def get_fert_unit(fert_unit: str) -> UnitType:
+        try:
+            return UnitType(fert_unit)
+        except ValueError:
+            return None
 
     def get_soil_type(soil: str) -> SoilType:
         try:
@@ -191,8 +211,10 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                 fertilizations.append(fert)
         return fertilizations
 
-    for year in data_dict:
-        for field_dict in data_dict[year]:
+    fields_dict, ferts_dict, crops_dict = data
+
+    for year in fields_dict:
+        for field_dict in fields_dict[year]:
             cult_data = field_cultivation(field_dict)
             fert_data = field_fertilization(field_dict)
 
@@ -215,7 +237,9 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             field = Field(
                 area=field_dict["Ha"],
                 year=year,
-                type=get_field_type(field_dict["Nutzungsart"]),
+                red_region=False,
+                field_type=get_field_type(field_dict["Nutzungsart"]),
+                demand_type=get_demand_type(field_dict["Düngung_Nach"]),
             )
             field.base_field = base_field
             update_session(session, field)
@@ -223,7 +247,35 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
             for cult in cult_data:
                 crop = session.query(Crop).filter(Crop.name == cult.name).one_or_none()
                 if crop is None:
-                    crop = Crop(name=cult.name, crop_type=get_crop_type(cult.name))
+                    try:
+                        crop_dict = crops_dict[cult.name]
+                    except:
+                        crop_dict = {}
+                    crop = Crop(
+                        name=cult.name,
+                        crop_class=get_crop_class(crop_dict.get("Klasse", None)),
+                        crop_type=get_crop_type(cult.name),
+                        kind=crop_dict.get("Art", None),
+                        feedable=crop_dict.get("Feldfutter", None),
+                        remains=crop_dict.get("Erntereste", None),
+                        legume_rate=get_legume_type(crop_dict.get("Leguminosenanteil", None)),
+                        nmin_depth=crop_dict.get("Nmin_Tiefe", 0),
+                        target_demand=crop_dict.get("Richtbedarf", None),
+                        target_yield=crop_dict.get("Richtertrag", None),
+                        var_yield=crop_dict.get("Differenz_Ertrag", None),
+                        target_protein=crop_dict.get("Richt_RP", None),
+                        var_protein=crop_dict.get("Differenz_RP", None),
+                        n=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[0],
+                        p2o5=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[1],
+                        k2o=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[2],
+                        mgo=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[3],
+                        byproduct=crop_dict.get("Nebenprodukt", None),
+                        byp_ratio=crop_dict.get("HNV", 0),
+                        byp_n=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[0],
+                        byp_p2o5=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[1],
+                        byp_k2o=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[2],
+                        byp_mgo=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[3],
+                    )
                     update_session(session, crop)
                 cultivation = Cultivation(
                     field_id=field,
@@ -247,12 +299,22 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                         .one_or_none()
                     )
                     if fertilizer is None:
+                        fert_dict = ferts_dict[fert.name]
                         fertilizer = Fertilizer(
                             name=fert.name,
                             year=fert_year,
                             fert_class=fert.class_,
                             fert_type=get_fert_type(fert.name),
                             active=True,
+                            unit=get_fert_unit(fert_dict["Einheit"]),
+                            price=fert_dict["Preis"],
+                            n=fert_dict["N"],
+                            p2o5=fert_dict["P2O5"],
+                            k2o=fert_dict["K2O"],
+                            mgo=fert_dict["MgO"],
+                            s=fert_dict["Schwefel"],
+                            cao=fert_dict["CaO"],
+                            nh4=fert_dict["NH4"],
                         )
                     update_session(session, fertilizer)
 
@@ -280,7 +342,7 @@ def _seed_database(db_path: str, data_dict: dict) -> None:
                     )
                     fertilization.cultivation = cultivation
                     fertilization.fertilizer = fertilizer
-                    fertilization.fields.append(field)
+                    fertilization.field.append(field)
                     update_session(session, fertilization)
 
             soil_sample = (

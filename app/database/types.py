@@ -104,7 +104,11 @@ class LegumeType(enum.Enum):
     crop_80 = r"> 70% bis 80%"
     crop_90 = r"> 80% bis 90%"
     crop_100 = r"> 90% bis 100%"
-    no_legume = None
+    # Zwischenfrucht
+    catch_25 = r"< 25%"
+    catch_50 = r"25% bis 75%"
+    catch_75 = r"> 75%"
+    none = None
 
 
 class FertClass(enum.Enum):

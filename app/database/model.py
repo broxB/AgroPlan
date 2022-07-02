@@ -1,6 +1,7 @@
 from database.types import (
     CropClass,
     CropType,
+    DemandType,
     FertClass,
     FertType,
     FieldType,
@@ -18,11 +19,13 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    PickleType,
     String,
     Table,
     UniqueConstraint,
 )
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import backref, relationship
 
 __all__ = [
@@ -81,7 +84,9 @@ class Field(Base):
     sub_suffix = Column("sub_suffix", Integer, default=0)
     area = Column("area", Float(asdecimal=True))
     year = Column("year", Integer)
-    type = Column("type", Enum(FieldType))
+    red_region = Column("red_region", Boolean)
+    field_type = Column("field_type", Enum(FieldType))
+    demand_type = Column("demand_type", Enum(DemandType))
     base_field = relationship("BaseField", back_populates="fields")
     cultivations = relationship("Cultivation", back_populates="field")
     fertilizations = relationship(
@@ -94,7 +99,7 @@ class Field(Base):
     def __repr__(self):
         return (
             f"Field(id='{self.id}', name='{self.base_field.prefix:02d}-{self.base_field.suffix} {self.base_field.name}', "
-            f"year='{self.year}', ha='{self.area:.2f}', type='{self.type.value}', "
+            f"year='{self.year}', ha='{self.area:.2f}', type='{self.field_type.value}', "
             f"soil_samples='{[f'{sample.year}: {sample.soil_type}' for sample in self.soil_samples]}', "
             f"cultivations={[f'{cult.crop_class.value}: {cult.crop.name}' for cult in self.cultivations]}, "
             f"fertilizations={[f'{fert.cultivation.crop.name}: {fert.measure.value} -> {fert.fertilizer.name}' for fert in self.fertilizations]})"
@@ -126,30 +131,35 @@ class Crop(Base):
     __tablename__ = "crop"
     id = Column("crop_id", Integer, primary_key=True)
     name = Column("name", String, unique=True)
-    group = Column("group", String)
+    crop_class = Column("class", Enum(CropClass))
     crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
-    feedable = Column("feedable", Boolean, nullable=False)
-    remains = Column("remains", Enum(RemainsType), nullable=False)
-    nmin_depth = Column("nmin_depth", Integer, nullable=False)
-    target_demand = Column("target_demand", Float(asdecimal=True), nullable=False)
-    target_yield = Column("target_yield", Float(asdecimal=True), nullable=False)
-    var_yield = Column("var_yield", Float(asdecimal=True), nullable=False)
-    target_protein = Column("target_protein", Float(asdecimal=True), nullable=False)
-    var_protein = Column("var_protein", Float(asdecimal=True), nullable=False)
-    n = Column("n", Float(asdecimal=True), nullable=False)
-    p2o5 = Column("p2o5", Float(asdecimal=True), nullable=False)
-    k2o = Column("k2o", Float(asdecimal=True), nullable=False)
-    mgo = Column("mgo", Float(asdecimal=True), nullable=False)
+    kind = Column("kind", String)
+    feedable = Column("feedable", Boolean)
+    remains = Column("remains", Boolean)
+    legume_rate = Column("legume_rate", Enum(LegumeType))
+    nmin_depth = Column("nmin_depth", Integer)
+    target_demand = Column("target_demand", Float(asdecimal=True))
+    target_yield = Column("target_yield", Float(asdecimal=True))
+    var_yield = Column("var_yield", MutableList.as_mutable(PickleType), default=[])
+    target_protein = Column("target_protein", Float(asdecimal=True))
+    var_protein = Column("var_protein", Float(asdecimal=True))
+    n = Column("n", Float(asdecimal=True))
+    p2o5 = Column("p2o5", Float(asdecimal=True))
+    k2o = Column("k2o", Float(asdecimal=True))
+    mgo = Column("mgo", Float(asdecimal=True))
     byproduct = Column("byproduct", String)
-    byp_ratio = Column("byp_ratio", Float(asdecimal=True), nullable=False)
-    byp_n = Column("byp_n", Float(asdecimal=True), nullable=False)
-    byp_p2o5 = Column("byp_p2o5", Float(asdecimal=True), nullable=False)
-    byp_k2o = Column("byp_k2o", Float(asdecimal=True), nullable=False)
-    byp_mgo = Column("byp_mgo", Float(asdecimal=True), nullable=False)
+    byp_ratio = Column("byp_ratio", Float(asdecimal=True))
+    byp_n = Column("byp_n", Float(asdecimal=True))
+    byp_p2o5 = Column("byp_p2o5", Float(asdecimal=True))
+    byp_k2o = Column("byp_k2o", Float(asdecimal=True))
+    byp_mgo = Column("byp_mgo", Float(asdecimal=True))
     cultivations = relationship("Cultivation", back_populates="crop")
 
     def __repr__(self):
-        return f"Crop(id='{self.id}', name='{self.name}', type='{self.crop_type}')"
+        return (
+            f"Crop(id='{self.id}', name='{self.name}', type='{self.crop_type}', "
+            f"var_yield='{self.var_yield}')"
+        )
 
 
 class Fertilization(Base):
@@ -182,19 +192,20 @@ class Fertilizer(Base):
     __table_args__ = (UniqueConstraint("name", "year", name="unique_fertilizers"),)
 
     id = Column("fertilizer_id", Integer, primary_key=True)
-    name = Column("name", String, nullable=False)
+    name = Column("name", String)
     year = Column("year", Integer)
-    fert_class = Column("class", Enum(FertClass), nullable=False)
-    fert_type = Column("type", Enum(FertType), nullable=False)
-    active = Column("active", Boolean, nullable=True)
-    unit = Column("unit", Enum(UnitType), nullable=False)
-    n = Column("n", Float(asdecimal=True), nullable=False)
-    p2o5 = Column("p2o5", Float(asdecimal=True), nullable=False)
-    k2o = Column("k2o", Float(asdecimal=True), nullable=False)
-    mgo = Column("mgo", Float(asdecimal=True), nullable=False)
-    s = Column("s", Float(asdecimal=True), nullable=False)
-    cao = Column("cao", Float(asdecimal=True), nullable=False)
-    nh4 = Column("nh4", Float(asdecimal=True), nullable=False)
+    fert_class = Column("class", Enum(FertClass))
+    fert_type = Column("type", Enum(FertType))
+    active = Column("active", Boolean)
+    unit = Column("unit", Enum(UnitType))
+    price = Column("price", Float(asdecimal=True))
+    n = Column("n", Float(asdecimal=True))
+    p2o5 = Column("p2o5", Float(asdecimal=True))
+    k2o = Column("k2o", Float(asdecimal=True))
+    mgo = Column("mgo", Float(asdecimal=True))
+    s = Column("s", Float(asdecimal=True))
+    cao = Column("cao", Float(asdecimal=True))
+    nh4 = Column("nh4", Float(asdecimal=True))
     usage = relationship("FertilizerUsage", backref="fertilizer")
 
     def __repr__(self):
