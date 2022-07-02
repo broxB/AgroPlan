@@ -13,7 +13,7 @@ class Crop:
 
     def __post_init__(self):
         self.name: str = self.crop.name  # W.-Gerste
-        self.group: str = self.crop.group  # Wintergerste
+        self.kind: str = self.crop.kind  # Wintergerste
         self.class_: CropClass = self.crop_class  # Hauptfrucht
         self.type_: CropType = self.crop.crop_type  # Getreide
         self.feedable: bool = self.crop.feedable  # Feldfutter
@@ -28,7 +28,8 @@ class Crop:
         self.p2o5: Decimal = self.crop.p2o5
         self.k2o: Decimal = self.crop.k2o
         self.mgo: Decimal = self.crop.mgo
-        self.byproduct: Decimal = self.crop.hnv  # byproduct -> Nebenprodukt
+        self.byproduct: Decimal = self.crop.byproduct
+        self.byp_ratio: Decimal = self.crop.byp_ratio
         self.byp_n: Decimal = self.crop.byp_n
         self.byp_p2o5: Decimal = self.crop.byp_p2o5
         self.byp_k2o: Decimal = self.crop.byp_k2o
@@ -76,19 +77,19 @@ class Crop:
         return self.p2o5 * crop_yield
 
     def _bypoduct_p2o5(self, crop_yield: Decimal) -> Decimal:
-        return self._use_byproduct * self.byproduct * self.byp_p2o5 * crop_yield
+        return self._use_byproduct * self.byp_ratio * self.byp_p2o5 * crop_yield
 
     def _k2o(self, crop_yield: Decimal) -> Decimal:
         return self.k2o * crop_yield
 
     def _byproduct_k2o(self, crop_yield: Decimal) -> Decimal:
-        return self._use_byproduct * self.byproduct * self.byp_k2o * crop_yield
+        return self._use_byproduct * self.byp_ratio * self.byp_k2o * crop_yield
 
     def _mgo(self, crop_yield: Decimal) -> Decimal:
         return self.mgo * crop_yield
 
     def _byproduct_mgo(self, crop_yield: Decimal) -> Decimal:
-        return self._use_byproduct * self.byproduct * self.byp_mgo * crop_yield
+        return self._use_byproduct * self.byp_ratio * self.byp_mgo * crop_yield
 
     def _s(self) -> Decimal:
         return Decimal()

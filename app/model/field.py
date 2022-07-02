@@ -12,4 +12,5 @@ class Field:
     def __post_init__(self):
         self.area = self.field.area
         self.year = self.field.year
-        self.type_: FieldType = self.field.type
+        self.type_: FieldType = self.field.field_type
+        self.red_region = self.field.red_region
