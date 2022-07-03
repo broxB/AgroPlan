@@ -85,6 +85,7 @@ class RemainsType(enum.Enum):
     frozen = "abgefroren"
     not_frozen_fall = "nicht abgf., eing. Herbst"
     not_frozen_spring = "nicht abgf., eing. Frühjahr"
+    catch_crop_used = "mit Nutzung"
 
 
 class LegumeType(enum.Enum):
@@ -94,16 +95,17 @@ class LegumeType(enum.Enum):
     grass_less_20 = r"> 10% bis 20%"
     grass_greater_20 = r"> 20%"
     # Ackerland
-    crop_10 = r"< 10%"
-    crop_20 = r"> 10% bis 20%"
-    crop_30 = r"> 20% bis 30%"
-    crop_40 = r"> 30% bis 40%"
-    crop_50 = r"> 40% bis 50%"
-    crop_60 = r"> 50% bis 60%"
-    crop_70 = r"> 60% bis 70%"
-    crop_80 = r"> 70% bis 80%"
-    crop_90 = r"> 80% bis 90%"
-    crop_100 = r"> 90% bis 100%"
+    crop_0 = r"< 10%"
+    crop_10 = r"10% - 19%"
+    crop_20 = r"20% - 29%"
+    crop_30 = r"30% - 39%"
+    crop_40 = r"40% - 49%"
+    crop_50 = r"50% - 59%"
+    crop_60 = r"60% - 69%"
+    crop_70 = r"70% - 79%"
+    crop_80 = r"80% - 89%"
+    crop_90 = r"90% - 99%"
+    crop_100 = r"100%"
     # Zwischenfrucht
     catch_25 = r"< 25%"
     catch_50 = r"25% bis 75%"

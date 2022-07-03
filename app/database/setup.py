@@ -82,10 +82,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                 raise ValueError(f"FieldType nicht vorhanden für {short_name=}")
 
     def get_demand_type(demand_type: str) -> DemandType:
-        try:
-            return DemandType(demand_type)
-        except ValueError:
-            return None
+        return DemandType(demand_type)
 
     def get_crop_type(crop_name: str) -> CropType:
         match crop_name:
@@ -109,10 +106,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                 raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
     def get_crop_class(class_: str) -> CropClass:
-        try:
-            return CropClass(class_)
-        except ValueError:
-            return None
+        return CropClass(class_)
 
     def get_remains_type(remains: str) -> RemainsType:
         try:
@@ -156,22 +150,26 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
             raise ValueError(f"FertType nicht vorhanden für {fert_name=}")
 
     def get_fert_unit(fert_unit: str) -> UnitType:
-        try:
-            return UnitType(fert_unit)
-        except ValueError:
-            return None
+        return UnitType(fert_unit)
 
     def get_soil_type(soil: str) -> SoilType:
-        try:
-            return SoilType(soil)
-        except ValueError:
-            return None
+        return SoilType(soil)
 
     def get_humus_type(humus: str) -> HumusType:
-        try:
-            return HumusType(humus)
-        except ValueError:
-            return None
+        return HumusType(humus)
+
+    def get_nmin(field_dict: dict, crop_class: CropClass) -> list[int]:
+        nmin = []
+        if crop_class == CropClass.main_crop:
+            nmin_30 = field_dict.get("Nmin30", 0)
+            nmin.append(nmin_30 if nmin_30 else 0)
+            nmin_60 = field_dict.get("Nmin60", 0)
+            nmin.append(nmin_60 if nmin_30 else 0)
+            nmin_90 = field_dict.get("Nmin90", 0)
+            nmin.append(nmin_90 if nmin_30 else 0)
+        else:
+            nmin = [0, 0, 0]
+        return nmin
 
     def field_cultivation(field_data: dict) -> list:
         cult_data = [v for k, v in field_data.items() if k.startswith("Frucht_")]
@@ -283,6 +281,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     crop_yield=cult.yield_,
                     remains=get_remains_type(cult.remains),
                     legume_rate=get_legume_type(cult.legume),
+                    nmin=get_nmin(field_dict, cult.class_),
                 )
                 cultivation.field = field
                 cultivation.crop = crop
@@ -345,6 +344,8 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     fertilization.field.append(field)
                     update_session(session, fertilization)
 
+            if field_dict["Probedatum"] is None:
+                continue
             soil_sample = (
                 session.query(SoilSample)
                 .filter(

@@ -71,7 +71,7 @@ class BaseField(Base):
     def __repr__(self):
         return (
             f"BaseField(id='{self.id}', name='{self.prefix:02d}-{self.suffix} {self.name}', "
-            f"fields='{[f'{field.year}: {field.type.value}, {field.area:.2f}ha' for field in self.fields]}'"
+            f"fields='{[f'{field.year}: {field.field_type.value}, {field.area:.2f}ha' for field in self.fields]}'"
         )
 
 
@@ -100,7 +100,7 @@ class Field(Base):
         return (
             f"Field(id='{self.id}', name='{self.base_field.prefix:02d}-{self.base_field.suffix} {self.base_field.name}', "
             f"year='{self.year}', ha='{self.area:.2f}', type='{self.field_type.value}', "
-            f"soil_samples='{[f'{sample.year}: {sample.soil_type}' for sample in self.soil_samples]}', "
+            f"soil_samples='{[sample.year for sample in self.soil_samples]}', "
             f"cultivations={[f'{cult.crop_class.value}: {cult.crop.name}' for cult in self.cultivations]}, "
             f"fertilizations={[f'{fert.cultivation.crop.name}: {fert.measure.value} -> {fert.fertilizer.name}' for fert in self.fertilizations]})"
         )
@@ -117,13 +117,15 @@ class Cultivation(Base):
     crop_yield = Column("yield", Float(asdecimal=True))
     remains = Column("remains", Enum(RemainsType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
+    nmin = Column("nmin", MutableList.as_mutable(PickleType), default=[])
     field = relationship("Field", back_populates="cultivations")
     crop = relationship("Crop", back_populates="cultivations")
 
     def __repr__(self):
         return (
-            f"Cultivation(id='{self.id}', field='{self.field.name}', year='{self.year}', type='{self.crop_type.name}', "
-            f"name='{self.crop.name}', yield='{self.crop_yield:.2f}', field='{self.fields[0].name}')"
+            f"Cultivation(id='{self.id}', field='{self.field.base_field.name}', year='{self.field.year}', "
+            f"type='{self.crop_class.value}', name='{self.crop.name}', yield='{self.crop_yield:.2f}', "
+            f"remains='{self.remains.value}', legume='{self.legume_rate.value}', nmin='{self.nmin}')"
         )
 
 
@@ -183,7 +185,7 @@ class Fertilization(Base):
         return (
             f"Fertilization(id='{self.id}', name='{self.fertilizer.name}', amount='{self.amount:.2f}', "
             f"measure='{self.measure.value}', month='{self.month}', crop='{self.cultivation.crop.name}', "
-            f"field='{self.fields[0].base_field.name}')"
+            f"field='{[field.base_field.name for field in self.field][0]}')"
         )
 
 
@@ -249,6 +251,6 @@ class SoilSample(Base):
     def __repr__(self):
         return (
             f"SoilSample(id='{self.id}', year='{self.year}', "
-            f"soil_type='{self.soil_type.name}', humus='{self.humus.name}', "
-            f"fields={f'{self.fields[0].base_field.name}', [f'{field.year}' for field in self.fields]})"
+            f"soil_type='{self.soil_type.value}', humus='{self.humus.value}', "
+            f"fields={f'{[field.base_field.name for field in self.fields][0]}', [f'{field.year}' for field in self.fields]})"
         )
