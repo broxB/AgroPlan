@@ -23,7 +23,7 @@ from database.model import (
     field_soil_sample,
 )
 from database.utils import create_session
-from sqlalchemy import asc, create_engine, desc, func, or_
+from sqlalchemy import asc, create_engine, desc, func, or_, not_
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -32,11 +32,15 @@ def main():
 
     # pprint(session.query(BaseField).all())
     # pprint(session.query(Field).all())
-    # print(session.query(Cultivation).all())
-    # print(session.query(Fertilization).all())
-    # print(session.query(Crop).all())
-    # print(session.query(Fertilizer).all())
-    # print(session.query(SoilSample).all())
+    # pprint(session.query(Cultivation).all())
+    # pprint(session.query(Fertilization).all())
+    # pprint(session.query(Crop).all())
+    # pprint(session.query(Fertilizer).all())
+    # pprint(session.query(SoilSample).all())
+
+    # Query fields without a soil sample
+    # pprint(session.query(Field).filter(not_(Field.soil_samples.any())).all())
+
 
     def inner_join():
         fields = (
@@ -88,9 +92,9 @@ def main():
             for db_fertilization in db_fertilizations:
                 pprint(db_fertilization)
 
-    inner_join()
-    simple_query()
-    complex_query()
+    # inner_join()
+    # simple_query()
+    # complex_query()
     # relationship_query()
 
 
