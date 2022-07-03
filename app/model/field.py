@@ -14,3 +14,4 @@ class Field:
         self.year = self.field.year
         self.type_: FieldType = self.field.field_type
         self.red_region = self.field.red_region
+        self.soil_sample = max(self.field.soil_samples, key=lambda x: x.year)
