@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import database.model as db
-from database.types import CropClass, CropType, LegumeType, RemainsType
+from database.types import CropClass, CropType, DemandType, LegumeType, RemainsType
 from model.crop import Crop
 from utils import load_json
 
@@ -28,13 +28,20 @@ class Cultivation:
         self._pre_crop_dict = load_json("data/Richtwerte/Abschläge/vorfrucht.json")
         self._legume_dict = load_json("data/Richtwerte/Abschläge/leguminosen.json")
 
-    def demand(self, demand_option, negative_output: bool = False):
-        return self.crop.demand(
-            crop_yield=self.crop_yield,
-            crop_protein=self.crop_protein,
-            demand_option=demand_option,
-            negative_output=negative_output,
+    def demand(self, demand_option, negative_output: bool = True):
+        demands = []
+        demands.append(
+            self.crop.demand_crop(
+                crop_yield=self.crop_yield,
+                crop_protein=self.crop_protein,
+            )
         )
+        if demand_option == DemandType.demand:
+            demands.append(self.crop.demand_byproduct(self.crop_yield))
+        demands = [sum(demand) for demand in zip(*demands)]
+        if negative_output:
+            demands = [(demand * -1) for demand in demands]
+        return demands
 
     def reduction_nmin(self) -> Decimal:
         if self.crop.feedable:

@@ -36,35 +36,29 @@ class Crop:
         self.byp_mgo: Decimal = self.crop.byp_mgo
         self._s_dict = load_json("data/Richtwerte/Nährstoffwerte/schwefelbedarf.json")
 
-    def demand(
+    def demand_crop(
         self,
-        *,
         crop_yield: Decimal,
         crop_protein: Decimal,
-        demand_option: DemandType,
-        negative_output: bool = False,
     ) -> list[Decimal]:
-        self._demand_option = demand_option
+        nutrients = [self.p2o5, self.k2o, self.mgo]
         demands = [
             self._n(crop_yield, crop_protein),
-            self._p2o5(crop_yield) + self._bypoduct_p2o5(crop_yield),
-            self._k2o(crop_yield) + self._byproduct_k2o(crop_yield),
-            self._mgo(crop_yield) + self._byproduct_mgo(crop_yield),
+            *[self._nutrient(crop_yield, x) for x in nutrients],
             self.s_demand,
-            Decimal(),
+            Decimal(),  # Kalk
         ]
-        if negative_output:
-            demands = [(demand * -1) for demand in demands]
         return demands
 
-    def subsequent_delivery(self, crop_yield: Decimal) -> list[Decimal]:
-        return [
+    def demand_byproduct(self, crop_yield: Decimal) -> list[Decimal]:
+        nutrients = [self.byp_p2o5, self.byp_k2o, self.byp_mgo]
+        demands = [
             Decimal(),  # Stickstoff
-            self._bypoduct_p2o5(crop_yield),
-            self._byproduct_k2o(crop_yield),
-            self._byproduct_mgo(crop_yield),
+            *[self._nutrient_byproduct(crop_yield, x) for x in nutrients],
             Decimal(),  # Schwefel
+            Decimal(),  # Kalk
         ]
+        return demands
 
     def is_class(self, crop_class: CropClass) -> bool:
         return self.crop_class == crop_class if crop_class else True
@@ -77,28 +71,12 @@ class Crop:
             + self.target_protein * (crop_protein - self.target_protein)
         )
 
-    def _p2o5(self, crop_yield: Decimal) -> Decimal:
-        return self.p2o5 * crop_yield
+    def _nutrient(self, crop_yield: Decimal, nutrient: Decimal) -> Decimal:
+        return nutrient * crop_yield
 
-    def _bypoduct_p2o5(self, crop_yield: Decimal) -> Decimal:
-        return self._use_byproduct * self.byp_ratio * self.byp_p2o5 * crop_yield
-
-    def _k2o(self, crop_yield: Decimal) -> Decimal:
-        return self.k2o * crop_yield
-
-    def _byproduct_k2o(self, crop_yield: Decimal) -> Decimal:
-        return self._use_byproduct * self.byp_ratio * self.byp_k2o * crop_yield
-
-    def _mgo(self, crop_yield: Decimal) -> Decimal:
-        return self.mgo * crop_yield
-
-    def _byproduct_mgo(self, crop_yield: Decimal) -> Decimal:
-        return self._use_byproduct * self.byp_ratio * self.byp_mgo * crop_yield
+    def _nutrient_byproduct(self, crop_yield: Decimal, byp_nutrient: Decimal) -> Decimal:
+        return self.byp_ratio * byp_nutrient * crop_yield
 
     @property
     def s_demand(self) -> Decimal:
         return Decimal(str(self._s_dict.get(self.name, 0)))
-
-    @property
-    def _use_byproduct(self) -> bool:
-        return self._demand_option == DemandType.demand
