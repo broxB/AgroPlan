@@ -1,4 +1,3 @@
-import timeit
 from decimal import Decimal
 from pprint import pprint
 from time import time
@@ -34,42 +33,81 @@ def main():
     session = create_session(path="app/database/anbauplanung.db", use_echo=False)
 
     year = 2022
-    db_fields = session.query(Field).filter(Field.year == year).all()
+    db_fields = session.query(Field).filter(Field.year == year, Field.cultivations.any()).all()
+    # db_fields = session.query(Field).filter(Field.year == year, Field.base_id == 68).all()
 
-    # db_fields = db_fields[:10]
+    db_fields = db_fields[:5]
     total_nges = Decimal()
+    field_timings = []
     for db_field in db_fields:
+        field_time = time()
         field = md.Field(db_field)
-        cultivation = md.Cultivation(field)
+        planning = md.Plan(field)
 
         for db_cultivation in db_field.cultivations:
-            cultivation.cultivations.append(db_cultivation)
+            crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
+            cultivation = md.Cultivation(db_cultivation, crop)
+            planning.cultivations.append(cultivation)
 
         for db_fertilizaiton in db_field.fertilizations:
             fertilizer = md.Fertilizer(db_fertilizaiton.fertilizer)
-            fertilization = md.Fertilization(db_fertilizaiton, fertilizer)
-            cultivation.fertilizations.append(fertilization)
+            crop = md.Crop(
+                db_fertilizaiton.cultivation.crop, db_fertilizaiton.cultivation.crop_class
+            )
+            fertilization = md.Fertilization(db_fertilizaiton, fertilizer, crop)
+            planning.fertilizations.append(fertilization)
 
         measure = None  # MeasureType.spring
         crop_class = None  # CropClass.second_crop
         fert_class = None  # FertClass.organic
-        field_nges = cultivation.n_ges(measure=measure, crop_class=crop_class)
-        if field_nges > 0:
-            print(
-                f"{db_field.base_field.name}: ",
-                *[
-                    f"{fert.fertilization.fertilizer.name}: {[f'{sum:.2f}' for sum in fert.nutrients(cultivation.field.type_)]}"
-                    for fert in cultivation.fertilizations
-                    if (fert.fertilizer.class_ == fert_class if fert_class else True)
-                ],
-                f"Nges: "
-                f"{[f'{fert.fertilizer.name}: {fert.amount:.1f} {fert.fertilizer.unit.value}' for fert in db_field.fertilizations if fert.fertilizer.fert_class == FertClass.organic and (fert.measure == measure if measure else True)]}"
-                f" -> {field_nges:.1f}",
-                sep="\n",
-                end="\n\n",
-            )
+
+        print(f"{db_field.base_field.name}: ")
+
+        # Bedarf und Düngung
+        field_demand = planning.sum_demands()
+        field_reduction = planning.sum_reductions()
+        field_fert = planning.sum_fertilizations(fert_class=fert_class)
+        print(
+            *[
+                f"Demand:",
+                [f"{demand:.2f}" for demand in field_demand],
+                f"Reduction:",
+                [f"{demand:.2f}" for demand in field_reduction],
+                f"Fertilization:",
+                [f"{fert:.2f}" for fert in field_fert],
+                f"Sum:",
+                [f"{sum(num):.2f}" for num in zip(*[field_demand, field_fert, field_reduction])],
+            ],
+            sep="\n",
+        )
+
+        # Liste der Düngungen
+        # print(
+        #     *[
+        #         f"{fert.fertilization.fertilizer.name}: {[f'{sum:.2f}' for sum in fert.nutrients(planning.field_type)]}"
+        #         for fert in planning.fertilizations
+        #         if (fert.fertilizer.class_ == fert_class if fert_class else True)
+        #     ],
+        #     sep="\n",
+        # )
+
+        # Nges
+        field_nges = planning.n_ges(measure=measure, crop_class=crop_class, netto=False)
         total_nges += field_nges
+        # print(
+        #     f"Nges: "
+        #     f"{[f'{fert.fertilizer.name}: {fert.amount:.1f} {fert.fertilizer.unit.value}' for fert in db_field.fertilizations if fert.fertilizer.fert_class == FertClass.organic and (fert.measure == measure if measure else True)]}"
+        #     f" -> {field_nges:.1f}",
+        # )
+        # print(f"NgesHD: {planning.n_ges(measure=MeasureType.fall, netto=True):.2f}", f"NgesFD: {planning.n_ges(measure=MeasureType.spring, netto=False):.2f}", sep="\n")
+
+        field_timings.append((db_field.base_field.name, f"{time() - field_time:.2f}"))
+        # print(f"{db_field.base_field.name}: {time() - field_time:.2f}")
+
+        print()
+
     print(f"Total: {total_nges:.1f}")
+    pprint(sorted(field_timings, key=lambda x: x[1], reverse=True)[:5])
     print(f"Finished in {time() - start_time:.2f} secs")
 
 

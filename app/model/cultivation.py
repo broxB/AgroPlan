@@ -1,93 +1,71 @@
 from dataclasses import dataclass
-from dataclasses import field as field_
 from decimal import Decimal
 
 import database.model as db
-from database.types import CropClass, FertClass, MeasureType
+from database.types import CropClass, CropType, LegumeType, RemainsType
 from model.crop import Crop
-from model.fertilization import Fertilization
-from model.field import Field
-from model.soil import Soil
+from utils import load_json
 
 
 @dataclass
 class Cultivation:
-    field: Field
-    cultivations: list[db.Cultivation] = field_(default_factory=list)
-    fertilizations: list[Fertilization] = field_(default_factory=list)
+    cultivation: db.Cultivation
+    crop: Crop
 
-    # summe nges
-    def n_ges(
-        self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
-    ) -> Decimal:
-        nges = Decimal()
-        for fertilization in self.fertilizations:
-            nges += fertilization.n_ges(measure, crop_class, netto)
-        return nges
+    def __post_init__(self):
+        self.crop_class: CropClass = self.cultivation.crop_class
+        self.crop_type: CropType = self.crop.crop_type
+        self.crop_yield: Decimal = self.cultivation.crop_yield
+        self.crop_protein: Decimal = (
+            self.cultivation.crop_protein
+            if self.cultivation.crop_protein
+            else self.crop.target_protein
+        )
+        self.nmin_depth: int = self.crop.nmin_depth
+        self.nmin: list[int] = self.cultivation.nmin
+        self.legume_rate: LegumeType = self.cultivation.legume_rate
+        self.remains: RemainsType = self.cultivation.remains
+        self._pre_crop_dict = load_json("data/Richtwerte/Abschläge/vorfrucht.json")
+        self._legume_dict = load_json("data/Richtwerte/Abschläge/leguminosen.json")
 
-    # summe düngung
-    def sum_fertilizations(self, fert_class: FertClass = None) -> list[Decimal]:
-        nutrients = []
-        for fertilization in self.fertilizations:
-            if fertilization.fertilizer.is_class(fert_class):
-                nutrients.append(fertilization.nutrients(self.field.type_))
-        return [sum(nutrient) for nutrient in zip(*nutrients)]
+    def demand(self, demand_option, negative_output: bool = False):
+        return self.crop.demand(
+            crop_yield=self.crop_yield,
+            crop_protein=self.crop_protein,
+            demand_option=demand_option,
+            negative_output=negative_output,
+        )
 
-    # summe bedarf
-    def sum_demands(
-        self, crop_class: CropClass = None, negative_output: bool = True
-    ) -> list[Decimal]:
-        demands = []
-        for cultivation in self.cultivations:
-            if cultivation.crop_class == crop_class if crop_class else True:
-                crop = Crop(cultivation.crop, cultivation.crop_class)
-                demands.append(
-                    crop.demand(
-                        crop_yield=cultivation.crop_yield,
-                        crop_protein=cultivation.crop_protein,
-                        demand_option=cultivation.demand_option,
-                        negative_output=negative_output,
-                    )
-                )
-            else:
-                demands.append([Decimal() for _ in range(5)])
-        return [sum(demand) for demand in zip(*demands)]
+    def reduction_nmin(self) -> Decimal:
+        if self.crop.feedable:
+            return Decimal()
+        match self.nmin_depth:
+            case 30:
+                return Decimal(self.nmin[0])
+            case 60:
+                return Decimal(sum(self.nmin[:2]))
+            case 90:
+                return Decimal(sum(self.nmin[:2])) + Decimal(self.nmin[2]) / 2
+            case _:
+                return Decimal()
 
-    # summe bodenvorrat
-    def sum_reductions(self, crop_class: CropClass = None) -> list[Decimal]:
-        prev_year = self.field.year - 1
-        # Vorjahres CaO Saldo
-        saldo = [prev_year.sum_fertilizations(), prev_year.sum_demands()]
-        cao_saldo = [sum(num) for num in zip(*saldo)][6]
+    def pre_crop_effect(self) -> Decimal:
+        if self.crop_class == CropClass.catch_crop:
+            return Decimal(self._pre_crop_dict[self.crop_type.value][self.remains.value])
+        else:
+            return Decimal(self._pre_crop_dict[self.crop_type.value])
 
-        # Vorjahres Nges
-        spring_nges = prev_year.n_ges(measure=MeasureType.spring)
-        # Aktuelle Herbst Nges zur Zwischenfrucht
-        fall_nges = prev_year.n_ges(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
-        # N Nachlieferung aus Vorjahr
-        nges = (spring_nges + fall_nges) * Decimal("0.1")
-
-        soil = Soil(self.field.soil_sample)
-        reductions = []
-        for cultivation in self.cultivations:
-            if cultivation.crop_class == crop_class:
-                if crop_class == CropClass.main_crop:
-                    nges = self.n_ges()
-                    reductions.append(soil.main_crop_reductions(self.field.type_, nges))
-                elif crop_class == CropClass.second_crop:
-                    reductions.append(soil.second_crop_reductions(self.field.type_))
-            elif crop_class is None:
-                reductions = [
-                    soil.main_crop_reductions(self.field.type_),
-                    soil.second_crop_reductions(self.field.type_),
-                ]
-                return [sum(reduction) for reduction in zip(*reductions)]
-                # else:
-                #     raise ValueError(
-                #         f"CropClass {crop_class} is not supported, use main_crop or second_crop."
-                #     )
-        return [Decimal() for _ in range(6)]
-
-    # vorfrucht
-    def previous_crop(self):
-        pass
+    def legume_delivery(self) -> Decimal:
+        if not self.crop.feedable:
+            return Decimal()
+        if (
+            self.crop_type == CropType.permanent_grassland
+            or self.crop_type == CropType.permanent_fallow
+        ):
+            return Decimal(self._legume_dict["Grünland"][self.legume_rate.value])
+        elif self.crop_type == CropType.alfalfa_grass or self.crop_type == CropType.clover_grass:
+            rate = int(self.legume_rate.name.split("_")[1]) / 10
+            return Decimal(self._legume_dict[self.crop_type.value] * rate)
+        elif self.crop_type == CropType.alfalfa or self.crop_type == CropType.clover:
+            return Decimal(self._legume_dict[self.crop_type.value])
+        return Decimal()

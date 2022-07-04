@@ -115,6 +115,7 @@ class Cultivation(Base):
     crop_class = Column("crop_class", Enum(CropClass))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
     crop_yield = Column("yield", Float(asdecimal=True))
+    crop_protein = Column("protein", Float(asdecimal=True))
     remains = Column("remains", Enum(RemainsType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
     nmin = Column("nmin", MutableList.as_mutable(PickleType), default=[])
