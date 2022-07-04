@@ -11,13 +11,11 @@ from model.fertilizer import Fertilizer
 class Fertilization:
     fertilization: db.Fertilization
     fertilizer: Fertilizer
+    crop: Crop
 
     def __post_init__(self):
         self.amount = self.fertilization.amount
         self.measure = self.fertilization.measure
-        self.crop: Crop = Crop(
-            self.fertilization.cultivation.crop, self.fertilization.cultivation.crop_class
-        )
 
     def n_ges(self, measure: MeasureType, crop_class: CropClass, netto: bool) -> Decimal:
         if self.fertilizer.is_organic:
@@ -36,7 +34,7 @@ class Fertilization:
         ]
 
     def _n_verf(self, field_type: FieldType) -> Decimal:
-        if self.crop.class_ == CropClass.catch_crop and self.fertilizer.is_organic:
+        if self.crop.crop_class == CropClass.catch_crop and self.fertilizer.is_organic:
             return self.fertilizer.n * Decimal("0.1")
         if self.crop.feedable:
             return self.fertilizer.n_verf(FieldType.grassland)

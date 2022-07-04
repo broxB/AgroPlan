@@ -14,8 +14,8 @@ class Crop:
     def __post_init__(self):
         self.name: str = self.crop.name  # W.-Gerste
         self.kind: str = self.crop.kind  # Wintergerste
-        self.class_: CropClass = self.crop_class  # Hauptfrucht
-        self.type_: CropType = self.crop.crop_type  # Getreide
+        self.crop_class: CropClass = self.crop_class  # Hauptfrucht
+        self.crop_type: CropType = self.crop.crop_type  # Getreide
         self.feedable: bool = self.crop.feedable  # Feldfutter
         self.remains: list[RemainsType] = self.crop.remains
         self.nmin_depth: int = self.crop.nmin_depth
@@ -34,7 +34,7 @@ class Crop:
         self.byp_p2o5: Decimal = self.crop.byp_p2o5
         self.byp_k2o: Decimal = self.crop.byp_k2o
         self.byp_mgo: Decimal = self.crop.byp_mgo
-        self._s_demand = load_json("data/Richtwerte/Nährstoffwerte/schwefelbedarf.json")
+        self._s_dict = load_json("data/Richtwerte/Nährstoffwerte/schwefelbedarf.json")
 
     def demand(
         self,
@@ -42,7 +42,7 @@ class Crop:
         crop_yield: Decimal,
         crop_protein: Decimal,
         demand_option: DemandType,
-        negative_output: bool = True,
+        negative_output: bool = False,
     ) -> list[Decimal]:
         self._demand_option = demand_option
         demands = [
@@ -50,10 +50,11 @@ class Crop:
             self._p2o5(crop_yield) + self._bypoduct_p2o5(crop_yield),
             self._k2o(crop_yield) + self._byproduct_k2o(crop_yield),
             self._mgo(crop_yield) + self._byproduct_mgo(crop_yield),
-            self._s,
+            self.s_demand,
+            Decimal(),
         ]
         if negative_output:
-            demands = [demand * Decimal("-1") for demand in demands]
+            demands = [(demand * -1) for demand in demands]
         return demands
 
     def subsequent_delivery(self, crop_yield: Decimal) -> list[Decimal]:
@@ -66,11 +67,14 @@ class Crop:
         ]
 
     def is_class(self, crop_class: CropClass) -> bool:
-        return self.class_ == crop_class if crop_class else True
+        return self.crop_class == crop_class if crop_class else True
 
     def _n(self, crop_yield: Decimal, crop_protein: Decimal) -> Decimal:
-        return self.target_demand * (crop_yield - self.target_yield) + self.target_protein * (
-            crop_protein - self.target_protein
+        i = 0 if self.target_yield > crop_yield else 1
+        return (
+            self.target_demand
+            + Decimal(str(self.var_yield[i])) * (crop_yield - self.target_yield)
+            + self.target_protein * (crop_protein - self.target_protein)
         )
 
     def _p2o5(self, crop_yield: Decimal) -> Decimal:
@@ -91,8 +95,9 @@ class Crop:
     def _byproduct_mgo(self, crop_yield: Decimal) -> Decimal:
         return self._use_byproduct * self.byp_ratio * self.byp_mgo * crop_yield
 
-    def _s(self) -> Decimal:
-        return Decimal()
+    @property
+    def s_demand(self) -> Decimal:
+        return Decimal(str(self._s_dict.get(self.name, 0)))
 
     @property
     def _use_byproduct(self) -> bool:
