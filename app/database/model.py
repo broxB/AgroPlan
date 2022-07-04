@@ -95,7 +95,7 @@ class Field(Base):
         back_populates="field",
     )
     soil_samples = relationship("SoilSample", secondary=field_soil_sample, back_populates="fields")
-    saldo = relationship("Saldo", back_populates="field")
+    saldo = relationship("Saldo", back_populates="field", uselist=False)
 
     def __repr__(self):
         return (

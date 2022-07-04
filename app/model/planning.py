@@ -39,6 +39,8 @@ class Plan:
     def sum_demands(self, negative_output: bool = True) -> list[Decimal]:
         demands = []
         for cultivation in self.cultivations:
+            if cultivation.crop_class == CropClass.catch_crop:
+                continue
             demands.append(
                 cultivation.demand(
                     demand_option=self.field.demand_option,
@@ -59,7 +61,7 @@ class Plan:
                 elif cultivation.crop_class == CropClass.second_crop:
                     reductions.append(self.second_crop_reductions())
         if self.prev_year:
-            # reductions.append(self.cao_saldo)
+            reductions.append(self.cao_saldo)
             reductions.append(self.n_redelivery)
         if not reductions:
             reductions.append([Decimal()] * 6)
@@ -112,6 +114,15 @@ class Plan:
         return None
 
     @property
+    def previous_crop(self) -> md.Cultivation:
+        if self.prev_year:
+            if self.prev_year.second_crop:
+                return self.prev_year.second_crop
+            elif self.prev_year.main_crop:
+                return self.prev_year.main_crop
+        return self.catch_crop
+
+    @property
     def n_redelivery(self) -> Decimal:
         nges = [Decimal()] * 6
         prev_spring_nges = self.prev_year.n_ges(measure=MeasureType.spring)
@@ -122,20 +133,8 @@ class Plan:
     @property
     def cao_saldo(self) -> Decimal:
         cao_saldo = [Decimal()] * 6
-        saldo = [self.prev_year.sum_fertilizations(), self.prev_year.sum_demands()]
-        cao_saldo[5] = [sum(num) for num in zip(*saldo)][5]
+        cao_saldo[5] = self.prev_year.field.saldo.cao
         return cao_saldo
-
-    @property
-    def previous_crop(self) -> md.Cultivation:
-        if self.catch_crop is None and self.prev_year:
-            if self.prev_year.second_crop:
-                return self.prev_year.second_crop
-            elif self.prev_year.main_crop:
-                return self.prev_year.main_crop
-        else:
-            return self.catch_crop
-        return None
 
     @property
     def prev_year(self):

@@ -15,7 +15,8 @@ class Field:
         self.year: int = self.field.year
         self.field_type: FieldType = self.field.field_type
         self.red_region: bool = self.field.red_region
+        self.demand_option: DemandType = self.field.demand_type
+        self.saldo: db.Saldo = self.field.saldo
         self.soil_sample: db.SoilSample = (
             max(self.field.soil_samples, key=lambda x: x.year) if self.field.soil_samples else None
         )
-        self.demand_option: DemandType = self.field.demand_type
