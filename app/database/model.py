@@ -95,6 +95,7 @@ class Field(Base):
         back_populates="field",
     )
     soil_samples = relationship("SoilSample", secondary=field_soil_sample, back_populates="fields")
+    saldo = relationship("Saldo", back_populates="field")
 
     def __repr__(self):
         return (
@@ -255,3 +256,16 @@ class SoilSample(Base):
             f"soil_type='{self.soil_type.value}', humus='{self.humus.value}', "
             f"fields={f'{[field.base_field.name for field in self.fields][0]}', [f'{field.year}' for field in self.fields]})"
         )
+
+
+class Saldo(Base):
+    __tablename__ = "saldo"
+
+    field_id = Column("field_id", Integer, ForeignKey("field.field_id"), primary_key=True)
+    n = Column("n", Float(asdecimal=True))
+    p2o5 = Column("p2o5", Float(asdecimal=True))
+    k2o = Column("k2o", Float(asdecimal=True))
+    mgo = Column("mgo", Float(asdecimal=True))
+    s = Column("s", Float(asdecimal=True))
+    cao = Column("cao", Float(asdecimal=True))
+    field = relationship("Field", back_populates="saldo")

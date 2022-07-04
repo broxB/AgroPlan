@@ -11,6 +11,7 @@ from database.model import (
     Fertilizer,
     FertilizerUsage,
     Field,
+    Saldo,
     SoilSample,
 )
 from database.types import (
@@ -281,7 +282,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     crop_yield=cult.yield_,
                     remains=get_remains_type(cult.remains),
                     legume_rate=get_legume_type(cult.legume),
-                    nmin=get_nmin(field_dict, cult.class_),
+                    nmin=get_nmin(field_dict, CropClass(cult.class_)),
                 )
                 cultivation.field = field
                 cultivation.crop = crop
@@ -343,6 +344,18 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     fertilization.fertilizer = fertilizer
                     fertilization.field.append(field)
                     update_session(session, fertilization)
+
+            saldo = session.query(Saldo).filter(Saldo.field_id == field.id).one_or_none()
+            if saldo is None:
+                saldo = Saldo(
+                    n=field_dict["N_Saldo"] if field_dict["N_Saldo"] else 0,
+                    p2o5=field_dict["P2O5_Saldo"] if field_dict["P2O5_Saldo"] else 0,
+                    k2o=field_dict["K2O_Saldo"] if field_dict["K2O_Saldo"] else 0,
+                    mgo=field_dict["MgO_Saldo"] if field_dict["MgO_Saldo"] else 0,
+                    s=field_dict["S_Saldo"] if field_dict["S_Saldo"] else 0,
+                    cao=field_dict["CaO_Saldo"] if field_dict["CaO_Saldo"] else 0,
+                )
+                saldo.field = field
 
             if field_dict["Probedatum"] is None:
                 continue

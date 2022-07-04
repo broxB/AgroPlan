@@ -17,13 +17,14 @@ from database.model import (
     HumusType,
     LegumeType,
     RemainsType,
+    Saldo,
     SoilSample,
     SoilType,
     field_fertilization,
     field_soil_sample,
 )
 from database.utils import create_session
-from sqlalchemy import asc, create_engine, desc, func, or_, not_
+from sqlalchemy import asc, create_engine, desc, func, not_, or_
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -40,7 +41,6 @@ def main():
 
     # Query fields without a soil sample
     # pprint(session.query(Field).filter(not_(Field.soil_samples.any())).all())
-
 
     def inner_join():
         fields = (
