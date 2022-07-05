@@ -4,20 +4,23 @@ from decimal import Decimal
 
 import database.model as db
 import model as md
-from database.types import CropClass, FertClass, FieldType, MeasureType
+from database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
 from database.utils import create_session
-from model.soil import Soil
 
 
 @dataclass
 class Plan:
-    field: md.Field
+    Field: md.Field
     cultivations: list[md.Cultivation] = field_(default_factory=list)
     fertilizations: list[md.Fertilization] = field_(default_factory=list)
 
     def __post_init__(self):
-        self.field_type = self.field.field_type
-        self.soil_sample = self.field.soil_sample
+        self.base_field_id = self.Field.base_id
+        self.field_saldo = self.Field.saldo
+        self.field_type = self.Field.field_type
+        self.year = self.Field.year
+        self.soil_sample: md.Soil = self.Field.soil_sample
+        self.demand_option: DemandType = self.Field.demand_option
 
     def n_ges(
         self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
@@ -31,7 +34,7 @@ class Plan:
         nutrients = []
         for fertilization in self.fertilizations:
             if fertilization.fertilizer.is_class(fert_class):
-                nutrients.append(fertilization.nutrients(self.field.field_type))
+                nutrients.append(fertilization.nutrients(self.field_type))
         if not nutrients:
             nutrients.append([Decimal()] * 6)
         return [sum(nutrient) for nutrient in zip(*nutrients)]
@@ -43,7 +46,7 @@ class Plan:
                 continue
             demands.append(
                 cultivation.demand(
-                    demand_option=self.field.demand_option,
+                    demand_option=self.demand_option,
                     negative_output=negative_output,
                 )
             )
@@ -53,44 +56,45 @@ class Plan:
 
     def sum_reductions(self) -> list[Decimal]:
         reductions = []
-        if self.soil_sample:
-            soil = md.Soil(self.soil_sample)
-            for cultivation in self.cultivations:
-                if cultivation.crop_class == CropClass.main_crop:
-                    reductions.append(self.main_crop_reductions(soil))
-                elif cultivation.crop_class == CropClass.second_crop:
-                    reductions.append(self.second_crop_reductions())
-        if self.prev_year:
-            reductions.append(self.cao_saldo)
-            reductions.append(self.n_redelivery)
+        for cultivation in self.cultivations:
+            if cultivation.crop_class == CropClass.main_crop:
+                reductions.append(self.main_crop_reductions(self.soil_sample))
+            elif cultivation.crop_class == CropClass.second_crop:
+                reductions.append(self.second_crop_reductions())
         if not reductions:
             reductions.append([Decimal()] * 6)
         return [sum(reduction) for reduction in zip(*reductions)]
 
-    def main_crop_reductions(self, soil: Soil) -> list[Decimal]:
-        sum = []
-        for reduction in (
-            soil.reduction_n(self.field_type),
-            soil.reduction_p2o5(self.field_type),
-            soil.reduction_k2o(self.field_type),
-            soil.reduction_mgo(self.field_type),
-            soil.reduction_s(
-                self.n_ges(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
-            ),
-            soil.reduction_cao(self.field_type),
-        ):
-            sum.append(reduction)
+    def main_crop_reductions(self, soil: md.soil.Soil) -> list[Decimal]:
+        reductions = []
+        if soil:
+            for reduction in (
+                soil.reduction_n(self.field_type),
+                soil.reduction_p2o5(self.field_type),
+                soil.reduction_k2o(self.field_type),
+                soil.reduction_mgo(self.field_type),
+                soil.reduction_s(
+                    self.n_ges(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
+                ),
+                soil.reduction_cao(self.field_type),
+            ):
+                reductions.append(reduction)
+        else:
+            reductions = [Decimal() * 6]
+        if self.plan_prev_year:
+            reductions[5] += self.cao_saldo()
+            reductions[0] += self.n_redelivery()
         if self.field_type == FieldType.cropland and self.previous_crop:
-            sum[0] += self.previous_crop.pre_crop_effect()
-        sum[0] += self.main_crop.reduction_nmin()
-        sum[0] += self.main_crop.legume_delivery()
-        return sum
+            reductions[0] += self.previous_crop.pre_crop_effect()
+        reductions[0] += self.main_crop.reduction_nmin()
+        reductions[0] += self.main_crop.legume_delivery()
+        return reductions
 
     def second_crop_reductions(self) -> list[Decimal]:
-        sum = [Decimal()] * 6
-        sum[0] += self.main_crop.pre_crop_effect()
-        sum[0] += self.second_crop.legume_delivery()
-        return sum
+        reductions = [Decimal()] * 6
+        reductions[0] += self.main_crop.pre_crop_effect()
+        reductions[0] += self.second_crop.legume_delivery()
+        return reductions
 
     @property
     def main_crop(self) -> md.Cultivation:
@@ -115,34 +119,32 @@ class Plan:
 
     @property
     def previous_crop(self) -> md.Cultivation:
-        if self.prev_year:
-            if self.prev_year.second_crop:
-                return self.prev_year.second_crop
-            elif self.prev_year.main_crop:
-                return self.prev_year.main_crop
-        return self.catch_crop
+        if self.catch_crop:
+            return self.catch_crop
+        elif self.plan_prev_year:
+            if self.plan_prev_year.second_crop:
+                return self.plan_prev_year.second_crop
+            elif self.plan_prev_year.main_crop:
+                return self.plan_prev_year.main_crop
+        else:
+            return None
 
-    @property
     def n_redelivery(self) -> Decimal:
-        nges = [Decimal()] * 6
-        prev_spring_nges = self.prev_year.n_ges(measure=MeasureType.spring)
+        prev_spring_nges = self.plan_prev_year.n_ges(measure=MeasureType.spring)
         fall_nges = self.n_ges(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
-        nges[0] = (prev_spring_nges + fall_nges) * Decimal("0.1")
+        nges = (prev_spring_nges + fall_nges) * Decimal("0.1")
         return nges
 
-    @property
     def cao_saldo(self) -> Decimal:
-        cao_saldo = [Decimal()] * 6
-        cao_saldo[5] = self.prev_year.field.saldo.cao
-        return cao_saldo
+        return self.plan_prev_year.field_saldo.cao
 
     @property
-    def prev_year(self):
+    def plan_prev_year(self):
         session = create_session()
-        year = self.field.year - 1
+        year = self.year - 1
         db_field = (
             session.query(db.Field)
-            .filter(db.Field.base_id == self.field.base_id, db.Field.year == year)
+            .filter(db.Field.base_id == self.base_field_id, db.Field.year == year)
             .one_or_none()
         )
         if db_field:
@@ -152,12 +154,14 @@ class Plan:
                 crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
                 cultivation = md.Cultivation(db_cultivation, crop)
                 planning.cultivations.append(cultivation)
-            for db_fertilizaiton in db_field.fertilizations:
-                fertilizer = md.Fertilizer(db_fertilizaiton.fertilizer)
+            for db_fertilization in db_field.fertilizations:
+                fertilizer = md.Fertilizer(db_fertilization.fertilizer)
                 crop = md.Crop(
-                    db_fertilizaiton.cultivation.crop, db_fertilizaiton.cultivation.crop_class
+                    db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
                 )
-                fertilization = md.Fertilization(db_fertilizaiton, fertilizer, crop)
+                fertilization = md.Fertilization(
+                    db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class
+                )
                 planning.fertilizations.append(fertilization)
         else:
             planning = None

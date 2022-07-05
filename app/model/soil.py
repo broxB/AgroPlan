@@ -2,31 +2,23 @@ from bisect import bisect_left, bisect_right
 from dataclasses import dataclass
 from decimal import Decimal
 
-from database.model import SoilSample
-from database.types import (
-    CropClass,
-    CropType,
-    FieldType,
-    HumusType,
-    LegumeType,
-    RemainsType,
-    SoilType,
-)
+import database.model as db
+from database.types import FieldType, HumusType, SoilType
 from utils import load_json
 
 
 @dataclass
 class Soil:
-    soil_sample: SoilSample
+    SoilSample: db.SoilSample
 
     def __post_init__(self):
-        self.year: int = self.soil_sample.year
-        self.type: SoilType = self.soil_sample.soil_type  # schwach lehmiger Sand
-        self.humus: HumusType = self.soil_sample.humus  # < 4%
-        self.ph: Decimal = self.soil_sample.ph
-        self.p2o5: Decimal = self.soil_sample.p2o5
-        self.k2o: Decimal = self.soil_sample.k2o
-        self.mg: Decimal = self.soil_sample.mg
+        self.year: int = self.SoilSample.year
+        self.soil_type: SoilType = self.SoilSample.soil_type
+        self.humus: HumusType = self.SoilSample.humus
+        self.ph: Decimal = self.SoilSample.ph
+        self.p2o5: Decimal = self.SoilSample.p2o5
+        self.k2o: Decimal = self.SoilSample.k2o
+        self.mg: Decimal = self.SoilSample.mg
         self._p2o5_dict = load_json("data/Richtwerte/Abschläge/abschlag_p2o5.json")
         self._k2o_dict = load_json("data/Richtwerte/Abschläge/abschlag_k2o.json")
         self._mgo_dict = load_json("data/Richtwerte/Abschläge/abschlag_mgo.json")
@@ -34,10 +26,10 @@ class Soil:
         self._s_dict = load_json("data/Richtwerte/Abschläge/abschlag_s.json")
         self._soil_dict = load_json("data/Richtwerte/Abschläge/bodenvorrat.json")
         self._classes = ["A", "B", "C", "D", "E"]
-        self._p2o5_class = load_json("data/Richtwerte/Gehaltsklassen/klassen_p2o5.json")
-        self._k2o_class = load_json("data/Richtwerte/Gehaltsklassen/klassen_k2o.json")
-        self._mgo_class = load_json("data/Richtwerte/Gehaltsklassen/klassen_mgo.json")
-        self._cao_class = load_json("data/Richtwerte/Gehaltsklassen/klassen_ph_wert.json")
+        self._p2o5_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_p2o5.json")
+        self._k2o_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_k2o.json")
+        self._mgo_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_mgo.json")
+        self._cao_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_ph_wert.json")
 
     def reduction_n(self, field_type: FieldType) -> Decimal:
         return Decimal(self._soil_dict[self.humus.value][field_type.value])
@@ -55,8 +47,8 @@ class Soil:
         if self.k2o is None:
             return Decimal()
         value = self.k2o / Decimal("1.205")  # calc element form
-        values = self._k2o_dict[field_type.value][self.type.value][self.humus.value]["Werte"]
-        reduction = self._k2o_dict[field_type.value][self.type.value][self.humus.value][
+        values = self._k2o_dict[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
+        reduction = self._k2o_dict[field_type.value][self.soil_type.value][self.humus.value][
             "Abschläge"
         ]
         index = bisect_right(values, value) - 1
@@ -66,8 +58,8 @@ class Soil:
         if self.mg is None:
             return Decimal()
         value = self.mg
-        values = self._mgo_dict[field_type.value][self.type.value][self.humus.value]["Werte"]
-        reduction = self._mgo_dict[field_type.value][self.type.value][self.humus.value][
+        values = self._mgo_dict[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
+        reduction = self._mgo_dict[field_type.value][self.soil_type.value][self.humus.value][
             "Abschläge"
         ]
         index = bisect_right(values, value) - 1
@@ -86,31 +78,43 @@ class Soil:
         if self.ph is None:
             return Decimal()
         ph_values = self._cao_dict[field_type.value]["phWert"]
-        index = bisect_left(ph_values, self.ph)
-        reduction = self._cao_dict[field_type.value][self.type.value][self.humus.value]
+        index = bisect_left(self.to_decimal(ph_values), self.ph)
+        reduction = self._cao_dict[field_type.value][self.soil_type.value][self.humus.value]
         return Decimal(-reduction[index] * 100 / 4)
 
+    def optimal_ph(self, field_type) -> Decimal:
+        return Decimal(
+            str(self._cao_class_dict[field_type.value][self.soil_type.value][self.humus.value][2])
+        )
+
     def class_p2o5(self, field_type: FieldType) -> str:
-        values = self._p2o5_class[field_type.value]
+        if self.p2o5 is None:
+            return ""
+        values = self._p2o5_class_dict[field_type.value]
         index = bisect_right(values, self.p2o5) - 1
         return self._classes[index]
 
     def class_k2o(self, field_type: FieldType) -> str:
-        values = self._k2o_class[field_type.value][self.type.value][self.humus.value]
+        if self.k2o is None:
+            return ""
+        values = self._k2o_class_dict[field_type.value][self.soil_type.value][self.humus.value]
         index = bisect_right(values, self.k2o) - 1
         return self._classes[index]
 
     def class_mgo(self, field_type: FieldType) -> str:
-        values = self._mgo_class[field_type.value][self.type.value][self.humus.value]
+        if self.mg is None:
+            return ""
+        values = self._mgo_class_dict[field_type.value][self.soil_type.value][self.humus.value]
         index = bisect_right(values, self.mgo) - 1
         return self._classes[index]
 
     def class_ph(self, field_type: FieldType) -> str:
-        values = self._cao_class[field_type.value][self.type.value][self.humus.value]
+        if self.ph is None:
+            return ""
+        values = self._cao_class_dict[field_type.value][self.soil_type.value][self.humus.value]
         index = bisect_right(values, self.ph) - 1
         return self._classes[index]
 
-    def optimal_ph(self, field_type) -> Decimal:
-        return Decimal(
-            str(self._cao_class[field_type.value][self.type.value][self.humus.value][2])
-        )
+    @staticmethod
+    def to_decimal(values: list[float]):
+        return [Decimal(str(value)) for value in values]

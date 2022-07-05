@@ -9,22 +9,22 @@ from utils import load_json
 
 @dataclass
 class Cultivation:
-    cultivation: db.Cultivation
+    Cultivation: db.Cultivation
     crop: Crop
 
     def __post_init__(self):
-        self.crop_class: CropClass = self.cultivation.crop_class
+        self.crop_class: CropClass = self.Cultivation.crop_class
         self.crop_type: CropType = self.crop.crop_type
-        self.crop_yield: Decimal = self.cultivation.crop_yield
+        self.crop_yield: Decimal = self.Cultivation.crop_yield
         self.crop_protein: Decimal = (
-            self.cultivation.crop_protein
-            if self.cultivation.crop_protein
+            self.Cultivation.crop_protein
+            if self.Cultivation.crop_protein
             else self.crop.target_protein
         )
         self.nmin_depth: int = self.crop.nmin_depth
-        self.nmin: list[int] = self.cultivation.nmin
-        self.legume_rate: LegumeType = self.cultivation.legume_rate
-        self.remains: RemainsType = self.cultivation.remains
+        self.nmin: list[int] = self.Cultivation.nmin
+        self.legume_rate: LegumeType = self.Cultivation.legume_rate
+        self.remains: RemainsType = self.Cultivation.remains
         self._pre_crop_dict = load_json("data/Richtwerte/Abschläge/vorfrucht.json")
         self._legume_dict = load_json("data/Richtwerte/Abschläge/leguminosen.json")
 
