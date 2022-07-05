@@ -36,25 +36,26 @@ def main():
     db_fields = session.query(Field).filter(Field.year == year, Field.cultivations.any()).all()
     # db_fields = session.query(Field).filter(Field.year == year, Field.base_id == 68).all()
 
-    db_fields = db_fields[:5]
+    db_fields = db_fields[1:2]
     total_nges = Decimal()
     field_timings = []
     for db_field in db_fields:
         field_time = time()
         field = md.Field(db_field)
         planning = md.Plan(field)
+        soil = md.Soil(db_field.soil_samples[0])
 
         for db_cultivation in db_field.cultivations:
             crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
             cultivation = md.Cultivation(db_cultivation, crop)
             planning.cultivations.append(cultivation)
 
-        for db_fertilizaiton in db_field.fertilizations:
-            fertilizer = md.Fertilizer(db_fertilizaiton.fertilizer)
+        for db_fertilization in db_field.fertilizations:
+            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
             crop = md.Crop(
-                db_fertilizaiton.cultivation.crop, db_fertilizaiton.cultivation.crop_class
+                db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
             )
-            fertilization = md.Fertilization(db_fertilizaiton, fertilizer, crop)
+            fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
             planning.fertilizations.append(fertilization)
 
         measure = None  # MeasureType.spring
@@ -70,13 +71,13 @@ def main():
         print(
             *[
                 f"Demand:",
-                [f"{demand:.2f}" for demand in field_demand],
+                [f"{demand:7.2f}" for demand in field_demand],
                 f"Reduction:",
-                [f"{demand:.2f}" for demand in field_reduction],
+                [f"{demand:7.2f}" for demand in field_reduction],
                 f"Fertilization:",
-                [f"{fert:.2f}" for fert in field_fert],
+                [f"{fert:7.2f}" for fert in field_fert],
                 f"Sum:",
-                [f"{sum(num):.2f}" for num in zip(*[field_demand, field_fert, field_reduction])],
+                [f"{sum(num):7.2f}" for num in zip(*[field_demand, field_fert, field_reduction])],
             ],
             sep="\n",
         )
@@ -111,6 +112,54 @@ def main():
     print(f"Finished in {time() - start_time:.2f} secs")
 
 
+def representation():
+    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+
+    index = 16
+    year = 2022
+    width, precision = 4, 0
+
+    db_fields = session.query(Field).filter(Field.year == year, Field.cultivations.any()).all()
+    db_fields = db_fields[index:]
+    for db_field in db_fields:
+        field = md.Field(db_field)
+        planning = md.Plan(field)
+        print(f"{db_field.base_field.prefix}-{db_field.base_field.suffix} {db_field.base_field.name} ({db_field.area:.2f} ha): ")
+
+        for db_cultivation in db_field.cultivations:
+            crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
+            cultivation = md.Cultivation(db_cultivation, crop)
+            planning.cultivations.append(cultivation)
+
+        for db_fertilization in db_field.fertilizations:
+            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+            crop = md.Crop(
+                db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
+            )
+            fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
+            planning.fertilizations.append(fertilization)
+
+        for cultivation in planning.cultivations:
+            if cultivation.crop_class != CropClass.catch_crop:
+                if cultivation.crop_class == CropClass.main_crop:
+                    reductions = planning.main_crop_reductions(md.Soil(field.soil_sample))
+                elif cultivation.crop_class == CropClass.second_crop:
+                    reductions = planning.second_crop_reductions()
+                print(f"{cultivation.crop_class.value}:")
+                print("    ", "Demand        ", [f'{demand:{width}.{precision}f}' for demand in cultivation.demand(field.demand_option)])
+                print("    ", "Reduction     ", [f'{demand:{width}.{precision}f}' for demand in reductions])
+                print("    ", "---------------------------------------------------------------")
+                for fertilization in planning.fertilizations:
+                    if fertilization.crop_class == cultivation.crop_class or fertilization.crop_class == CropClass.catch_crop and cultivation.crop_class == CropClass.main_crop:
+                        print("    ", f"{fertilization.fertilizer.name[:14]:14}", [f'{nutrient:{width}.{precision}f}' for nutrient in fertilization.nutrients(field.field_type)])
+
+        field_demand = planning.sum_demands()
+        field_reduction = planning.sum_reductions()
+        field_fert = planning.sum_fertilizations()
+        print("    ", "---------------------------------------------------------------")
+        print("    ", "Saldo         ", [f"{sum(num):{width}.{precision}f}" for num in zip(*[field_demand, field_fert, field_reduction])], end="\n\n")
+
 if __name__ == "__main__":
-    main()
+    # main()
     # reseed_database()
+    representation()
