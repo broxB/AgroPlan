@@ -11,6 +11,7 @@ from database.utils import create_session
 @dataclass
 class Plan:
     field: md.Field
+    first_year: bool = True
     cultivations: list[md.Cultivation] = field_(default_factory=list)
     fertilizations: list[md.Fertilization] = field_(default_factory=list)
 
@@ -21,6 +22,7 @@ class Plan:
         self.year = self.field.year
         self.soil_sample: md.Soil = self.field.soil_sample
         self.demand_option: DemandType = self.field.demand_option
+        self.plan_prev_year = self._plan_prev_year()
 
     def n_ges(
         self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
@@ -82,9 +84,10 @@ class Plan:
             reductions[4] += soil.reduction_s(
                 self.n_ges(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
             )
-            reductions[5] += soil.reduction_cao(self.field_type)
-        else:
-            reductions = [Decimal() * 6]
+            if soil.year + 3 < self.year:
+                reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
+            else:
+                reductions[5] += soil.reduction_cao(self.field_type)
         if self.plan_prev_year:
             reductions[5] += self.cao_saldo()
             reductions[0] += self.n_redelivery()
@@ -142,8 +145,9 @@ class Plan:
     def cao_saldo(self) -> Decimal:
         return self.plan_prev_year.field_saldo.cao
 
-    @property
-    def plan_prev_year(self):
+    def _plan_prev_year(self):
+        if not self.first_year:
+            return
         session = create_session()
         year = self.year - 1
         db_field = (
@@ -153,7 +157,7 @@ class Plan:
         )
         if db_field:
             field = md.Field(db_field)
-            plan = Plan(field)
+            plan = Plan(field, False)
             for db_cultivation in db_field.cultivations:
                 crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
                 cultivation = md.Cultivation(db_cultivation, crop)

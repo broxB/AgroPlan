@@ -74,11 +74,15 @@ class Soil:
         reduction_nges = self._s_dict["Nges"][nges_index][s_index]
         return Decimal(reduction_s + reduction_nges)
 
-    def reduction_cao(self, field_type: FieldType) -> Decimal:
+    def reduction_cao(self, field_type: FieldType, preservation: bool = False) -> Decimal:
         if self.ph is None:
             return Decimal()
+        else:
+            value = self.ph
+        if preservation:
+            value = self.optimal_ph(field_type)
         ph_values = self._cao_dict[field_type.value]["phWert"]
-        index = bisect_left(self.to_decimal(ph_values), round(self.ph, 1))
+        index = bisect_left(self.to_decimal(ph_values), round(value, 1))
         reduction = self._cao_dict[field_type.value][self.soil_type.value][self.humus.value]
         return Decimal(-reduction[index] * 100 / 4)
 

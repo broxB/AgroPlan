@@ -3,11 +3,7 @@ from pprint import pprint
 from time import time
 
 import model as md
-from database.model import (
-    BaseField,
-    Field,
-    Saldo,
-)
+from database.model import BaseField, Field, Saldo
 from database.setup import setup_database
 from database.types import *
 from database.utils import create_session
@@ -51,6 +47,79 @@ def data_collection(index: int = None, year: int = None, start: int = 0, end: in
         yield planning
 
 
+def timing(header: int = -1, reverse: bool = True):
+    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    db_fields = session.query(Field).filter(Field.year == 2022, Field.cultivations.any()).all()
+    plans = []
+    for db_field in db_fields:
+        field = md.Field(db_field)
+        planning = md.Plan(field)
+
+        for db_cultivation in db_field.cultivations:
+            crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
+            cultivation = md.Cultivation(db_cultivation, crop)
+            planning.cultivations.append(cultivation)
+
+        for db_fertilization in db_field.fertilizations:
+            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+            crop = md.Crop(
+                db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
+            )
+            fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
+            planning.fertilizations.append(fertilization)
+        plans.append(planning)
+    # plans: list[md.Plan] = data_collection(year=2022)
+    print(f"Start timing:")
+    start_time = time()
+    field_timings = []
+    for plan in plans:
+        field_name = plan.field.Field.base_field.name
+        field_time = time()
+
+        field_demand = plan.sum_demands()
+        field_reduction = plan.sum_reductions()
+        field_fert = plan.sum_fertilizations()
+
+        field_timing = time() - field_time
+        field_timings.append((field_name, f"{field_timing:.2f}"))
+
+    finish_time = time() - start_time
+    pprint(sorted(field_timings, key=lambda x: x[1], reverse=reverse)[:header])
+    print(f"Finished in {finish_time:.2f} secs")
+
+
+def small_timing(index: int = None, name: str = True):
+    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    db_field = session.query(Field).join(BaseField).filter(Field.year == 2022, BaseField.name == name, Field.cultivations.any()).one_or_none()
+    if db_field is None:
+        return
+
+    field = md.Field(db_field)
+    plan = md.Plan(field)
+
+    for db_cultivation in db_field.cultivations:
+        crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
+        cultivation = md.Cultivation(db_cultivation, crop)
+        plan.cultivations.append(cultivation)
+
+    for db_fertilization in db_field.fertilizations:
+        fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+        crop = md.Crop(
+            db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
+        )
+        fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
+        plan.fertilizations.append(fertilization)
+
+    print(f"Start timing:", plan.field.Field.base_field.name)
+    start_time = time()
+
+    field_demand = plan.sum_demands()
+    field_reduction = plan.sum_reductions()
+    field_fert = plan.sum_fertilizations()
+
+    print(f"Finished in {time() - start_time:.2f} secs")
+
+
 def visualize_plan(plan: md.Plan, header: bool = True):
     width, precision = 5, 0
     elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO"]
@@ -80,7 +149,7 @@ def visualize_plan(plan: md.Plan, header: bool = True):
     print("    ", "Saldo         ", [f"{sum(num):{width}.{precision}f}" for num in zip(*[field_demand, field_fert, field_reduction])], end="\n\n")
 
 
-def log_error(index:int = None, plans: list[md.Plan] = None, visual: bool = False):
+def log_error(index:int = None, plans: list[md.Plan] = None, visual: bool = False, year: int = None):
     width, precision = 6, 1
     elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO"]
 
@@ -90,7 +159,7 @@ def log_error(index:int = None, plans: list[md.Plan] = None, visual: bool = Fals
         start, end = 0, -1
         index = 0
     if plans is None:
-        plans = data_collection(start=start, end=end)
+        plans = data_collection(start=start, end=end, year=year)
 
     def equal(x,y):
         diff = abs(Decimal(x)) - abs(Decimal(y))
@@ -115,94 +184,16 @@ def log_error(index:int = None, plans: list[md.Plan] = None, visual: bool = Fals
                         print("    ", f"{f'{elem[i]}:':>5}", f"{saldo[i]:>{width}}", " != ", f"{db_saldo[i]:{width}}")
                 print()
                 if visual:
-                    visualize_plan(id, header=False, plan=plan)
-
-
-def timing(header: int = -1, reverse: bool = True):
-    # session = create_session(path="app/database/anbauplanung.db", use_echo=False)
-    # db_fields = session.query(Field).filter(Field.year == 2022, Field.cultivations.any()).all()
-    # plans = []
-    # for db_field in db_fields:
-    #     field = md.Field(db_field)
-    #     planning = md.Plan(field)
-
-    #     for db_cultivation in db_field.cultivations:
-    #         crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-    #         cultivation = md.Cultivation(db_cultivation, crop)
-    #         planning.cultivations.append(cultivation)
-
-    #     for db_fertilization in db_field.fertilizations:
-    #         fertilizer = md.Fertilizer(db_fertilization.fertilizer)
-    #         crop = md.Crop(
-    #             db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-    #         )
-    #         fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
-    #         planning.fertilizations.append(fertilization)
-    #     plans.append(planning)
-    plans: list[md.Plan] = data_collection(year=2022)
-    print(f"Start timing:")
-    start_time = time()
-    field_timings = []
-    for plan in plans:
-        field_name = plan.field.Field.base_field.name
-        field_time = time()
-
-        field_demand = plan.sum_demands()
-        time_demand = time() - field_time
-
-        field_reduction = plan.sum_reductions()
-        time_reduction = time() - field_time - time_demand
-
-        field_fert = plan.sum_fertilizations()
-        time_fert = time() - field_time - time_reduction
-
-        times = [time_demand, time_reduction, time_fert]
-        field_timing = time() - field_time
-        field_sum = [field_demand, field_reduction, field_fert]
-        field_timings.append((field_name, f"{field_timing:.2f}", [f"{time:.2f}" for time in times]))
-
-    finish_time = time() - start_time
-    pprint(sorted(field_timings, key=lambda x: x[1], reverse=reverse)[:header])
-    print(f"Finished in {finish_time:.2f} secs")
-
-
-def small_timing(index: int = None, name: str = True):
-    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
-    db_field = session.query(Field).join(BaseField).filter(Field.year == 2022, BaseField.name == name, Field.cultivations.any()).one_or_none()
-    if db_field is None:
-        return
-
-    field = md.Field(db_field)
-    plan = md.Plan(field)
-
-    for db_cultivation in db_field.cultivations:
-        crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-        cultivation = md.Cultivation(db_cultivation, crop)
-        plan.cultivations.append(cultivation)
-
-    for db_fertilization in db_field.fertilizations:
-        fertilizer = md.Fertilizer(db_fertilization.fertilizer)
-        crop = md.Crop(
-            db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-        )
-        fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
-        plan.fertilizations.append(fertilization)
-
-    # print(f"Start timing:", plan.field.Field.base_field.name)
-    # start_time = time()
-
-    field_demand = plan.sum_demands()
-    field_reduction = plan.sum_reductions()
-    field_fert = plan.sum_fertilizations()
-
-    # print(f"Finished in {time() - start_time:.2f} secs")
+                    visualize_plan(header=False, plan=plan)
 
 
 if __name__ == "__main__":
     # reseed_database()
-    # plans = data_collection(end=3, year=2021)
+    # start_time = time()
+    # plans = data_collection(year=2022)
     # for plan in plans:
-    #     visualize_plan(plan=plan)
-    # log_error(index=None, plans=None, visual=False)
-    # timing(header=5)
-    small_timing(name="Am Jammer")
+        # visualize_plan(plan=plan)
+    log_error(index=0, plans=None, year=2021, visual=True)
+    # timing(header=-1)
+    # small_timing(name="Am Jammer")
+    # print(f"{time() - start_time:.2f} secs")
