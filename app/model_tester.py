@@ -5,13 +5,8 @@ from time import time
 import model as md
 from database.model import (
     BaseField,
-    Crop,
-    Cultivation,
-    Fertilization,
-    Fertilizer,
     Field,
-    SoilSample,
-    field_fertilization,
+    Saldo,
 )
 from database.setup import setup_database
 from database.types import *
@@ -25,141 +20,189 @@ def reseed_database():
     crops = load_json("data/kulturen.json")
     data = [fields, fertilizers, crops]
     setup_database("anbauplanung.db", data)
-    # seed_extra(fertilizers, crops)
 
 
-def main():
+def data_collection(index: int = None, year: int = None, start: int = 0, end: int = -1):
+    if index is not None:
+        start, end = index, index + 1
+
+    if year is None:
+        year = 2022
+
+    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    db_fields = session.query(Field).filter(Field.year == year, Field.cultivations.any()).all()
+    db_fields = db_fields[start:end]
+    for db_field in db_fields:
+        field = md.Field(db_field)
+        planning = md.Plan(field)
+
+        for db_cultivation in db_field.cultivations:
+            crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
+            cultivation = md.Cultivation(db_cultivation, crop)
+            planning.cultivations.append(cultivation)
+
+        for db_fertilization in db_field.fertilizations:
+            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+            crop = md.Crop(
+                db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
+            )
+            fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
+            planning.fertilizations.append(fertilization)
+        yield planning
+
+
+def visualize_plan(plan: md.Plan, header: bool = True):
+    width, precision = 5, 0
+    elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO"]
+
+    field = plan.field
+    if header:
+        print(f"{field.Field.base_field.prefix}-{field.Field.base_field.suffix} {field.Field.base_field.name} ({field.Field.area:.2f} ha): ")
+    for cultivation in plan.cultivations:
+        if cultivation.crop_class != CropClass.catch_crop:
+            if cultivation.crop_class == CropClass.main_crop:
+                reductions = plan.main_crop_reductions(field.soil_sample)
+            elif cultivation.crop_class == CropClass.second_crop:
+                reductions = plan.second_crop_reductions()
+            print("    ", f"{cultivation.crop_class.value}:  ", [f'{e.center(width)}' for e in elem])
+            print("    ", "---------------------------------------------------------------------")
+            print("    ", "Demand        ", [f'{demand:{width}.{precision}f}' for demand in cultivation.demand(field.demand_option)])
+            print("    ", "Reduction     ", [f'{demand:{width}.{precision}f}' for demand in reductions])
+            print("    ", "---------------------------------------------------------------------")
+            for fertilization in plan.fertilizations:
+                if fertilization.crop_class == cultivation.crop_class or fertilization.crop_class == CropClass.catch_crop and cultivation.crop_class == CropClass.main_crop:
+                    print("    ", f"{fertilization.fertilizer.name[:14]:14}", [f'{nutrient:{width}.{precision}f}' for nutrient in fertilization.nutrients(field.field_type)])
+
+    field_demand = plan.sum_demands()
+    field_reduction = plan.sum_reductions()
+    field_fert = plan.sum_fertilizations()
+    print("    ", "---------------------------------------------------------------------")
+    print("    ", "Saldo         ", [f"{sum(num):{width}.{precision}f}" for num in zip(*[field_demand, field_fert, field_reduction])], end="\n\n")
+
+
+def log_error(index:int = None, plans: list[md.Plan] = None, visual: bool = False):
+    width, precision = 6, 1
+    elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO"]
+
+    if index is not None:
+        start, end = index, index + 1
+    else:
+        start, end = 0, -1
+        index = 0
+    if plans is None:
+        plans = data_collection(start=start, end=end)
+
+    def equal(x,y):
+        diff = abs(Decimal(x)) - abs(Decimal(y))
+        return diff <= Decimal("0.1")
+
+    session = create_session()
+    print("\n","Errors:   ", "Model  vs  DB", end="\n\n")
+    for idx, plan in enumerate(plans):
+        id = idx + index
+        saldo = [f"{sum(num):.{precision}f}" for num in zip(*[plan.sum_demands(), plan.sum_reductions(), plan.sum_fertilizations()])]
+        db_saldo = session.query(Saldo.n, Saldo.p2o5, Saldo.k2o, Saldo.mgo, Saldo.s, Saldo.cao).filter(Saldo.field_id == plan.field.Field.id).one_or_none()
+        if db_saldo:
+            db_saldo = [f"{num:.{precision}f}" for num in db_saldo]
+            compare = [equal(x,y) for x,y in zip(*[saldo, db_saldo])]
+            if not all(compare):
+                base_field = plan.field.Field.base_field
+                print(f"[{id}]", f"{base_field.prefix}-{base_field.suffix} {base_field.name}", " -> ",
+                      f"[{base_field.id}]",
+                      f"[{plan.year}: {plan.field.Field.id}, {plan.plan_prev_year.year}: {plan.plan_prev_year.field.Field.id}]")
+                for i, value in enumerate(compare):
+                    if value is False:
+                        print("    ", f"{f'{elem[i]}:':>5}", f"{saldo[i]:>{width}}", " != ", f"{db_saldo[i]:{width}}")
+                print()
+                if visual:
+                    visualize_plan(id, header=False, plan=plan)
+
+
+def timing(header: int = -1, reverse: bool = True):
+    # session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    # db_fields = session.query(Field).filter(Field.year == 2022, Field.cultivations.any()).all()
+    # plans = []
+    # for db_field in db_fields:
+    #     field = md.Field(db_field)
+    #     planning = md.Plan(field)
+
+    #     for db_cultivation in db_field.cultivations:
+    #         crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
+    #         cultivation = md.Cultivation(db_cultivation, crop)
+    #         planning.cultivations.append(cultivation)
+
+    #     for db_fertilization in db_field.fertilizations:
+    #         fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+    #         crop = md.Crop(
+    #             db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
+    #         )
+    #         fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
+    #         planning.fertilizations.append(fertilization)
+    #     plans.append(planning)
+    plans: list[md.Plan] = data_collection(year=2022)
+    print(f"Start timing:")
     start_time = time()
-    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
-
-    year = 2022
-    db_fields = session.query(Field).filter(Field.year == year, Field.cultivations.any()).all()
-    # db_fields = session.query(Field).filter(Field.year == year, Field.base_id == 68).all()
-
-    db_fields = db_fields[1:2]
-    total_nges = Decimal()
     field_timings = []
-    for db_field in db_fields:
+    for plan in plans:
+        field_name = plan.field.Field.base_field.name
         field_time = time()
-        field = md.Field(db_field)
-        planning = md.Plan(field)
-        soil = md.Soil(db_field.soil_samples[0])
 
-        for db_cultivation in db_field.cultivations:
-            crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-            cultivation = md.Cultivation(db_cultivation, crop)
-            planning.cultivations.append(cultivation)
+        field_demand = plan.sum_demands()
+        time_demand = time() - field_time
 
-        for db_fertilization in db_field.fertilizations:
-            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
-            crop = md.Crop(
-                db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-            )
-            fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
-            planning.fertilizations.append(fertilization)
+        field_reduction = plan.sum_reductions()
+        time_reduction = time() - field_time - time_demand
 
-        measure = None  # MeasureType.spring
-        crop_class = None  # CropClass.second_crop
-        fert_class = None  # FertClass.organic
+        field_fert = plan.sum_fertilizations()
+        time_fert = time() - field_time - time_reduction
 
-        print(f"{db_field.base_field.name}: ")
+        times = [time_demand, time_reduction, time_fert]
+        field_timing = time() - field_time
+        field_sum = [field_demand, field_reduction, field_fert]
+        field_timings.append((field_name, f"{field_timing:.2f}", [f"{time:.2f}" for time in times]))
 
-        # Bedarf und Düngung
-        field_demand = planning.sum_demands()
-        field_reduction = planning.sum_reductions()
-        field_fert = planning.sum_fertilizations(fert_class=fert_class)
-        print(
-            *[
-                f"Demand:",
-                [f"{demand:7.2f}" for demand in field_demand],
-                f"Reduction:",
-                [f"{demand:7.2f}" for demand in field_reduction],
-                f"Fertilization:",
-                [f"{fert:7.2f}" for fert in field_fert],
-                f"Sum:",
-                [f"{sum(num):7.2f}" for num in zip(*[field_demand, field_fert, field_reduction])],
-            ],
-            sep="\n",
-        )
-
-        # Liste der Düngungen
-        # print(
-        #     *[
-        #         f"{fert.fertilization.fertilizer.name}: {[f'{sum:.2f}' for sum in fert.nutrients(planning.field_type)]}"
-        #         for fert in planning.fertilizations
-        #         if (fert.fertilizer.class_ == fert_class if fert_class else True)
-        #     ],
-        #     sep="\n",
-        # )
-
-        # Nges
-        field_nges = planning.n_ges(measure=measure, crop_class=crop_class, netto=False)
-        total_nges += field_nges
-        # print(
-        #     f"Nges: "
-        #     f"{[f'{fert.fertilizer.name}: {fert.amount:.1f} {fert.fertilizer.unit.value}' for fert in db_field.fertilizations if fert.fertilizer.fert_class == FertClass.organic and (fert.measure == measure if measure else True)]}"
-        #     f" -> {field_nges:.1f}",
-        # )
-        # print(f"NgesHD: {planning.n_ges(measure=MeasureType.fall, netto=True):.2f}", f"NgesFD: {planning.n_ges(measure=MeasureType.spring, netto=False):.2f}", sep="\n")
-
-        field_timings.append((db_field.base_field.name, f"{time() - field_time:.2f}"))
-        # print(f"{db_field.base_field.name}: {time() - field_time:.2f}")
-
-        print()
-
-    print(f"Total: {total_nges:.1f}")
-    pprint(sorted(field_timings, key=lambda x: x[1], reverse=True)[:5])
-    print(f"Finished in {time() - start_time:.2f} secs")
+    finish_time = time() - start_time
+    pprint(sorted(field_timings, key=lambda x: x[1], reverse=reverse)[:header])
+    print(f"Finished in {finish_time:.2f} secs")
 
 
-def representation():
+def small_timing(index: int = None, name: str = True):
     session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    db_field = session.query(Field).join(BaseField).filter(Field.year == 2022, BaseField.name == name, Field.cultivations.any()).one_or_none()
+    if db_field is None:
+        return
 
-    index = 16
-    year = 2022
-    width, precision = 4, 0
+    field = md.Field(db_field)
+    plan = md.Plan(field)
 
-    db_fields = session.query(Field).filter(Field.year == year, Field.cultivations.any()).all()
-    db_fields = db_fields[index:]
-    for db_field in db_fields:
-        field = md.Field(db_field)
-        planning = md.Plan(field)
-        print(f"{db_field.base_field.prefix}-{db_field.base_field.suffix} {db_field.base_field.name} ({db_field.area:.2f} ha): ")
+    for db_cultivation in db_field.cultivations:
+        crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
+        cultivation = md.Cultivation(db_cultivation, crop)
+        plan.cultivations.append(cultivation)
 
-        for db_cultivation in db_field.cultivations:
-            crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-            cultivation = md.Cultivation(db_cultivation, crop)
-            planning.cultivations.append(cultivation)
+    for db_fertilization in db_field.fertilizations:
+        fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+        crop = md.Crop(
+            db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
+        )
+        fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
+        plan.fertilizations.append(fertilization)
 
-        for db_fertilization in db_field.fertilizations:
-            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
-            crop = md.Crop(
-                db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-            )
-            fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
-            planning.fertilizations.append(fertilization)
+    # print(f"Start timing:", plan.field.Field.base_field.name)
+    # start_time = time()
 
-        for cultivation in planning.cultivations:
-            if cultivation.crop_class != CropClass.catch_crop:
-                if cultivation.crop_class == CropClass.main_crop:
-                    reductions = planning.main_crop_reductions(md.Soil(field.soil_sample))
-                elif cultivation.crop_class == CropClass.second_crop:
-                    reductions = planning.second_crop_reductions()
-                print(f"{cultivation.crop_class.value}:")
-                print("    ", "Demand        ", [f'{demand:{width}.{precision}f}' for demand in cultivation.demand(field.demand_option)])
-                print("    ", "Reduction     ", [f'{demand:{width}.{precision}f}' for demand in reductions])
-                print("    ", "---------------------------------------------------------------")
-                for fertilization in planning.fertilizations:
-                    if fertilization.crop_class == cultivation.crop_class or fertilization.crop_class == CropClass.catch_crop and cultivation.crop_class == CropClass.main_crop:
-                        print("    ", f"{fertilization.fertilizer.name[:14]:14}", [f'{nutrient:{width}.{precision}f}' for nutrient in fertilization.nutrients(field.field_type)])
+    field_demand = plan.sum_demands()
+    field_reduction = plan.sum_reductions()
+    field_fert = plan.sum_fertilizations()
 
-        field_demand = planning.sum_demands()
-        field_reduction = planning.sum_reductions()
-        field_fert = planning.sum_fertilizations()
-        print("    ", "---------------------------------------------------------------")
-        print("    ", "Saldo         ", [f"{sum(num):{width}.{precision}f}" for num in zip(*[field_demand, field_fert, field_reduction])], end="\n\n")
+    # print(f"Finished in {time() - start_time:.2f} secs")
+
 
 if __name__ == "__main__":
-    # main()
     # reseed_database()
-    representation()
+    # plans = data_collection(end=3, year=2021)
+    # for plan in plans:
+    #     visualize_plan(plan=plan)
+    # log_error(index=None, plans=None, visual=False)
+    # timing(header=5)
+    small_timing(name="Am Jammer")
