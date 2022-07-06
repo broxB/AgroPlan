@@ -36,7 +36,7 @@ class Cultivation:
                 crop_protein=self.crop_protein,
             )
         )
-        if demand_option == DemandType.demand:
+        if demand_option == DemandType.demand or self.remains == RemainsType.removed:
             demands.append(self.crop.demand_byproduct(self.crop_yield))
         demands = [sum(demand) for demand in zip(*demands)]
         if negative_output:
