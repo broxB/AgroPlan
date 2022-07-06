@@ -10,17 +10,17 @@ from database.utils import create_session
 
 @dataclass
 class Plan:
-    Field: md.Field
+    field: md.Field
     cultivations: list[md.Cultivation] = field_(default_factory=list)
     fertilizations: list[md.Fertilization] = field_(default_factory=list)
 
     def __post_init__(self):
-        self.base_field_id = self.Field.base_id
-        self.field_saldo = self.Field.saldo
-        self.field_type = self.Field.field_type
-        self.year = self.Field.year
-        self.soil_sample: md.Soil = self.Field.soil_sample
-        self.demand_option: DemandType = self.Field.demand_option
+        self.base_field_id = self.field.base_id
+        self.field_saldo = self.field.saldo
+        self.field_type = self.field.field_type
+        self.year = self.field.year
+        self.soil_sample: md.Soil = self.field.soil_sample
+        self.demand_option: DemandType = self.field.demand_option
 
     def n_ges(
         self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
@@ -66,19 +66,23 @@ class Plan:
         return [sum(reduction) for reduction in zip(*reductions)]
 
     def main_crop_reductions(self, soil: md.soil.Soil) -> list[Decimal]:
-        reductions = []
+        reductions = [Decimal()] * 6
         if soil:
-            for reduction in (
-                soil.reduction_n(self.field_type),
-                soil.reduction_p2o5(self.field_type),
-                soil.reduction_k2o(self.field_type),
-                soil.reduction_mgo(self.field_type),
-                soil.reduction_s(
-                    self.n_ges(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
-                ),
-                soil.reduction_cao(self.field_type),
-            ):
-                reductions.append(reduction)
+            if self.demand_option == DemandType.demand:
+                for i, reduction in enumerate(
+                    (
+                        soil.reduction_p2o5(self.field_type),
+                        soil.reduction_k2o(self.field_type),
+                        soil.reduction_mgo(self.field_type),
+                    ),
+                    start=1,
+                ):
+                    reductions[i] += reduction
+            reductions[0] += soil.reduction_n(self.field_type)
+            reductions[4] += soil.reduction_s(
+                self.n_ges(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
+            )
+            reductions[5] += soil.reduction_cao(self.field_type)
         else:
             reductions = [Decimal() * 6]
         if self.plan_prev_year:
@@ -149,11 +153,11 @@ class Plan:
         )
         if db_field:
             field = md.Field(db_field)
-            planning = Plan(field)
+            plan = Plan(field)
             for db_cultivation in db_field.cultivations:
                 crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
                 cultivation = md.Cultivation(db_cultivation, crop)
-                planning.cultivations.append(cultivation)
+                plan.cultivations.append(cultivation)
             for db_fertilization in db_field.fertilizations:
                 fertilizer = md.Fertilizer(db_fertilization.fertilizer)
                 crop = md.Crop(
@@ -162,7 +166,7 @@ class Plan:
                 fertilization = md.Fertilization(
                     db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class
                 )
-                planning.fertilizations.append(fertilization)
+                plan.fertilizations.append(fertilization)
         else:
-            planning = None
-        return planning
+            plan = None
+        return plan
