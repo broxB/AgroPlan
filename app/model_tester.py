@@ -47,7 +47,7 @@ def data_collection(index: int = None, year: int = None, start: int = 0, end: in
         yield planning
 
 
-def timing(header: int = -1, reverse: bool = True):
+def timing(header: int = None, reverse: bool = True):
     session = create_session(path="app/database/anbauplanung.db", use_echo=False)
     db_fields = session.query(Field).filter(Field.year == 2022, Field.cultivations.any()).all()
     plans = []
@@ -84,7 +84,8 @@ def timing(header: int = -1, reverse: bool = True):
         field_timings.append((field_name, f"{field_timing:.2f}"))
 
     finish_time = time() - start_time
-    pprint(sorted(field_timings, key=lambda x: x[1], reverse=reverse)[:header])
+    if header:
+        pprint(sorted(field_timings, key=lambda x: x[1], reverse=reverse)[:header])
     print(f"Finished in {finish_time:.2f} secs")
 
 
@@ -151,7 +152,7 @@ def visualize_plan(plan: md.Plan, header: bool = True):
 
 def log_error(index:int = None, plans: list[md.Plan] = None, visual: bool = False, year: int = None):
     width, precision = 6, 1
-    elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO"]
+    elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO", "Nges"]
 
     if index is not None:
         start, end = index, index + 1
@@ -170,7 +171,8 @@ def log_error(index:int = None, plans: list[md.Plan] = None, visual: bool = Fals
     for idx, plan in enumerate(plans):
         id = idx + index
         saldo = [f"{sum(num):.{precision}f}" for num in zip(*[plan.sum_demands(), plan.sum_reductions(), plan.sum_fertilizations()])]
-        db_saldo = session.query(Saldo.n, Saldo.p2o5, Saldo.k2o, Saldo.mgo, Saldo.s, Saldo.cao).filter(Saldo.field_id == plan.field.Field.id).one_or_none()
+        saldo += [f"{plan.n_ges(measure=MeasureType.spring, netto=False):.{precision}f}"]
+        db_saldo = session.query(Saldo.n, Saldo.p2o5, Saldo.k2o, Saldo.mgo, Saldo.s, Saldo.cao, Saldo.nges).filter(Saldo.field_id == plan.field.Field.id).one_or_none()
         if db_saldo:
             db_saldo = [f"{num:.{precision}f}" for num in db_saldo]
             compare = [equal(x,y) for x,y in zip(*[saldo, db_saldo])]
@@ -193,7 +195,7 @@ if __name__ == "__main__":
     # plans = data_collection(year=2022)
     # for plan in plans:
         # visualize_plan(plan=plan)
-    log_error(index=0, plans=None, year=2021, visual=True)
+    log_error(index=None, plans=None, year=2022, visual=False)
     # timing(header=-1)
     # small_timing(name="Am Jammer")
     # print(f"{time() - start_time:.2f} secs")
