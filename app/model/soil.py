@@ -37,7 +37,7 @@ class Soil:
     def reduction_p2o5(self, field_type: FieldType) -> Decimal:
         if self.p2o5 is None:
             return Decimal()
-        value = self.p2o5 / Decimal("2.291")  # calc element form
+        value = round(self.p2o5 / Decimal("2.291"), 1)  # calc element form
         values = self._p2o5_dict[field_type.value]["Werte"]
         reduction = self._p2o5_dict[field_type.value]["Abschläge"]
         index = bisect_right(values, value) - 1
@@ -46,7 +46,7 @@ class Soil:
     def reduction_k2o(self, field_type: FieldType) -> Decimal:
         if self.k2o is None:
             return Decimal()
-        value = self.k2o / Decimal("1.205")  # calc element form
+        value = round(self.k2o / Decimal("1.205"), 1)  # calc element form
         values = self._k2o_dict[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
         reduction = self._k2o_dict[field_type.value][self.soil_type.value][self.humus.value][
             "Abschläge"
@@ -57,7 +57,7 @@ class Soil:
     def reduction_mgo(self, field_type: FieldType) -> Decimal:
         if self.mg is None:
             return Decimal()
-        value = self.mg
+        value = round(self.mg, 1)
         values = self._mgo_dict[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
         reduction = self._mgo_dict[field_type.value][self.soil_type.value][self.humus.value][
             "Abschläge"
@@ -78,7 +78,7 @@ class Soil:
         if self.ph is None:
             return Decimal()
         ph_values = self._cao_dict[field_type.value]["phWert"]
-        index = bisect_left(self.to_decimal(ph_values), self.ph)
+        index = bisect_left(self.to_decimal(ph_values), round(self.ph, 1))
         reduction = self._cao_dict[field_type.value][self.soil_type.value][self.humus.value]
         return Decimal(-reduction[index] * 100 / 4)
 
