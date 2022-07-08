@@ -24,7 +24,6 @@ class Field:
         self.red_region: bool = self.Field.red_region
         self.demand_option: DemandType = self.Field.demand_type
         self.saldo: db.Saldo = self.Field.saldo
-        self.soil_sample = self._soil_sample()
         self.field_prev_year = self._field_prev_year()
 
     def n_ges(
@@ -177,7 +176,8 @@ class Field:
             field = None
         return field
 
-    def _soil_sample(self):
+    @property
+    def soil_sample(self):
         soil_sample = (
             max(self.Field.soil_samples, key=lambda x: x.year) if self.Field.soil_samples else None
         )
