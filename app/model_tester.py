@@ -25,8 +25,8 @@ def data_collection(index: int = None, year: int = None, start: int = 0, end: in
     if year is None:
         year = 2022
 
-    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
-    db_fields = session.query(Field).filter(Field.year == year, Field.cultivations.any()).all()
+    session = create_session(path="app/database/anbauplanung.db", echo=False)
+    db_fields = session.query(Field).filter(Field.year == year).all() #, Field.cultivations.any()
     db_fields = db_fields[start:end]
     for db_field in db_fields:
         field = md.Field(db_field)
@@ -47,7 +47,7 @@ def data_collection(index: int = None, year: int = None, start: int = 0, end: in
 
 
 def timing(header: int = None, reverse: bool = True):
-    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    session = create_session(path="app/database/anbauplanung.db", echo=False)
     db_fields = session.query(Field).filter(Field.year == 2022, Field.cultivations.any()).all()
     fields = []
     for db_field in db_fields:
@@ -88,7 +88,7 @@ def timing(header: int = None, reverse: bool = True):
 
 
 def small_timing(name: str = True):
-    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    session = create_session(path="app/database/anbauplanung.db", echo=False)
     db_field = session.query(Field).join(BaseField).filter(Field.year == 2022, BaseField.name == name, Field.cultivations.any()).one_or_none()
     if db_field is None:
         return
@@ -146,7 +146,7 @@ def visualize_field(field: md.Field, header: bool = True):
     print("    ", "Saldo         ", [f"{sum(num):{width}.{precision}f}" for num in zip(*[field_demand, field_fert, field_reduction])], end="\n\n")
 
 
-def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = False, year: int = None):
+def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = False, year: int = None, output: bool = True):
     width, precision = 6, 1
     elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO", "Nges"]
 
@@ -162,7 +162,7 @@ def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = Fa
         diff = abs(Decimal(x)) - abs(Decimal(y))
         return diff <= Decimal("0.1")
 
-    session = create_session()
+    session = create_session("app/database/anbauplanung.db")
     print("\n","Errors:   ", "Model  vs  DB", end="\n\n")
     for idx, field in enumerate(fields):
         id = idx + index
@@ -172,7 +172,7 @@ def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = Fa
         if db_saldo:
             db_saldo = [f"{num:.{precision}f}" for num in db_saldo]
             compare = [equal(x,y) for x,y in zip(*[saldo, db_saldo])]
-            if not all(compare):
+            if not all(compare) and output:
                 base_field = field.Field.base_field
                 print(f"[{id}]", f"{base_field.prefix}-{base_field.suffix} {base_field.name}", " -> ",
                       f"[{base_field.id}]",
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     # plans = data_collection(year=2022)
     # for plan in plans:
         # visualize_plan(plan=plan)
-    log_error(index=None, fields=None, year=2022, visual=False)
+    log_error(index=None, fields=None, year=2022, output=False, visual=False)
     # timing(header=-1)
     # small_timing(name="Am Jammer")
     # print(f"{time() - start_time:.2f} secs")
