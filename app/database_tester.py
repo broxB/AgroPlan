@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 
 def main():
-    session = create_session(path="app/database/anbauplanung.db", use_echo=False)
+    session = create_session(path="app/database/anbauplanung.db", echo=False)
 
     # pprint(session.query(BaseField).all())
     # pprint(session.query(Field).all())

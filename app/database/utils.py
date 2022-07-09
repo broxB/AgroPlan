@@ -23,7 +23,7 @@ class DBConnection:
             Engine: Database engine.
         """
         if url not in cls.__connections.keys():
-            logger.debug()(f"Establishing connection... {url}")
+            logger.debug(f"Establishing connection... {url}")
             cls.__connections[url] = create_engine(url=f"sqlite:///{url}", echo=echo, future=True)
         return cls.__connections[url]
 
