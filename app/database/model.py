@@ -268,5 +268,5 @@ class Saldo(Base):
     mgo = Column("mgo", Float(asdecimal=True))
     s = Column("s", Float(asdecimal=True))
     cao = Column("cao", Float(asdecimal=True))
-    nges = Column("nges", Float(asdecimal=True))
+    n_total = Column("nges", Float(asdecimal=True))
     field = relationship("Field", back_populates="saldo")

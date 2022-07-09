@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import database.model as db
-from database.types import CropClass, FieldType, MeasureType
+from database.types import CropClass, FertClass, FieldType, MeasureType
 from model.crop import Crop
 from model.fertilizer import Fertilizer
 
@@ -18,10 +18,10 @@ class Fertilization:
         self.amount: Decimal = self.Fertilization.amount
         self.measure: MeasureType = self.Fertilization.measure
 
-    def n_ges(self, measure: MeasureType, crop_class: CropClass, netto: bool) -> Decimal:
+    def n_total(self, measure: MeasureType, crop_class: CropClass, netto: bool) -> Decimal:
         if self.fertilizer.is_organic:
             if self.is_measure(measure) and self.crop.is_class(crop_class):
-                return self.amount * self.fertilizer.n_ges(netto)
+                return self.amount * self.fertilizer.n_total(netto)
         return Decimal()
 
     def nutrients(self, field_type: FieldType) -> list[Decimal]:
@@ -43,3 +43,26 @@ class Fertilization:
 
     def is_measure(self, measure: MeasureType) -> bool:
         return self.measure == measure if measure else True
+
+    def check_for_overfertilization(self, field_type: FieldType, red_region: bool):
+        if self.fertilizer.is_class(FertClass.organic) and self.measure == MeasureType.fall:
+            n_total, nh4 = [self.amount * n for n in (self.fertilizer.n, self.fertilizer.nh4)]
+            if field_type == FieldType.grassland or self.crop.feedable:
+                if n_total > (80 if not red_region else 60):
+                    raise OverFertilizationError(n_total)
+            else:
+                if n_total > 60:
+                    raise OverFertilizationError(n_total)
+                elif nh4 > 30:
+                    raise OverFertilizationError(nh4)
+
+
+class OverFertilizationError(Exception):
+    """Raised when fertilization in fall violates threshold."""
+
+    def __init__(self, value: Decimal) -> None:
+        self.value = value
+        super().__init__()
+
+    def __str__(self) -> str:
+        return f"{self.value:.0f} kg/ha -> max. 60kg/ha Ntotal or 30kg/ha NH4 for fall fertilizations."

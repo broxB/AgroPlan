@@ -65,14 +65,14 @@ class Soil:
         index = bisect_right(values, value) - 1
         return Decimal(reduction[index])
 
-    def reduction_s(self, s_demand: Decimal, nges: Decimal) -> Decimal:
+    def reduction_s(self, s_demand: Decimal, n_total: Decimal) -> Decimal:
         s_values = self._s_dict["Grenzwerte"]["Bedarf"]
-        nges_values = self._s_dict["Grenzwerte"]["Nges"]
+        n_total_values = self._s_dict["Grenzwerte"]["Nges"]
         s_index = bisect_right(s_values, s_demand) - 1
-        nges_index = str(nges_values[bisect_right(nges_values, nges) - 1])
+        n_total_index = str(n_total_values[bisect_right(n_total_values, n_total) - 1])
         reduction_s = self._s_dict["Humusgehalt"][self.humus.value][s_index]
-        reduction_nges = self._s_dict["Nges"][nges_index][s_index]
-        return Decimal(reduction_s + reduction_nges)
+        reduction_n_total = self._s_dict["Nges"][n_total_index][s_index]
+        return Decimal(reduction_s + reduction_n_total)
 
     def reduction_cao(self, field_type: FieldType, preservation: bool = False) -> Decimal:
         if self.ph is None:

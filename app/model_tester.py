@@ -167,8 +167,8 @@ def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = Fa
     for idx, field in enumerate(fields):
         id = idx + index
         saldo = [f"{sum(num):.{precision}f}" for num in zip(*[field.sum_demands(), field.sum_reductions(), field.sum_fertilizations()])]
-        saldo += [f"{field.n_ges(measure=MeasureType.spring, netto=False):.{precision}f}"]
-        db_saldo = session.query(Saldo.n, Saldo.p2o5, Saldo.k2o, Saldo.mgo, Saldo.s, Saldo.cao, Saldo.nges).filter(Saldo.field_id == field.Field.id).one_or_none()
+        saldo += [f"{field.n_total(measure=MeasureType.spring, netto=False):.{precision}f}"]
+        db_saldo = session.query(Saldo.n, Saldo.p2o5, Saldo.k2o, Saldo.mgo, Saldo.s, Saldo.cao, Saldo.n_total).filter(Saldo.field_id == field.Field.id).one_or_none()
         if db_saldo:
             db_saldo = [f"{num:.{precision}f}" for num in db_saldo]
             compare = [equal(x,y) for x,y in zip(*[saldo, db_saldo])]
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     # plans = data_collection(year=2022)
     # for plan in plans:
         # visualize_plan(plan=plan)
-    log_error(index=None, fields=None, year=2022, output=False, visual=False)
+    log_error(index=None, fields=None, year=2022, output=True, visual=False)
     # timing(header=-1)
     # small_timing(name="Am Jammer")
     # print(f"{time() - start_time:.2f} secs")

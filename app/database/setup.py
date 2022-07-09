@@ -354,7 +354,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     mgo=field_dict["MgO_Saldo"] if field_dict["MgO_Saldo"] else 0,
                     s=field_dict["S_Saldo"] if field_dict["S_Saldo"] else 0,
                     cao=field_dict["CaO_Saldo"] if field_dict["CaO_Saldo"] else 0,
-                    nges=field_dict["Nges_FD"] if field_dict["Nges_FD"] else 0,
+                    n_total=field_dict["Nges_FD"] if field_dict["Nges_FD"] else 0,
                 )
                 saldo.field = field
 

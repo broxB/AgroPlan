@@ -41,20 +41,22 @@ class Crop:
         crop_yield: Decimal,
         crop_protein: Decimal,
     ) -> list[Decimal]:
-        nutrients = [self.p2o5, self.k2o, self.mgo]
         demands = [
             self._n(crop_yield, crop_protein),
-            *[self._nutrient(crop_yield, x) for x in nutrients],
+            self._nutrient(crop_yield, self.p2o5),
+            self._nutrient(crop_yield, self.k2o),
+            self._nutrient(crop_yield, self.mgo),
             self.s_demand,
             Decimal(),  # Kalk
         ]
         return demands
 
     def demand_byproduct(self, crop_yield: Decimal) -> list[Decimal]:
-        nutrients = [self.byp_p2o5, self.byp_k2o, self.byp_mgo]
         demands = [
             Decimal(),  # Stickstoff
-            *[self._nutrient_byproduct(crop_yield, x) for x in nutrients],
+            self._nutrient_byproduct(crop_yield, self.byp_p2o5),
+            self._nutrient_byproduct(crop_yield, self.byp_k2o),
+            self._nutrient_byproduct(crop_yield, self.byp_mgo),
             Decimal(),  # Schwefel
             Decimal(),  # Kalk
         ]

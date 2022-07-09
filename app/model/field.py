@@ -6,6 +6,8 @@ import database.model as db
 import model as md
 from database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
 from database.utils import create_session
+from loguru import logger
+from model.fertilization import OverFertilizationError
 from model.soil import Soil
 
 
@@ -26,19 +28,25 @@ class Field:
         self.saldo: db.Saldo = self.Field.saldo
         self.field_prev_year = self._field_prev_year()
 
-    def n_ges(
+    def n_total(
         self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
     ) -> Decimal:
-        nges = Decimal()
+        n_total = Decimal()
         for fertilization in self.fertilizations:
-            nges += fertilization.n_ges(measure, crop_class, netto)
-        return nges
+            n_total += fertilization.n_total(measure, crop_class, netto)
+        return n_total
 
     def sum_fertilizations(self, fert_class: FertClass = None) -> list[Decimal]:
         nutrients = []
         for fertilization in self.fertilizations:
             if fertilization.fertilizer.is_class(fert_class):
                 nutrients.append(fertilization.nutrients(self.field_type))
+                try:
+                    fertilization.check_for_overfertilization(self.field_type, self.red_region)
+                except OverFertilizationError as e:
+                    logger.warning(
+                        f"{self.Field.base_field.name} [{self.field_type.value}]: {fertilization.fertilizer.name} {e.value:.0f}"
+                    )
         if not nutrients:
             nutrients.append([Decimal()] * 6)
         return [sum(nutrient) for nutrient in zip(*nutrients)]
@@ -84,7 +92,7 @@ class Field:
                     reductions[i] += reduction
             reductions[0] += soil.reduction_n(self.field_type)
             reductions[4] += soil.reduction_s(
-                self.n_ges(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
+                self.n_total(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
             )
             if soil.year + 3 < self.year:
                 reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
@@ -139,10 +147,10 @@ class Field:
             return None
 
     def n_redelivery(self) -> Decimal:
-        prev_spring_nges = self.field_prev_year.n_ges(measure=MeasureType.spring)
-        fall_nges = self.n_ges(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
-        nges = (prev_spring_nges + fall_nges) * Decimal("0.1")
-        return nges
+        prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.spring)
+        fall_n_total = self.n_total(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
+        n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
+        return n_total
 
     def cao_saldo(self) -> Decimal:
         return self.field_prev_year.saldo.cao
