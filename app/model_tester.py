@@ -46,78 +46,6 @@ def data_collection(index: int = None, year: int = None, start: int = 0, end: in
         yield field
 
 
-def timing(header: int = None, reverse: bool = True):
-    session = create_session(path="app/database/anbauplanung.db", echo=False)
-    db_fields = session.query(Field).filter(Field.year == 2022, Field.cultivations.any()).all()
-    fields = []
-    for db_field in db_fields:
-        field = md.Field(db_field)
-
-        for db_cultivation in db_field.cultivations:
-            crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-            cultivation = md.Cultivation(db_cultivation, crop)
-            field.cultivations.append(cultivation)
-
-        for db_fertilization in db_field.fertilizations:
-            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
-            crop = md.Crop(
-                db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-            )
-            fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
-            field.fertilizations.append(fertilization)
-        fields.append(field)
-    # plans: list[md.Plan] = data_collection(year=2022)
-    print(f"Start timing:")
-    start_time = time()
-    field_timings = []
-    for field in fields:
-        field_name = field.Field.base_field.name
-        field_time = time()
-
-        field_demand = field.sum_demands()
-        field_reduction = field.sum_reductions()
-        field_fert = field.sum_fertilizations()
-
-        field_timing = time() - field_time
-        field_timings.append((field_name, f"{field_timing:.2f}"))
-
-    finish_time = time() - start_time
-    if header:
-        pprint(sorted(field_timings, key=lambda x: x[1], reverse=reverse)[:header])
-    print(f"Finished in {finish_time:.2f} secs")
-
-
-def small_timing(name: str = True):
-    session = create_session(path="app/database/anbauplanung.db", echo=False)
-    db_field = session.query(Field).join(BaseField).filter(Field.year == 2022, BaseField.name == name, Field.cultivations.any()).one_or_none()
-    if db_field is None:
-        return
-
-    field = md.Field(db_field)
-
-    for db_cultivation in db_field.cultivations:
-        crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-        cultivation = md.Cultivation(db_cultivation, crop)
-        field.cultivations.append(cultivation)
-
-    for db_fertilization in db_field.fertilizations:
-        fertilizer = md.Fertilizer(db_fertilization.fertilizer)
-        crop = md.Crop(
-            db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-        )
-        fertilization = md.Fertilization(db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class)
-        field.fertilizations.append(fertilization)
-
-    print(f"Start timing:", field.Field.base_field.name)
-    start_time = time()
-
-    field_demand = field.sum_demands()
-    field_reduction = field.sum_reductions()
-    field_fert = field.sum_fertilizations()
-
-    print(f"Finished in {time() - start_time:.2f} secs")
-
-
 def visualize_field(field: md.Field, header: bool = True):
     width, precision = 5, 0
     elem = ["N", "P2O5", "K2O", "MgO", "S", "CaO"]
@@ -129,6 +57,7 @@ def visualize_field(field: md.Field, header: bool = True):
             if cultivation.crop_class == CropClass.main_crop:
                 reductions = field.main_crop_reductions(field.soil_sample)
             elif cultivation.crop_class == CropClass.second_crop:
+                print()
                 reductions = field.second_crop_reductions()
             print("    ", f"{cultivation.crop_class.value}:  ", [f'{e.center(width)}' for e in elem])
             print("    ", "---------------------------------------------------------------------")
@@ -187,11 +116,10 @@ def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = Fa
 
 if __name__ == "__main__":
     # reseed_database()
-    # start_time = time()
-    # plans = data_collection(year=2022)
-    # for plan in plans:
-        # visualize_plan(plan=plan)
-    log_error(index=None, fields=None, year=2022, output=True, visual=False)
-    # timing(header=-1)
-    # small_timing(name="Am Jammer")
-    # print(f"{time() - start_time:.2f} secs")
+    fields = data_collection(year=2021)
+    for field in fields:
+        # field.overfertilization
+        if field.catch_crop:
+            print(field.Field.base_field.name, [f"{n:.2f}" for n in field.catch_crop.demand(field.demand_option)])
+            # visualize_field(field=field)
+    # log_error(index=None, fields=None, year=2022, output=True, visual=False)
