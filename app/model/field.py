@@ -7,7 +7,6 @@ import model as md
 from database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
 from database.utils import create_session
 from loguru import logger
-from model.fertilization import OverFertilizationError
 from model.soil import Soil
 
 
@@ -41,12 +40,6 @@ class Field:
         for fertilization in self.fertilizations:
             if fertilization.fertilizer.is_class(fert_class):
                 nutrients.append(fertilization.nutrients(self.field_type))
-                try:
-                    fertilization.check_for_overfertilization(self.field_type, self.red_region)
-                except OverFertilizationError as e:
-                    logger.warning(
-                        f"{self.Field.base_field.name} [{self.field_type.value}]: {fertilization.fertilizer.name} {e.value:.0f}"
-                    )
         if not nutrients:
             nutrients.append([Decimal()] * 6)
         return [sum(nutrient) for nutrient in zip(*nutrients)]
@@ -79,6 +72,8 @@ class Field:
 
     def main_crop_reductions(self, soil: Soil) -> list[Decimal]:
         reductions = [Decimal()] * 6
+        if not self.main_crop:
+            return reductions
         if soil:
             if self.demand_option == DemandType.demand:
                 for i, reduction in enumerate(
@@ -109,9 +104,20 @@ class Field:
 
     def second_crop_reductions(self) -> list[Decimal]:
         reductions = [Decimal()] * 6
+        if not self.second_crop:
+            return reductions
         reductions[0] += self.main_crop.pre_crop_effect()
         reductions[0] += self.second_crop.legume_delivery()
         return reductions
+
+    def n_redelivery(self) -> Decimal:
+        prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.spring)
+        fall_n_total = self.n_total(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
+        n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
+        return n_total
+
+    def cao_saldo(self) -> Decimal:
+        return self.field_prev_year.saldo.cao
 
     @property
     def main_crop(self) -> md.Cultivation:
@@ -146,14 +152,48 @@ class Field:
         else:
             return None
 
-    def n_redelivery(self) -> Decimal:
-        prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.spring)
-        fall_n_total = self.n_total(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
-        n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
-        return n_total
+    @property
+    def soil_sample(self):
+        soil_sample = (
+            max(self.Field.soil_samples, key=lambda x: x.year) if self.Field.soil_samples else None
+        )
+        if soil_sample:
+            return md.Soil(soil_sample)
+        return None
 
-    def cao_saldo(self) -> Decimal:
-        return self.field_prev_year.saldo.cao
+    @property
+    def overfertilization(self) -> bool:
+        n_total, nh4 = self._sum_fall_fertilizations()
+        if (
+            self.field_type == FieldType.grassland
+            or self.main_crop
+            and self.main_crop.crop.feedable
+        ):
+            if n_total > (80 if not self.red_region else 60):
+                logger.info(
+                    f"{self.Field.base_field.name}: {n_total=:.0f} is violating the maximum value for fall fertilizations."
+                )
+                return True
+        elif n_total > 60 or nh4 > 30:
+            logger.info(
+                f"{self.Field.base_field.name}: {n_total=:.0f} or {nh4=:.0f} are violating the maximum values for fall fertilizations."
+            )
+            return True
+        return False
+
+    def _sum_fall_fertilizations(self):
+        sum_n = [(0, 0)]
+        for fertilization in self.fertilizations:
+            if (
+                fertilization.fertilizer.is_class(FertClass.organic)
+                and fertilization.measure == MeasureType.fall
+            ):
+                n_total, nh4 = [
+                    fertilization.amount * n
+                    for n in (fertilization.fertilizer.n, fertilization.fertilizer.nh4)
+                ]
+                sum_n.append((n_total, nh4))
+        return [sum(n) for n in zip(*sum_n)]
 
     def _field_prev_year(self):
         if not self.first_year:
@@ -183,12 +223,3 @@ class Field:
         else:
             field = None
         return field
-
-    @property
-    def soil_sample(self):
-        soil_sample = (
-            max(self.Field.soil_samples, key=lambda x: x.year) if self.Field.soil_samples else None
-        )
-        if soil_sample:
-            return md.Soil(soil_sample)
-        return None

@@ -43,26 +43,3 @@ class Fertilization:
 
     def is_measure(self, measure: MeasureType) -> bool:
         return self.measure == measure if measure else True
-
-    def check_for_overfertilization(self, field_type: FieldType, red_region: bool):
-        if self.fertilizer.is_class(FertClass.organic) and self.measure == MeasureType.fall:
-            n_total, nh4 = [self.amount * n for n in (self.fertilizer.n, self.fertilizer.nh4)]
-            if field_type == FieldType.grassland or self.crop.feedable:
-                if n_total > (80 if not red_region else 60):
-                    raise OverFertilizationError(n_total)
-            else:
-                if n_total > 60:
-                    raise OverFertilizationError(n_total)
-                elif nh4 > 30:
-                    raise OverFertilizationError(nh4)
-
-
-class OverFertilizationError(Exception):
-    """Raised when fertilization in fall violates threshold."""
-
-    def __init__(self, value: Decimal) -> None:
-        self.value = value
-        super().__init__()
-
-    def __str__(self) -> str:
-        return f"{self.value:.0f} kg/ha -> max. 60kg/ha Ntotal or 30kg/ha NH4 for fall fertilizations."
