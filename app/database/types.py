@@ -20,8 +20,8 @@ class FieldType(enum.Enum):
     grassland = "Grünland"
     cropland = "Ackerland"
     exchanged_land = "Tauschfläche"
-    fallow_grassland = "Ackerland-Brache"
-    fallow_cropland = "Grünland-Brache"
+    fallow_grassland = "Grünland-Brache"
+    fallow_cropland = "Ackerland-Brache"
 
 
 class SoilType(enum.Enum):
