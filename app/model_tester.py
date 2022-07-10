@@ -3,6 +3,7 @@ from pprint import pprint
 from time import time
 
 import model as md
+from model.cultivation import create_cultivation
 from database.model import BaseField, Field, Saldo
 from database.setup import setup_database
 from database.types import *
@@ -33,7 +34,7 @@ def data_collection(index: int = None, year: int = None, start: int = 0, end: in
 
         for db_cultivation in db_field.cultivations:
             crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-            cultivation = md.Cultivation(db_cultivation, crop)
+            cultivation = create_cultivation(db_cultivation, crop)
             field.cultivations.append(cultivation)
 
         for db_fertilization in db_field.fertilizations:
@@ -95,6 +96,7 @@ def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = Fa
     print("\n","Errors:   ", "Model  vs  DB", end="\n\n")
     for idx, field in enumerate(fields):
         id = idx + index
+        field.overfertilization
         saldo = [f"{sum(num):.{precision}f}" for num in zip(*[field.sum_demands(), field.sum_reductions(), field.sum_fertilizations()])]
         saldo += [f"{field.n_total(measure=MeasureType.spring, netto=False):.{precision}f}"]
         db_saldo = session.query(Saldo.n, Saldo.p2o5, Saldo.k2o, Saldo.mgo, Saldo.s, Saldo.cao, Saldo.n_total).filter(Saldo.field_id == field.Field.id).one_or_none()
@@ -116,10 +118,9 @@ def log_error(index:int = None, fields: list[md.Field] = None, visual: bool = Fa
 
 if __name__ == "__main__":
     # reseed_database()
-    fields = data_collection(year=2021)
-    for field in fields:
-        # field.overfertilization
-        if field.catch_crop:
-            print(field.Field.base_field.name, [f"{n:.2f}" for n in field.catch_crop.demand(field.demand_option)])
+    # fields = data_collection(year=2021)
+    # for field in fields:
+    #     if field.catch_crop:
+    #         print(field.Field.base_field.name, [f"{n:.2f}" for n in field.catch_crop.demand(field.demand_option)])
             # visualize_field(field=field)
-    # log_error(index=None, fields=None, year=2022, output=True, visual=False)
+    log_error(index=None, fields=None, year=2022, output=True, visual=False)
