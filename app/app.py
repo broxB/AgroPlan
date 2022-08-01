@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication
 def main():
     app = QApplication(sys.argv)
     logger.debug("Creating app")
-    # app.setStyle("windows")
+    # app.setStyle("Fusion")
     window = MainWindow(use_ui=True)
     window.show()
     sys.exit(app.exec())

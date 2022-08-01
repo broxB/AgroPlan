@@ -5,10 +5,11 @@ from utils.utils import get_field_cultivation
 
 
 class StandardItem(QStandardItem):
-    def __init__(self, text="", checkable=False):
+    def __init__(self, text="", checkable=False, selectable=True):
         super().__init__()
         self.setEditable(False)
         self.setCheckable(checkable)
+        self.setSelectable(selectable)
         self.setText(text)
 
 
@@ -24,7 +25,7 @@ class MyTreeView(QTreeView):
 
         field_data = get_field_cultivation(field)
         for year in field_data:
-            year_item = StandardItem(year)
+            year_item = StandardItem(year, selectable=False)
             for crop in field_data[year]:
                 crop_item = StandardItem(crop, checkable=False)
                 year_item.appendRow(crop_item)

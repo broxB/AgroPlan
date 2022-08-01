@@ -8,6 +8,7 @@ from PyQt6.QtCore import pyqtSlot as Slot
 from PyQt6.QtWidgets import (
     QComboBox,
     QDialog,
+    QGroupBox,
     QLabel,
     QLineEdit,
     QMainWindow,
@@ -28,12 +29,12 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         global USE_UI
         USE_UI = use_ui
         logger.debug("Init setup UI")
-        uic.loadUi("qtdesigner/AgroPlan/mainwindow.ui", self) if USE_UI else self.setupUi(self)
+        uic.loadUi("qtdesigner/AgroPlan/new_mainwindow.ui", self) if USE_UI else self.setupUi(self)
         logger.debug("Post setup UI")
         self.setFocus()
-        self.pushButton: QPushButton
+        self.pushButton_soil_samples: QPushButton
         self.comboBox: QComboBox
-        # self.comboBox.addItems(get_fields_list("2022"))
+        self.comboBox.addItems(get_fields_list("2022"))
         # self.combo_lineEdit = MyLineEdit(self.comboBox)
         # self.combo_lineEdit.setClearButtonEnabled(True)
         # self.comboBox.setLineEdit(self.combo_lineEdit)
@@ -51,6 +52,8 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
         self.spinBox: QSpinBox
         self.treeView.insert_data(self.comboBox.currentText())
         self.tableView.cultivation_data(self.comboBox.currentText(), self.spinBox.value())
+        self.groupBox_zhf: QGroupBox
+        self.groupBox_zhf.setVisible(True)
 
     # @Slot()
     # def select_popup(self):
@@ -74,26 +77,27 @@ class MainWindow(QMainWindow, mainwindow.Ui_MainWindow):
 
     def click_treeview_item(self, value: QModelIndex):
         if value.parent().data() is None:
-            year = int(value.data())
+            # year = int(value.data())
+            return
         else:
             year = int(value.parent().data())
         self.spinBox.setValue(year)
 
-    @Slot(name="on_pushButton_3_clicked")
+    @Slot(name="on_pushButton_prev_clicked")
     def lower_combobox_index(self) -> None:
         index = self.comboBox.currentIndex()
         if index == 0:
             return
         self.comboBox.setCurrentIndex(index - 1)
 
-    @Slot(name="on_pushButton_2_clicked")
+    @Slot(name="on_pushButton_next_clicked")
     def raise_combobox_index(self) -> None:
         index = self.comboBox.currentIndex()
         if index == self.comboBox.count() - 1:
             return
         self.comboBox.setCurrentIndex(index + 1)
 
-    @Slot(name="on_pushButton_clicked")
+    @Slot(name="on_pushButton_soil_samples_clicked")
     @Slot(name="on_actionDialog_triggered")
     def open_dialog(self) -> None:
         dialog = UIDialog(self)
