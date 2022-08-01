@@ -7,6 +7,7 @@ import model as md
 from database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
 from database.utils import create_session
 from loguru import logger
+from model.cultivation import CatchCrop, MainCrop, SecondCrop, create_cultivation
 from model.soil import Soil
 
 
@@ -61,20 +62,15 @@ class Field:
 
     def sum_reductions(self) -> list[Decimal]:
         reductions = []
+        reductions.append(self.soil_reductions(self.soil_sample))
+        reductions.append(self.redelivery())
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.main_crop:
-                reductions.append(self.main_crop_reductions(self.soil_sample))
-            elif cultivation.crop_class == CropClass.second_crop:
-                reductions.append(self.second_crop_reductions())
-        if not reductions:
-            reductions.append([Decimal()] * 6)
+            reductions.append(self.crop_reductions(cultivation))
         return [sum(reduction) for reduction in zip(*reductions)]
 
-    def main_crop_reductions(self, soil: Soil) -> list[Decimal]:
+    def soil_reductions(self, soil: Soil) -> list[Decimal]:
         reductions = [Decimal()] * 6
-        if not self.main_crop:
-            return reductions
-        if soil:
+        if soil and self.field_type in [FieldType.cropland, FieldType.grassland]:
             if self.demand_option == DemandType.demand:
                 for i, reduction in enumerate(
                     (
@@ -86,29 +82,40 @@ class Field:
                 ):
                     reductions[i] += reduction
             reductions[0] += soil.reduction_n(self.field_type)
-            reductions[4] += soil.reduction_s(
-                self.n_total(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
-            )
+            if self.main_crop:
+                reductions[4] += soil.reduction_s(
+                    self.n_total(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
+                )
             if soil.year + 3 < self.year:
                 reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
             else:
                 reductions[5] += soil.reduction_cao(self.field_type)
+        return reductions
+
+    def redelivery(self) -> list[Decimal]:
+        reductions = [Decimal()] * 6
         if self.field_prev_year:
             reductions[5] += self.cao_saldo()
             reductions[0] += self.n_redelivery()
-        if self.field_type == FieldType.cropland and self.previous_crop:
-            reductions[0] += self.previous_crop.pre_crop_effect()
-        reductions[0] += self.main_crop.reduction_nmin()
-        reductions[0] += self.main_crop.legume_delivery()
         return reductions
 
-    def second_crop_reductions(self) -> list[Decimal]:
+    def crop_reductions(self, cultivation: md.Cultivation) -> list[Decimal]:
         reductions = [Decimal()] * 6
-        if not self.second_crop:
-            return reductions
-        reductions[0] += self.main_crop.pre_crop_effect()
-        reductions[0] += self.second_crop.legume_delivery()
+        reductions[0] += cultivation.reduction()
+        reductions[0] += self.pre_crop_effect(cultivation)
         return reductions
+
+    def pre_crop_effect(self, cultivation: md.Cultivation) -> Decimal:
+        if self.field_type != FieldType.cropland or cultivation.crop_class == CropClass.catch_crop:
+            return Decimal()
+        if cultivation.crop_class == CropClass.main_crop:
+            crop = self.previous_crop
+        else:
+            crop = self.main_crop
+        try:
+            return crop.pre_crop_effect()
+        except AttributeError:
+            return Decimal()
 
     def n_redelivery(self) -> Decimal:
         prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.spring)
@@ -120,28 +127,28 @@ class Field:
         return self.field_prev_year.saldo.cao
 
     @property
-    def main_crop(self) -> md.Cultivation:
+    def main_crop(self) -> MainCrop:
         for cultivation in self.cultivations:
             if cultivation.crop_class == CropClass.main_crop:
                 return cultivation
         return None
 
     @property
-    def second_crop(self) -> md.Cultivation:
+    def second_crop(self) -> SecondCrop:
         for cultivation in self.cultivations:
             if cultivation.crop_class == CropClass.second_crop:
                 return cultivation
         return None
 
     @property
-    def catch_crop(self) -> md.Cultivation:
+    def catch_crop(self) -> CatchCrop:
         for cultivation in self.cultivations:
             if cultivation.crop_class == CropClass.catch_crop:
                 return cultivation
         return None
 
     @property
-    def previous_crop(self) -> md.Cultivation:
+    def previous_crop(self) -> MainCrop | SecondCrop | CatchCrop:
         if self.catch_crop:
             return self.catch_crop
         elif self.field_prev_year:
@@ -149,8 +156,7 @@ class Field:
                 return self.field_prev_year.second_crop
             elif self.field_prev_year.main_crop:
                 return self.field_prev_year.main_crop
-        else:
-            return None
+        return None
 
     @property
     def soil_sample(self):
@@ -209,7 +215,7 @@ class Field:
             field = md.Field(db_field, False)
             for db_cultivation in db_field.cultivations:
                 crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-                cultivation = md.Cultivation(db_cultivation, crop)
+                cultivation = create_cultivation(db_cultivation, crop)
                 field.cultivations.append(cultivation)
             for db_fertilization in db_field.fertilizations:
                 fertilizer = md.Fertilizer(db_fertilization.fertilizer)

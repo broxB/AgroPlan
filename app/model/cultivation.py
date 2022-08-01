@@ -7,6 +7,15 @@ from model.crop import Crop
 from utils import load_json
 
 
+def create_cultivation(cultivation, crop):
+    if cultivation.crop_class == CropClass.catch_crop:
+        return CatchCrop(cultivation, crop)
+    elif cultivation.crop_class == CropClass.main_crop:
+        return MainCrop(cultivation, crop)
+    else:
+        return SecondCrop(cultivation, crop)
+
+
 @dataclass
 class Cultivation:
     Cultivation: db.Cultivation
@@ -28,7 +37,7 @@ class Cultivation:
         self._pre_crop_dict = load_json("data/Richtwerte/Abschläge/vorfrucht.json")
         self._legume_dict = load_json("data/Richtwerte/Abschläge/leguminosen.json")
 
-    def demand(self, demand_option, negative_output: bool = True):
+    def demand(self, demand_option, negative_output: bool = True) -> list[Decimal]:
         demands = []
         demands.append(
             self.crop.demand_crop(
@@ -43,24 +52,8 @@ class Cultivation:
             demands = [(demand * -1) for demand in demands]
         return demands
 
-    def reduction_nmin(self) -> Decimal:
-        if self.crop.feedable:
-            return Decimal()
-        match self.nmin_depth:
-            case 30:
-                return Decimal(self.nmin[0])
-            case 60:
-                return Decimal(sum(self.nmin[:2]))
-            case 90:
-                return Decimal(sum(self.nmin[:2])) + Decimal(self.nmin[2]) / 2
-            case _:
-                return Decimal()
-
     def pre_crop_effect(self) -> Decimal:
-        if self.crop_class == CropClass.catch_crop:
-            return Decimal(self._pre_crop_dict[self.crop_type.value][self.remains.value])
-        else:
-            return Decimal(self._pre_crop_dict[self.crop_type.value])
+        return Decimal(self._pre_crop_dict[self.crop_type.value])
 
     def legume_delivery(self) -> Decimal:
         if not self.crop.feedable:
@@ -76,3 +69,37 @@ class Cultivation:
         elif self.crop_type == CropType.alfalfa or self.crop_type == CropType.clover:
             return Decimal(self._legume_dict[self.crop_type.value])
         return Decimal()
+
+    def reduction(self) -> Decimal:
+        return Decimal()
+
+
+class MainCrop(Cultivation):
+    def reduction_nmin(self) -> Decimal:
+        if self.crop.feedable:
+            return Decimal()
+        match self.nmin_depth:
+            case 30:
+                return Decimal(self.nmin[0])
+            case 60:
+                return Decimal(sum(self.nmin[:2]))
+            case 90:
+                return Decimal(sum(self.nmin[:2])) + Decimal(self.nmin[2]) / 2
+            case _:
+                return Decimal()
+
+    def reduction(self) -> list[Decimal]:
+        return self.reduction_nmin() + self.legume_delivery()
+
+
+class SecondCrop(Cultivation):
+    def reduction(self) -> Decimal:
+        return self.legume_delivery()
+
+
+class CatchCrop(Cultivation):
+    def demand(self, *args, **kwargs) -> list[Decimal]:
+        return [Decimal("-60"), *[Decimal()] * 5]
+
+    def pre_crop_effect(self) -> Decimal:
+        return Decimal(self._pre_crop_dict[self.crop_type.value][self.remains.value])
