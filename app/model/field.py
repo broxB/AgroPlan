@@ -8,6 +8,7 @@ from database.types import CropClass, DemandType, FertClass, FieldType, MeasureT
 from database.utils import create_session
 from loguru import logger
 from model.cultivation import CatchCrop, MainCrop, SecondCrop, create_cultivation
+from model.fertilizer import create_fertilizer
 from model.soil import Soil
 
 
@@ -31,6 +32,16 @@ class Field:
     def n_total(
         self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
     ) -> Decimal:
+        """Summarizes the nitrogen values of all fertilizations specified.
+
+        Args:
+            measure (MeasureType, optional): MeasureType that should be counted. Defaults to None.
+            crop_class (CropClass, optional): CropClass that should be counted. Defaults to None.
+            netto (bool, optional): If storage loss should be applied. Defaults to False.
+
+        Returns:
+            Decimal: Sum for nitrogen of all fertilizations.
+        """
         n_total = Decimal()
         for fertilization in self.fertilizations:
             n_total += fertilization.n_total(measure, crop_class, netto)
@@ -93,6 +104,7 @@ class Field:
         return reductions
 
     def redelivery(self) -> list[Decimal]:
+        """Sum the nutrient values left in the soil from last period."""
         reductions = [Decimal()] * 6
         if self.field_prev_year:
             reductions[5] += self.cao_saldo()
@@ -169,6 +181,7 @@ class Field:
 
     @property
     def overfertilization(self) -> bool:
+        """Checks if fertilization applied in fall exceeds the regulations"""
         n_total, nh4 = self._sum_fall_fertilizations()
         if (
             self.field_type == FieldType.grassland
@@ -218,7 +231,7 @@ class Field:
                 cultivation = create_cultivation(db_cultivation, crop)
                 field.cultivations.append(cultivation)
             for db_fertilization in db_field.fertilizations:
-                fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+                fertilizer = create_fertilizer(db_fertilization.fertilizer)
                 crop = md.Crop(
                     db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
                 )

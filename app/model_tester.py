@@ -3,11 +3,12 @@ from pprint import pprint
 from time import time
 
 import model as md
-from model.cultivation import create_cultivation
 from database.model import BaseField, Field, Saldo
 from database.setup import setup_database
 from database.types import *
 from database.utils import create_session
+from model.cultivation import create_cultivation
+from model.fertilizer import create_fertilizer
 from utils import load_json
 
 
@@ -38,7 +39,7 @@ def data_collection(index: int = None, year: int = None, start: int = 0, end: in
             field.cultivations.append(cultivation)
 
         for db_fertilization in db_field.fertilizations:
-            fertilizer = md.Fertilizer(db_fertilization.fertilizer)
+            fertilizer = create_fertilizer(db_fertilization.fertilizer)
             crop = md.Crop(
                 db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
             )

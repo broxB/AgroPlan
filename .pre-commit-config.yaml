@@ -2,7 +2,8 @@ repos:
 -   repo: https://github.com/psf/black
     rev: 22.6.0
     hooks:
-    - id: black
+    -   id: black
+        exclude: app/model_tester.py
 
 -   repo: https://github.com/pycqa/isort
     rev: 5.10.1
