@@ -2,6 +2,14 @@ import json
 import re
 
 
+def round_to_nearest(number, num_decimals):
+    """python uses banking round; while this round 0.5 up"""
+    if (number * 10 ** (num_decimals + 1)) % 10 == 5:
+        return round(number + 1 / 10 ** (num_decimals + 1), num_decimals)
+    else:
+        return round(number, num_decimals)
+
+
 def dataclass_from_dict(dclass, data_dict: dict):
     """Create dataclass from dictionary.
 
