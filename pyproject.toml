@@ -12,6 +12,7 @@ exclude = '''
   | buck-out
   | build
   | dist
+  | app/model_tester.py
 )/
 '''
 
