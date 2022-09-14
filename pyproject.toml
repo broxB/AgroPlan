@@ -13,11 +13,14 @@ exclude = '''
   | build
   | dist
   | app/model_tester.py
+  | ^migrations/
+  | \.flaskenv
 )/
 '''
 
 [tool.isort]
 profile = "black"
+skip_glob = "*/migrations/*.py"
 
 [tool.coverage]
   [tool.coverage.run]

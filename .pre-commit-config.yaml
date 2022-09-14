@@ -3,9 +3,11 @@ repos:
     rev: 22.6.0
     hooks:
     -   id: black
-        exclude: app/model_tester.py
+        exclude: ^(app/model_tester.py|migrations/|\.flaskenv)
 
 -   repo: https://github.com/pycqa/isort
     rev: 5.10.1
     hooks:
     -   id: isort
+        args: [--filter-files]
+        files: \.py$

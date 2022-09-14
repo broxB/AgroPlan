@@ -38,7 +38,23 @@
 #         return f"<User {self.username}>"
 
 
-from database.types import (
+from sqlalchemy import (
+    Boolean,
+    Column,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    PickleType,
+    String,
+    Table,
+    UniqueConstraint,
+)
+from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.orm import backref, relationship
+
+from app.database.base import Model as Base
+from app.database.types import (
     CropClass,
     CropType,
     DemandType,
@@ -52,21 +68,6 @@ from database.types import (
     SoilType,
     UnitType,
 )
-from sqlalchemy import (
-    Boolean,
-    Column,
-    Enum,
-    Float,
-    ForeignKey,
-    Integer,
-    PickleType,
-    String,
-    Table,
-    UniqueConstraint,
-)
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy.orm import backref, relationship
 
 __all__ = [
     "field_fertilization",
@@ -81,7 +82,6 @@ __all__ = [
     "SoilSample",
 ]
 
-Base = declarative_base()
 
 field_fertilization = Table(
     "field_fertilization",

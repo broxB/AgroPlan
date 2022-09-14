@@ -3,11 +3,13 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler, SMTPHandler
 
-from database.model import User
 from flask import Flask
 
-from app import auth, cli, errors, main
-from app.extensions import bootstrap, db, login, mail, migrate, moment
+from app.database.model import Field
+
+# from app import auth, cli, errors, main
+# from app.extensions import bootstrap, db, login, mail, migrate, moment
+from app.extensions import db, migrate
 from config import Config
 
 
@@ -32,21 +34,21 @@ def register_extensions(app: Flask):
     """Register Flask extensions."""
     db.init_app(app)
     migrate.init_app(app, db)
-    login.init_app(app)
-    mail.init_app(app)
-    bootstrap.init_app(app)
-    moment.init_app(app)
+    # login.init_app(app)
+    # mail.init_app(app)
+    # bootstrap.init_app(app)
+    # moment.init_app(app)
 
 
 def register_blueprints(app: Flask):
     """Register Flask blueprints."""
-    app.register_blueprint(auth.bp, url_prefix="/auth")
-    app.register_blueprint(main.bp)
+    # app.register_blueprint(auth.bp, url_prefix="/auth")
+    # app.register_blueprint(main.bp)
 
 
 def register_errorhandlers(app: Flask):
     """Register error handlers."""
-    app.register_blueprint(errors.bp)
+    # app.register_blueprint(errors.bp)
 
 
 def register_shellcontext(app: Flask):
@@ -54,12 +56,12 @@ def register_shellcontext(app: Flask):
 
     @app.shell_context_processor
     def make_shell_context():
-        return {"db": db, "User": User}
+        return {"db": db, "Field": Field}
 
 
 def register_commands(app: Flask):
     """Register Click commands."""
-    cli.register(app)
+    # cli.register(app)
     # app.cli.add_command(commands.test)
     # app.cli.add_command(commands.lint)
 
@@ -78,7 +80,7 @@ def configure_logger(app: Flask):
                 mailhost=(app.config["MAIL_SERVER"], app.config["MAIL_PORT"]),
                 fromaddr="no-reply@" + app.config["MAIL_SERVER"],
                 toaddrs=app.config["ADMINS"],
-                subject="Microblog Failure",
+                subject="AgroPlan Failure",
                 credentials=auth_creds,
                 secure=secure,
             )
@@ -87,7 +89,7 @@ def configure_logger(app: Flask):
 
         if not os.path.exists("logs"):
             os.mkdir("logs")
-        file_handler = RotatingFileHandler("logs/microblog.log", maxBytes=10240, backupCount=10)
+        file_handler = RotatingFileHandler("logs/agroplan.log", maxBytes=10240, backupCount=10)
         file_handler.setFormatter(
             logging.Formatter(
                 "%(asctime)s %(levelname)s: %(message)s " + "[in %(pathname)s:%(lineno)d]"
@@ -97,7 +99,7 @@ def configure_logger(app: Flask):
         app.logger.addHandler(file_handler)
 
         app.logger.setLevel(logging.INFO)
-        app.logger.info("Microblog startup")
+        app.logger.info("AgroPlan startup")
 
     return app
 
