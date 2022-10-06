@@ -5,7 +5,8 @@ from logging.handlers import RotatingFileHandler, SMTPHandler
 
 from flask import Flask
 
-from app.database.model import Field
+from app import cli
+from app.database.model import Field, User
 
 # from app import auth, cli, errors, main
 # from app.extensions import bootstrap, db, login, mail, migrate, moment
@@ -33,7 +34,7 @@ def create_app(config_object=Config):
 def register_extensions(app: Flask):
     """Register Flask extensions."""
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db, render_as_batch=True)
     # login.init_app(app)
     # mail.init_app(app)
     # bootstrap.init_app(app)
@@ -56,12 +57,12 @@ def register_shellcontext(app: Flask):
 
     @app.shell_context_processor
     def make_shell_context():
-        return {"db": db, "Field": Field}
+        return {"db": db, "User": User, "Field": Field}
 
 
 def register_commands(app: Flask):
     """Register Click commands."""
-    # cli.register(app)
+    cli.register(app)
     # app.cli.add_command(commands.test)
     # app.cli.add_command(commands.lint)
 

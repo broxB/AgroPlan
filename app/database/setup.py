@@ -2,7 +2,10 @@ from collections import namedtuple
 from decimal import Decimal
 from pathlib import Path
 
-from database.model import (
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from app.database.model import (
     Base,
     BaseField,
     Crop,
@@ -13,8 +16,9 @@ from database.model import (
     Field,
     Saldo,
     SoilSample,
+    User,
 )
-from database.types import (
+from app.database.types import (
     CropClass,
     CropType,
     DemandType,
@@ -28,9 +32,6 @@ from database.types import (
     SoilType,
     UnitType,
 )
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from utils import load_json
 
 
 def setup_database(db_name: str, seed: dict) -> None:
@@ -212,6 +213,13 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
 
     fields_dict, ferts_dict, crops_dict = data
 
+    user = User(
+        username="Dev-Tester",
+        email="dev@agroplan.de",
+    )
+    user.set_password("test")
+    update_session(session, user)
+
     for year in fields_dict:
         for field_dict in fields_dict[year]:
             cult_data = field_cultivation(field_dict)
@@ -227,6 +235,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
             )
             if base_field is None:
                 base_field = BaseField(
+                    user_id=user.id,
                     prefix=field_dict["Prefix"],
                     suffix=field_dict["Suffix"],
                     name=field_dict["Name"],
@@ -251,6 +260,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     except:
                         crop_dict = {}
                     crop = Crop(
+                        user_id=user.id,
                         name=cult.name,
                         crop_class=get_crop_class(crop_dict.get("Klasse", None)),
                         crop_type=get_crop_type(cult.name),
@@ -301,6 +311,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     if fertilizer is None:
                         fert_dict = ferts_dict[fert.name]
                         fertilizer = Fertilizer(
+                            user_id=user.id,
                             name=fert.name,
                             year=fert_year,
                             fert_class=fert.class_,
@@ -326,6 +337,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     )
                     if fertilizer_usage is None:
                         fertilizer_usage = FertilizerUsage(
+                            user_id=user.id,
                             name=fert.name,
                             year=year,
                             amount=Decimal(field.area) * Decimal(fert.amount),
@@ -387,5 +399,4 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
 
 
 if __name__ == "__main__":
-    seed = load_json("data/schläge_reversed.json")
-    setup_database("database_v3.1.db", seed)
+    setup_database("database_v3.1.db")

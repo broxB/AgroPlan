@@ -1,43 +1,8 @@
-# from time import time
+from time import time
 
-# from flask import current_app
-# from flask_login import UserMixin
-# from jwt import InvalidSignatureError, decode, encode
-# from werkzeug.security import check_password_hash, generate_password_hash
-
-# class User(UserMixin, Base):
-#     id = Column(Integer, primary_key=True)
-#     username = Column(String(64), index=True, unique=True)
-#     email = Column(String(120), index=True, unique=True)
-#     password_hash = Column(String(128))
-
-#     def set_password(self, password):
-#         self.password_hash = generate_password_hash(password)
-
-#     def check_password(self, password):
-#         return check_password_hash(self.password_hash, password)
-
-#     def get_reset_password_token(self, expires_in=600):
-#         return encode(
-#             {"reset_password": self.id, "exp": time() + expires_in},
-#             current_app.config["SECRET_KEY"],
-#             algorithm="HS256",
-#         )
-
-#     @staticmethod
-#     def verify_reset_password_token(token):
-#         try:
-#             user_id = decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])[
-#                 "reset_password"
-#             ]
-#         except InvalidSignatureError:
-#             return None
-#         return User.query.get(user_id)
-
-#     def __repr__(self):
-#         return f"<User {self.username}>"
-
-
+from flask import current_app
+from flask_login import UserMixin
+from jwt import InvalidSignatureError, decode, encode
 from sqlalchemy import (
     Boolean,
     Column,
@@ -52,6 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import backref, relationship
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database.base import Model as Base
 from app.database.types import (
@@ -80,7 +46,44 @@ __all__ = [
     "Fertilizer",
     "FertilizerUsage",
     "SoilSample",
+    "Saldo",
+    "User",
 ]
+
+
+class User(UserMixin, Base):
+    __tablename__ = "user"
+
+    id = Column("user_id", Integer, primary_key=True)
+    username = Column("username", String(64), index=True, unique=True)
+    email = Column("email", String(120), index=True, unique=True)
+    password_hash = Column("password_hash", String(128))
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def get_reset_password_token(self, expires_in=600):
+        return encode(
+            {"reset_password": self.id, "exp": time() + expires_in},
+            current_app.config["SECRET_KEY"],
+            algorithm="HS256",
+        )
+
+    @staticmethod
+    def verify_reset_password_token(token):
+        try:
+            user_id = decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])[
+                "reset_password"
+            ]
+        except InvalidSignatureError:
+            return None
+        return User.query.get(user_id)
+
+    def __repr__(self):
+        return f"<User {self.username}>"
 
 
 field_fertilization = Table(
@@ -100,8 +103,9 @@ field_soil_sample = Table(
 
 class BaseField(Base):
     __tablename__ = "base_field"
-    __table_args__ = (UniqueConstraint("prefix", "suffix", name="unique_base_fields"),)
+    __table_args__ = (UniqueConstraint("user_id", "prefix", "suffix"),)
 
+    user_id = Column("user_id", Integer, ForeignKey("user.user_id"))
     id = Column("base_id", Integer, primary_key=True)
     prefix = Column("prefix", Integer)
     suffix = Column("suffix", Integer)
@@ -117,7 +121,7 @@ class BaseField(Base):
 
 class Field(Base):
     __tablename__ = "field"
-    __table_args__ = (UniqueConstraint("sub_suffix", "base_id", "year", name="unique_fields"),)
+    __table_args__ = (UniqueConstraint("base_id", "sub_suffix", "year"),)
 
     id = Column("field_id", Integer, primary_key=True)
     base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
@@ -149,7 +153,7 @@ class Field(Base):
 
 class Cultivation(Base):
     __tablename__ = "cultivation"
-    __table_args__ = (UniqueConstraint("field_id", "crop_class", name="unique_cultivations"),)
+    __table_args__ = (UniqueConstraint("field_id", "crop_class"),)
 
     id = Column("cultivation_id", Integer, primary_key=True)
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
@@ -173,8 +177,11 @@ class Cultivation(Base):
 
 class Crop(Base):
     __tablename__ = "crop"
+    __table_args__ = (UniqueConstraint("user_id", "name"),)
+
+    user_id = Column("user_id", Integer, ForeignKey("user.user_id"))
     id = Column("crop_id", Integer, primary_key=True)
-    name = Column("name", String, unique=True)
+    name = Column("name", String)
     crop_class = Column("class", Enum(CropClass))
     crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
     kind = Column("kind", String)
@@ -233,8 +240,9 @@ class Fertilization(Base):
 
 class Fertilizer(Base):
     __tablename__ = "fertilizer"
-    __table_args__ = (UniqueConstraint("name", "year", name="unique_fertilizers"),)
+    __table_args__ = (UniqueConstraint("user_id", "name", "year"),)
 
+    user_id = Column("user_id", Integer, ForeignKey("user.user_id"))
     id = Column("fertilizer_id", Integer, primary_key=True)
     name = Column("name", String)
     year = Column("year", Integer)
@@ -262,8 +270,9 @@ class Fertilizer(Base):
 
 class FertilizerUsage(Base):
     __tablename__ = "fertilizer_usage"
-    __table_args__ = (UniqueConstraint("fertilizer_name", "year", name="unique_fertilizers"),)
+    __table_args__ = (UniqueConstraint("user_id", "fertilizer_name", "year"),)
 
+    user_id = Column("user_id", Integer, ForeignKey("user.user_id"))
     id = Column("id", Integer, primary_key=True)
     name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
     year = Column("year", Integer)
@@ -277,7 +286,7 @@ class FertilizerUsage(Base):
 
 class SoilSample(Base):
     __tablename__ = "soil_sample"
-    __table_args__ = (UniqueConstraint("base_id", "year", name="unique_samples"),)
+    __table_args__ = (UniqueConstraint("base_id", "year"),)
 
     id = Column("sample_id", Integer, primary_key=True)
     base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
