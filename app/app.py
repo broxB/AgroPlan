@@ -5,13 +5,12 @@ from logging.handlers import RotatingFileHandler, SMTPHandler
 
 from flask import Flask
 
-from app import cli
+from app import auth, cli, errors, main
 from app.database.model import Field, User
-
-# from app import auth, cli, errors, main
-# from app.extensions import bootstrap, db, login, mail, migrate, moment
-from app.extensions import db, migrate
+from app.extensions import bootstrap, db, login, migrate
 from config import Config
+
+# from app.extensions import mail, moment
 
 
 def create_app(config_object=Config):
@@ -35,21 +34,21 @@ def register_extensions(app: Flask):
     """Register Flask extensions."""
     db.init_app(app)
     migrate.init_app(app, db, render_as_batch=True)
-    # login.init_app(app)
+    login.init_app(app)
     # mail.init_app(app)
-    # bootstrap.init_app(app)
+    bootstrap.init_app(app)
     # moment.init_app(app)
 
 
 def register_blueprints(app: Flask):
     """Register Flask blueprints."""
-    # app.register_blueprint(auth.bp, url_prefix="/auth")
-    # app.register_blueprint(main.bp)
+    app.register_blueprint(auth.bp, url_prefix="/auth")
+    app.register_blueprint(main.bp)
 
 
 def register_errorhandlers(app: Flask):
     """Register error handlers."""
-    # app.register_blueprint(errors.bp)
+    app.register_blueprint(errors.bp)
 
 
 def register_shellcontext(app: Flask):

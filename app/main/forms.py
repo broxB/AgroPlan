@@ -1,14 +1,13 @@
-from database.model import User
-from flask import request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Email, Length, ValidationError
+
+from app.database.model import User
 
 
 class EditProfileForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired(), Email()])
-    about_me = TextAreaField("About me", validators=[Length(min=0, max=140)])
     submit = SubmitField("Submit")
 
     def __init__(self, original_username, original_email, *args, **kwargs):
@@ -33,6 +32,6 @@ class EmptyForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
-class PostForm(FlaskForm):
-    post = TextAreaField("Say something", validators=[DataRequired()])
-    submit = SubmitField("Submit")
+# class PostForm(FlaskForm):
+#     post = TextAreaField("Say something", validators=[DataRequired()])
+#     submit = SubmitField("Submit")

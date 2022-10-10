@@ -1,16 +1,16 @@
-from auth import bp
-from auth.email import send_password_reset_email
-from auth.forms import (
+from flask import flash, redirect, render_template, request, url_for
+from flask_login import current_user, login_user, logout_user
+from werkzeug.urls import url_parse
+
+from app.auth import bp
+from app.auth.email import send_password_reset_email
+from app.auth.forms import (
     LoginForm,
     RegistrationForm,
     ResetPasswordForm,
     ResetPasswordRequestForm,
 )
-from database.model import User
-from flask import flash, redirect, render_template, request, url_for
-from flask_login import current_user, login_user, logout_user
-from werkzeug.urls import url_parse
-
+from app.database.model import User
 from app.extensions import db
 
 

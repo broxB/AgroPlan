@@ -58,6 +58,7 @@ class User(UserMixin, Base):
     username = Column("username", String(64), index=True, unique=True)
     email = Column("email", String(120), index=True, unique=True)
     password_hash = Column("password_hash", String(128))
+    fields = relationship("BaseField", back_populates="user")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -81,6 +82,9 @@ class User(UserMixin, Base):
         except InvalidSignatureError:
             return None
         return User.query.get(user_id)
+
+    def get_fields(self):
+        return BaseField.query.filter(BaseField.user_id == self.id)
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -111,6 +115,7 @@ class BaseField(Base):
     suffix = Column("suffix", Integer)
     name = Column("name", String)
     fields = relationship("Field", back_populates="base_field")
+    user = relationship("User", back_populates="fields")
 
     def __repr__(self):
         return (

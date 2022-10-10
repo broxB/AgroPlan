@@ -1,6 +1,6 @@
-from errors import bp
 from flask import render_template
 
+from app.errors import bp
 from app.extensions import db
 
 
