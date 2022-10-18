@@ -2,7 +2,7 @@
 {% import 'bootstrap5/utils.html' as utils %}
 
 {% block styles %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="custom stylesheet" href="{{ url_for('static', filename='style.css') }}">
 {% endblock %}
 
 {% block title %}
@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block navbar %}
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container-fluid">
       <a class="navbar-brand" href="{{ url_for('main.home') }}">AgroPlan</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,11 +37,13 @@
 {% endblock %}
 
 {% block sidebar %}
-  {% include "sidebar.html" %}
+  {% if not sidebar_disabled %}
+    {% include "sidebar.html" %}
+  {% endif %}
 {% endblock %}
 
 {% block content %}
-  <div class="container">
+  <div class="container-fluid bg-light">
     {% with message = utils.render_messages() %}
     {% if message %}
       <div class="alert alert-info" role="alert">{{ message }}</div>
