@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+  <h1 class="header">{{ "{prefix:02d}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}</h1>
+  <div class="table-responsive crop-table">
+    <table class="table table-hover table-bordered caption-top">
+      <caption>List of cultivated crops</caption>
+      <thead class="table-dark">
+        <tr>
+          <th>Year</th>
+          <th>Crop-Class</th>
+          <th>Name</th>
+          <th>Area</th>
+          <th>Yield</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for field in base_field.fields %}
+          {% for cultivation in field.cultivations %}
+          <tr>
+            <td>{{ field.year }}</td>
+            <td>{{ cultivation.crop_class.value }}</td>
+            <td>{{ cultivation.crop.name }}</td>
+            <td class="align-right">{{ "{area:.2f} ha".format(area=field.area) }}</td>
+            <td class="align-right">{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
+          </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

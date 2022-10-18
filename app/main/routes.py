@@ -11,7 +11,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
-from app.database.model import Field, User
+from app.database.model import BaseField, User
 from app.extensions import db, login
 from app.main import bp
 from app.main.forms import EditProfileForm, EmptyForm
@@ -56,7 +56,7 @@ def index():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template("user.html", title="Profile", user=user)
+    return render_template("user.html", title="Profile", user=user, sidebar_disabled=True)
 
 
 @bp.route("/edit_profile", methods=["GET", "POST"])
@@ -72,11 +72,14 @@ def edit_profile():
     if request.method == "GET":
         form.username.data = current_user.username
         form.email.data = current_user.email
-    return render_template("edit_profile.html", title="Edit Profile", form=form)
+    return render_template(
+        "edit_profile.html", title="Edit Profile", form=form, sidebar_disabled=True
+    )
 
 
-@bp.route("/user/<username>/popup")
+@bp.route("/field/<base_field_id>")
 @login_required
-def user_popup(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    return render_template("user_popup.html", user=user)
+def base_field(base_field_id):
+    base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
+    fields = current_user.get_fields()
+    return render_template("field.html", title="Field", base_field=base_field, fields=fields)
