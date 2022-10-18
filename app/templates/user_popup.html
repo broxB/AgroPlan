@@ -1,55 +1,55 @@
 <table class="table">
-    <tr>
-        <td width="64" style="border: 0px;"><img src="{{ user.avatar(64) }}"></td>
-        <td style="border: 0px;">
-            <p><a href="{{ url_for('main.user', username=user.username) }}">{{ user.username }}</a></p>
-            <small>
-                {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
-                {% if user.last_seen %}
-                <p>{{ 'Last seen on' }}: {{ moment(user.last_seen).format('lll') }}</p>
-                {% endif %}
-                <p>{{ '%(count)d followers', count=user.followers.count() }}, {{ '%(count)d following', count=user.followed.count() }}</p>
-                {% if user != current_user %}
-                    {% if not current_user.is_following(user) %}
-                    <p>
-                        <form method="post" onsubmit="toggle_follow(event, 'follow');">
-                            {{ form.hidden_tag() }}
-                            {{ form.submit(value='Follow', class_='btn btn-default btn-sm') }}
-                        </form>
-                    </p>
-                    {% else %}
-                    <p>
-                        <form method="post" onsubmit="toggle_follow(event, 'unfollow');">
-                            {{ form.hidden_tag() }}
-                            {{ form.submit(value='Unfollow', class_='btn btn-default btm-sm') }}
-                        </form>
-                    </p>
-                    {% endif %}
-                {% endif %}
-            </small>
-        </td>
-    </tr>
+  <tr>
+    <td width="64" style="border: 0px;"><img src="{{ user.avatar(64) }}"></td>
+    <td style="border: 0px;">
+      <p><a href="{{ url_for('main.user', username=user.username) }}">{{ user.username }}</a></p>
+      <small>
+        {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+        {% if user.last_seen %}
+        <p>{{ 'Last seen on' }}: {{ moment(user.last_seen).format('lll') }}</p>
+        {% endif %}
+        <p>{{ '%(count)d followers', count=user.followers.count() }}, {{ '%(count)d following', count=user.followed.count() }}</p>
+        {% if user != current_user %}
+          {% if not current_user.is_following(user) %}
+          <p>
+            <form method="post" onsubmit="toggle_follow(event, 'follow');">
+              {{ form.hidden_tag() }}
+              {{ form.submit(value='Follow', class_='btn btn-default btn-sm') }}
+            </form>
+          </p>
+          {% else %}
+          <p>
+            <form method="post" onsubmit="toggle_follow(event, 'unfollow');">
+              {{ form.hidden_tag() }}
+              {{ form.submit(value='Unfollow', class_='btn btn-default btm-sm') }}
+            </form>
+          </p>
+          {% endif %}
+        {% endif %}
+      </small>
+    </td>
+  </tr>
 </table>
 
 <script type="text/javascript">
-    function toggle_follow(event, op){
-        event.preventDefault();
-        $.ajax({
-            type: 'POST',
-            url: '{{ url_for("main.js") }}',
-            data: {
-                op: op,
-                username: "{{ user.username }}"
-            },
-            success:function(data) {
-                //console.log(event.path[8])
-                var elem = $(event.path[8]);
-                elem.popover("destroy");
-                //elem.attr('data-content', data).data('bs.popover').setContent();
-                //flask_moment_render_all();
-            },
-            error:function(){
-            },
-        });
-    };
+  function toggle_follow(event, op){
+    event.preventDefault();
+    $.ajax({
+      type: 'POST',
+      url: '{{ url_for("main.js") }}',
+      data: {
+        op: op,
+        username: "{{ user.username }}"
+      },
+      success:function(data) {
+        //console.log(event.path[8])
+        var elem = $(event.path[8]);
+        elem.popover("destroy");
+        //elem.attr('data-content', data).data('bs.popover').setContent();
+        //flask_moment_render_all();
+      },
+      error:function(){
+      },
+    });
+  };
   </script>

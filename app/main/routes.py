@@ -40,15 +40,15 @@ def home():
 @login_required
 def index():
     page = request.args.get("page", 1, type=int)
-    fields = current_user.get_fields().paginate(page, 10, False)
-    next_url = url_for("main.index", page=fields.next_num) if fields.has_next else None
-    prev_url = url_for("main.index", page=fields.prev_num) if fields.has_prev else None
+    fields = current_user.get_fields()  # .paginate(page, 10, False)
+    # next_url = url_for("main.index", page=fields.next_num) if fields.has_next else None
+    # prev_url = url_for("main.index", page=fields.prev_num) if fields.has_prev else None
     return render_template(
         "index.html",
         title="Home",
-        fields=fields.items,
-        next_url=next_url,
-        prev_url=prev_url,
+        fields=fields
+        # next_url=next_url,
+        # prev_url=prev_url,
     )
 
 

@@ -1,52 +1,60 @@
 {% extends "layout.html" %}
 {% import 'bootstrap5/utils.html' as utils %}
 
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+{% endblock %}
+
 {% block title %}
-    {% if title %}{{ title }} - AgroPlan{% else %}{{ 'AgroPlan' }}{% endif %}
+  {% if title %}{{ title }} - AgroPlan{% else %}{{ 'AgroPlan' }}{% endif %}
 {% endblock %}
 
 {% block navbar %}
-    <nav class="navbar navbar-expand-lg bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('main.home') }}">AgroPlan</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    {% if current_user.is_anonymous %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">{{ 'Login' }}</a>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.user', username=current_user.username) }}">{{ 'Profile' }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">{{ 'Logout' }}</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{{ url_for('main.home') }}">AgroPlan</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          {% if current_user.is_anonymous %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.login') }}">{{ 'Login' }}</a>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main.user', username=current_user.username) }}">{{ 'Profile' }}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">{{ 'Logout' }}</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+{% endblock %}
+
+{% block sidebar %}
+  {% include "sidebar.html" %}
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        {% with message = utils.render_messages() %}
-        {% if message %}
-            <div class="alert alert-info" role="alert">{{ message }}</div>
-        {% endif %}
-        {% endwith %}
+  <div class="container">
+    {% with message = utils.render_messages() %}
+    {% if message %}
+      <div class="alert alert-info" role="alert">{{ message }}</div>
+    {% endif %}
+    {% endwith %}
 
-        {# application content needs to be provided in the app_content block #}
-        {% block app_content %}{% endblock %}
-    </div>
+    {# application content needs to be provided in the app_content block #}
+    {% block app_content %}{% endblock %}
+  </div>
 {% endblock %}
 
 {% block scripts %}
-    {{ super() }}
-    <script>
-    </script>
+  {{ super() }}
+  <script>
+  </script>
 {% endblock %}

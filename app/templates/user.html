@@ -1,15 +1,17 @@
 {% extends "base.html" %}
 
+{% block sidebar %} {% endblock %}
+
 {% block app_content %}
-    <table class="table table-hover">
-        <tr>
-            <td>
-                <h1>{{ 'User' }}: {{ user.username }}</h1>
-                {% if user == current_user %}
-                {% if user.email %}<p>{{ user.email }}</p>{% endif %}
-                <p><a href="{{ url_for('main.edit_profile') }}">{{ 'Edit your profile' }}</a></p>
-                {% endif %}
-            </td>
-        </tr>
-    </table>
+  <table class="table table-hover">
+    <tr>
+      <td>
+        <h1>{{ 'User' }}: {{ user.username }}</h1>
+        {% if user == current_user %}
+        {% if user.email %}<p>{{ user.email }}</p>{% endif %}
+        <p><a href="{{ url_for('main.edit_profile') }}">{{ 'Edit your profile' }}</a></p>
+        {% endif %}
+      </td>
+    </tr>
+  </table>
 {% endblock %}

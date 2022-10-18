@@ -1,0 +1,21 @@
+/* * {
+    border: 1px solid blue;
+} */
+
+.sidebar-item:hover {
+    /* color: red; */
+    border: 1px solid red;
+}
+/* .main {
+    display: flex;
+    flex-direction: row;
+} */
+
+/* .container {
+    width: 75%;
+} */
+
+.sidebar {
+    height: 100vh-40px;
+}
+
