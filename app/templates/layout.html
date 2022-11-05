@@ -5,7 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    <link rel="shortcut icon" href="../static/img/favicon.png" type="image/x-icon">
     <!-- Bootstrap CSS -->
     {{ bootstrap.load_css() }}
     {% block styles %}{% endblock %}
@@ -19,13 +19,19 @@
       {% block navbar %}{% endblock navbar %}
     </header>
 
-    <main class="main d-flex">
-      <!-- Your side bar -->
-      {% block sidebar %}{% endblock sidebar %}
+    <!-- <div class="main d-flex"> -->
+    <div class="container-fluid d-flex px-0" id="main">
+      <!-- <div class="row row-offcanvas row-offcanvas-left vh-100"></div> -->
+        <!-- Your side bar -->
+        {% block sidebar %}{% endblock sidebar %}
 
-      <!-- Your page content -->
-      {% block content %}{% endblock %}
-    </main>
+        <!-- <main class="d-flex flex-row"> -->
+        <main class="col pt-5 mt-3 h-100 overflow-auto scrollable">
+          <!-- Your page content -->
+          {% block content %}{% endblock %}
+        </main>
+      <!-- </div> -->
+    </div>
 
     <footer>
       <!-- Your footer -->

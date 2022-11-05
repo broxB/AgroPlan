@@ -1,0 +1,71 @@
+body, html {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* my test settings */
+
+
+/* * {
+  border: 1px solid blue;
+} */
+
+/* h1 {
+  padding: 1rem 0;
+} */
+
+.sidebar-item {
+  font-size: 0.8rem;
+}
+
+.sidebar-item:hover {
+  border-width: 1px 0;
+  border-style: solid;
+  border-color: var(--bs-green);
+  margin: -1px 0 0;
+}
+
+.navbar {
+  background-color: var(--bs-green);
+}
+
+.content {
+  /* margin-left: 1em; */
+  background-color: antiquewhite;
+  /* width: 80%; */
+}
+
+.align-right {
+  text-align: right;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.table-action {
+  white-space: nowrap;
+  width: 1em;
+}
+
+#sidebar {
+  height: calc(100vh - 56px);
+  overflow: auto;
+  margin-right: 0;
+}
+
+/* Hide Scrollbar in firefox and edge
+ #sidebar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}*/
+
+/* Hide Scrollbar in Chrome
+#siderbar::-webkit-scrollbar {
+  display: none;
+} */
+
+/* main {
+  display: flex;
+  flex-direction: row;
+} */
