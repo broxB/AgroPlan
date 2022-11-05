@@ -15,3 +15,15 @@
     </div>
   </div>
 </nav>
+
+{% block scripts %}
+  <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+  <script>
+    $(document).ready(function() {
+      $('[data-bs-toggle=sidebarCollapse]').click(function() {
+        $('#sidebarNav').toggleClass('show');
+        $(this).attr('aria-expanded', function(i, attr) {return attr == 'true' ? 'false': 'true'});
+      });
+    });
+  </script>
+{% endblock %}

@@ -12,7 +12,7 @@
 {% block navbar %}
   <nav class="navbar navbar-expand-lg navbar-dark p-2">
     <div class="d-flex flex-row">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNav" aria-controls="#sidebarNav" aria-expanded="false" aria-label="Toggle sidebar">
+      <button class="navbar-toggler" type="button" data-bs-toggle="sidebarCollapse" aria-expanded="false" aria-label="Toggle sidebar">
         <span class="navbar-toggler-icon"></span>
       </button>
       <a class="navbar-brand ps-2" href="{{ url_for('main.home') }}">AgroPlan</a>
@@ -68,6 +68,4 @@
 
 {% block scripts %}
   {{ super() }}
-  <script>
-  </script>
 {% endblock %}
