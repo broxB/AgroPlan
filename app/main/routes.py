@@ -52,6 +52,12 @@ def index():
     )
 
 
+@bp.route("/preset", methods=["GET", "POST"])
+@login_required
+def preset():
+    return render_template("preset.html")
+
+
 @bp.route("/user/<username>")
 @login_required
 def user(username):
@@ -82,4 +88,6 @@ def edit_profile():
 def base_field(base_field_id):
     base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
     fields = current_user.get_fields()
-    return render_template("field.html", title="Field", base_field=base_field, fields=fields)
+    return render_template(
+        "field.html", title=base_field.name, base_field=base_field, fields=fields
+    )
