@@ -19,18 +19,14 @@
       {% block navbar %}{% endblock navbar %}
     </header>
 
-    <!-- <div class="main d-flex"> -->
-    <div class="container-fluid d-flex px-0" id="main">
-      <!-- <div class="row row-offcanvas row-offcanvas-left vh-100"></div> -->
+    <div class="container-fluid d-flex p-0" id="main">
         <!-- Your side bar -->
         {% block sidebar %}{% endblock sidebar %}
 
-        <!-- <main class="d-flex flex-row"> -->
-        <main class="col pt-5 mt-3 h-100 overflow-auto scrollable">
+        <main class="col h-100 overflow-auto">
           <!-- Your page content -->
           {% block content %}{% endblock %}
         </main>
-      <!-- </div> -->
     </div>
 
     <footer>
