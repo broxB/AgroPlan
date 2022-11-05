@@ -54,6 +54,11 @@ body, html {
   margin-right: 0;
 }
 
+main {
+  height: calc(100vh - 56px);
+  overflow: auto;
+}
+
 /* Hide Scrollbar in firefox and edge
  #sidebar {
   -ms-overflow-style: none;

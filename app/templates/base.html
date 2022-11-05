@@ -12,10 +12,10 @@
 {% block navbar %}
   <nav class="navbar navbar-expand-lg navbar-dark p-2">
     <div class="d-flex flex-row">
-      <button type="button" class="navbar-toggler-lg me-1" data-bs-toggle="offcanvas" data-bs-target="#offcanvasWithBothOptions" aria-controls="offcanvasWithBothOptions" aria-expanded="False" aria-label="Toggle sidebar">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarNav" aria-controls="#sidebarNav" aria-expanded="false" aria-label="Toggle sidebar">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand p-1" href="{{ url_for('main.home') }}">AgroPlan</a>
+      <a class="navbar-brand ps-2" href="{{ url_for('main.home') }}">AgroPlan</a>
     </div>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
