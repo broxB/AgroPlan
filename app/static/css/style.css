@@ -1,28 +1,15 @@
 body, html {
   height: 100%;
-  /* font-family: sans-serif; */
 }
 
-/* my test settings */
-
-
-/* * {
-  border: 1px solid blue;
-} */
-
-/* h1 {
-  padding: 1rem 0;
-} */
-
-.sidebar-item {
-  font-size: 0.8rem;
+:root {
+  --content-height: calc(100vh - 56px);
 }
 
-.sidebar-item:hover {
-  border-width: 1px 0;
-  border-style: solid;
-  border-color: var(--bs-green);
-  margin: -1px 0 0;
+main {
+  height: var(--content-height);
+  scrollbar-width: thin;
+  overflow: auto;
 }
 
 .navbar {
@@ -47,8 +34,8 @@ body, html {
 }
 
 #sidebar {
-  /* background-color: transparent; */
-  height: calc(100vh - 56px);
+  background-color: transparent;
+  height: var(--content-height);
   overflow: auto;
   margin-right: 0;
   scrollbar-width: thin;
@@ -56,59 +43,47 @@ body, html {
   scrollbar-track-color: var(--bs-gray-600);
 }
 
-/* custom scrollbar for chrome */
-  #sidebar::-webkit-scrollbar {
-    width: 5px;
-  }
-
-  #sidebar::-webkit-scrollbar-track {
-    background-color: var(--bs-dark);
-  }
-
-  #sidebar::-webkit-scrollbar-thumb {
-    background: var(--bs-gray-500);
-    border-radius: 10px;
-  }
-
-  #sidebar::-webkit-scrollbar-thumb:hover {
-    background: var(--bs-green);
-  }
-
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  /* ::-webkit-scrollbar-track {
-    background: var(--bs-light);
-  } */
-
-  ::-webkit-scrollbar-thumb {
-    background: #bbb;
-    border-radius: 16px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--bs-green);
-  }
-
-main {
-  height: calc(100vh - 56px);
-  scrollbar-width: thin;
-  overflow: auto;
+.sidebar-item {
+  font-size: 0.8rem;
+  border-color: var(--bs-gray-800);
 }
 
-/* Hide Scrollbar in firefox and edge
- #sidebar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}*/
+.sidebar-item.active {
+  background-color: var(--bs-secondary)!important;
+  border-color: var(--bs-gray-500)!important;
+}
 
-/* Hide Scrollbar in Chrome
-#siderbar::-webkit-scrollbar {
-  display: none;
-} */
+.sidebar-item:hover {
+  border-width: 1px 0;
+  border-style: solid;
+  border-color: var(--bs-gray-500);
+  margin: -1px 0 0;
+}
 
-/* main {
-  display: flex;
-  flex-direction: row;
-} */
+/* custom scrollbar for chrome and firefox*/
+
+#sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+  background: var(--bs-gray-500);
+  border-radius: 10px;
+}
+
+#sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--bs-green);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--bs-green);
+}
