@@ -1,6 +1,6 @@
 body, html {
   height: 100%;
-  /* overflow: hidden; */
+  /* font-family: sans-serif; */
 }
 
 /* my test settings */
@@ -30,9 +30,7 @@ body, html {
 }
 
 .content {
-  /* margin-left: 1em; */
-  background-color: antiquewhite;
-  /* width: 80%; */
+  /* background-color: antiquewhite; */
 }
 
 .align-right {
@@ -49,13 +47,53 @@ body, html {
 }
 
 #sidebar {
+  /* background-color: transparent; */
   height: calc(100vh - 56px);
   overflow: auto;
   margin-right: 0;
+  scrollbar-width: thin;
+  scrollbar-base-color: var(--bs-dark);
+  scrollbar-track-color: var(--bs-gray-600);
 }
+
+/* custom scrollbar for chrome */
+  #sidebar::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  #sidebar::-webkit-scrollbar-track {
+    background-color: var(--bs-dark);
+  }
+
+  #sidebar::-webkit-scrollbar-thumb {
+    background: var(--bs-gray-500);
+    border-radius: 10px;
+  }
+
+  #sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-green);
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  /* ::-webkit-scrollbar-track {
+    background: var(--bs-light);
+  } */
+
+  ::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 16px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-green);
+  }
 
 main {
   height: calc(100vh - 56px);
+  scrollbar-width: thin;
   overflow: auto;
 }
 
