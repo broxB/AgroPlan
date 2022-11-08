@@ -2,22 +2,37 @@
 {% import 'bootstrap5/utils.html' as utils %}
 
 {% block styles %}
-  <link rel="custom stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-{% endblock %}
+  <link rel="custom stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock styles %}
 
 {% block title %}
-  {% if title %}{{ title }} | AgroPlan{% else %}{{ 'AgroPlan' }}{% endif %}
-{% endblock %}
+  {% if title %}
+    {{ title }} | AgroPlan
+  {% else %}
+    {{ 'AgroPlan' }}
+  {% endif %}
+{% endblock title %}
 
 {% block navbar %}
   <nav class="navbar sticky-top navbar-expand-lg navbar-dark p-2">
     <div class="d-flex flex-row">
-      <button class="navbar-toggler" type="button" id="sidebarToggle" aria-expanded="false" aria-label="Toggle sidebar">
+      <button class="navbar-toggler"
+              type="button"
+              id="sidebarToggle"
+              aria-expanded="false"
+              aria-label="Toggle sidebar">
         <span class="navbar-toggler-icon"></span>
       </button>
       <a class="navbar-brand ps-2" href="{{ url_for('main.home') }}">AgroPlan</a>
     </div>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="navbar-collapse collapse" id="navbarNav">
@@ -31,41 +46,41 @@
       </ul>
       <ul class="navbar-nav ms-auto">
         {% if current_user.is_anonymous %}
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('auth.login') }}">{{ 'Login' }}</a>
-        </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.login') }}">{{ 'Login' }}</a>
+          </li>
         {% else %}
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main.user', username=current_user.username) }}">{{ 'Profile' }}</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('auth.logout') }}">{{ 'Logout' }}</a>
-        </li>
+          <li class="nav-item">
+            <a class="nav-link"
+               href="{{ url_for('main.user', username=current_user.username) }}">{{ 'Profile' }}</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">{{ 'Logout' }}</a>
+          </li>
         {% endif %}
       </ul>
     </div>
   </nav>
-{% endblock %}
+{% endblock navbar %}
 
 {% block sidebar %}
   {% if not sidebar_disabled %}
     {% include "sidebar.html" %}
   {% endif %}
-{% endblock %}
+{% endblock sidebar %}
 
 {% block content %}
   <div class="container-fluid content px-4 py-2">
     {% with message = utils.render_messages() %}
-    {% if message %}
-      <div class="alert alert-info" role="alert">{{ message }}</div>
-    {% endif %}
+      {% if message %}<div class="alert alert-info" role="alert">{{ message }}</div>{% endif %}
     {% endwith %}
 
     {# application content needs to be provided in the app_content block #}
-    {% block app_content %}{% endblock %}
+    {% block app_content %}
+    {% endblock app_content %}
   </div>
-{% endblock %}
+{% endblock content %}
 
 {% block scripts %}
   {{ super() }}
-{% endblock %}
+{% endblock scripts %}

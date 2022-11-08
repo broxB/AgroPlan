@@ -2,41 +2,55 @@
 <html lang="en">
   <head>
     {% block head %}
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="shortcut icon" href="../static/img/favicon.png" type="image/x-icon">
-    <!-- Bootstrap CSS -->
-    {{ bootstrap.load_css() }}
-    {% block styles %}{% endblock %}
+      <!-- Required meta tags -->
+      <meta charset="utf-8">
+      <meta name="description" content="Agro planning software">
+      <meta name="keywords" content="DÜV, Agro, Planning, Fertilization">
+      <meta name="author" content="Philipp Brockmann">
+      <meta name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+      <link rel="shortcut icon"
+            href="../static/img/favicon.png"
+            type="image/x-icon">
+      <!-- Bootstrap CSS -->
+      {{ bootstrap.load_css() }}
+      {% block styles %}
+      {% endblock styles %}
 
-    <title>{% block title %}{% endblock %}</title>
-    {% endblock %}
+      <title>
+        {% block title %}
+        {% endblock title %}
+      </title>
+    {% endblock head %}
   </head>
   <body>
     <header>
       <!-- Your nav bar -->
-      {% block navbar %}{% endblock navbar %}
+      {% block navbar %}
+      {% endblock navbar %}
     </header>
 
     <div class="container-fluid d-flex p-0" id="main">
-        <!-- Your side bar -->
-        {% block sidebar %}{% endblock sidebar %}
+      <!-- Your side bar -->
+      {% block sidebar %}
+      {% endblock sidebar %}
 
-        <main class="col overflow-auto bg-light">
-          <!-- Your page content -->
-          {% block content %}{% endblock %}
-        </main>
+      <main class="col overflow-auto bg-light">
+        <!-- Your page content -->
+        {% block content %}
+        {% endblock content %}
+      </main>
     </div>
 
     <footer>
       <!-- Your footer -->
-      {% block footer %}{% endblock footer %}
+      {% block footer %}
+      {% endblock footer %}
     </footer>
 
     {% block scripts %}
       <!-- Optional JavaScript -->
       {{ bootstrap.load_js() }}
-    {% endblock %}
+    {% endblock scripts %}
   </body>
 </html>

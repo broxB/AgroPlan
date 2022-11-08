@@ -1,5 +1,5 @@
 // toggle sidebar
-document.getElementById('sidebarToggle').addEventListener('click', () => {
+document.getElementById("sidebarToggle").addEventListener("click", () => {
   toggleSidebar(this);
   activateSidebarItem();
 });
@@ -9,19 +9,23 @@ window.addEventListener("load", () => {
 });
 // save scroll position of sidebar
 window.addEventListener("beforeunload", () => {
-  localStorage.setItem("scrollPositon", document.querySelector("#sidebar").scrollTop);
+  localStorage.setItem(
+    "scrollPositon",
+    document.querySelector("#sidebar").scrollTop
+  );
 });
 
 // scroll to selected field and add active tag
 function activateSidebarItem() {
-  const value = JSON.parse(document.getElementById('data').textContent);
+  const value = JSON.parse(document.getElementById("data").textContent);
   var element = document.getElementById(value);
-  element.classList.add('active');
-  document.querySelector("#sidebar").scrollTop = localStorage.getItem("scrollPositon") || 0;
-};
+  element.classList.add("active");
+  document.querySelector("#sidebar").scrollTop =
+    localStorage.getItem("scrollPositon") || 0;
+}
 // toggle sidebar in mobile mode
 function toggleSidebar(toggler) {
-  var element = document.getElementById('sidebarNav');
-  element.classList.toggle('show');
-  toggler.ariaExpanded = (toggler.ariaExpanded == 'true' ? 'false' : 'true');
-};
+  var element = document.getElementById("sidebarNav");
+  element.classList.toggle("show");
+  toggler.ariaExpanded = toggler.ariaExpanded == "true" ? "false" : "true";
+}

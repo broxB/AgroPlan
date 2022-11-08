@@ -1,17 +1,19 @@
 <nav class="navbar navbar-expand-lg p-0 align-items-start" id="sidebar">
   <div class="navbar-collapse collapse" id="sidebarNav">
     <!-- <div class="navbar-nav"> -->
-      <div class="list-group list-group-flush">
+    <div class="list-group list-group-flush">
 
-        {% for field in fields %}
-          <a href="{{ url_for('main.base_field', base_field_id=field.id) }}" class="list-group-item list-group-item-action bg-dark text-white sidebar-item" id="{{ field.id }}">
+      {% for field in fields %}
+        <a href="{{ url_for('main.base_field', base_field_id=field.id) }}"
+           class="list-group-item list-group-item-action bg-dark text-white sidebar-item"
+           id="{{ field.id }}">
           <div class="d-flex w-100 justify-content-between">
             <span class="mb-1">{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.prefix, suffix=field.suffix, name=field.name) }}</span>
           </div>
-          </a>
-        {% endfor %}
+        </a>
+      {% endfor %}
 
-      </div>
+    </div>
     <!-- </div> -->
   </div>
 </nav>

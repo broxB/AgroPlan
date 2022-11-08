@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-  <h1 class="py-1">{{ "{prefix:02d}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}</h1>
+  <h1 class="py-1">
+    {{ "{prefix:02d}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+  </h1>
   <div class="table-responsive crop-table">
     <table class="table table-hover table-bordered caption-top">
       <caption>List of cultivated crops</caption>
@@ -18,17 +20,17 @@
       <tbody>
         {% for field in base_field.fields %}
           {% for cultivation in field.cultivations %}
-          <tr>
-            <td>{{ field.year }}</td>
-            <td>{{ cultivation.crop_class.value }}</td>
-            <td>{{ cultivation.crop.name }}</td>
-            <td class="align-right">{{ "{area:.2f} ha".format(area=field.area) }}</td>
-            <td class="align-right">{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
-            <td class="table-action">
-              <button type="button" class="btn btn-primary">Edit</button>
-              <button type="button" class="btn btn-danger">Delete</button>
-            </td>
-          </tr>
+            <tr>
+              <td>{{ field.year }}</td>
+              <td>{{ cultivation.crop_class.value }}</td>
+              <td>{{ cultivation.crop.name }}</td>
+              <td class="align-right">{{ "{area:.2f} ha".format(area=field.area) }}</td>
+              <td class="align-right">{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
+              <td class="table-action">
+                <button type="button" class="btn btn-primary">Edit</button>
+                <button type="button" class="btn btn-danger">Delete</button>
+              </td>
+            </tr>
           {% endfor %}
         {% endfor %}
       </tbody>
@@ -36,4 +38,4 @@
   </div>
   {% set data = base_field.id %}
   <script id="data" type="application/json">{{ data|tojson }}</script>
-{% endblock %}
+{% endblock app_content %}

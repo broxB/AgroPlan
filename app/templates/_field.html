@@ -1,13 +1,16 @@
 <details>
-  <summary><b>{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.prefix, suffix=field.suffix, name=field.name) }}</b></summary>
+  <summary>
+    <b>{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.prefix, suffix=field.suffix, name=field.name) }}</b>
+  </summary>
   <table class="table table-hover">
-    <thead></thead>
+    <thead>
+    </thead>
     {% for field in field.fields %}
-    <tr>
-      <td width="100px">{{ field.year }}</td>
-      <td width="100px">{{ '{:.2f}'.format(field.area) }}</td>
-      <td>{{ field.field_type.value }}</td>
-    </tr>
+      <tr>
+        <td width="100px">{{ field.year }}</td>
+        <td width="100px">{{ '{:.2f}'.format(field.area) }}</td>
+        <td>{{ field.field_type.value }}</td>
+      </tr>
     {% endfor %}
   </table>
 </details>
