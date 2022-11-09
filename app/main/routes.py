@@ -46,7 +46,8 @@ def index():
     return render_template(
         "index.html",
         title="Home",
-        fields=fields
+        fields=fields,
+        active_page="home"
         # next_url=next_url,
         # prev_url=prev_url,
     )
@@ -62,7 +63,9 @@ def preset():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template("user.html", title="Profile", user=user, sidebar_disabled=True)
+    return render_template(
+        "user.html", title="Profile", user=user, sidebar_disabled=True, active_page="profile"
+    )
 
 
 @bp.route("/edit_profile", methods=["GET", "POST"])
@@ -89,5 +92,9 @@ def base_field(base_field_id):
     base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
     fields = current_user.get_fields()
     return render_template(
-        "field.html", title=base_field.name, base_field=base_field, fields=fields
+        "field.html",
+        title=base_field.name,
+        base_field=base_field,
+        fields=fields,
+        field_footer=True,
     )

@@ -1,41 +1,48 @@
 {% extends "base.html" %}
 
 {% block app_content %}
+
   <h1 class="py-1">
     {{ "{prefix:02d}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
   </h1>
-  <div class="table-responsive crop-table">
-    <table class="table table-hover table-bordered caption-top">
-      <caption>List of cultivated crops</caption>
-      <thead class="table-dark align-center">
-        <tr>
-          <th>Year</th>
-          <th>Class</th>
-          <th>Name</th>
-          <th>Area</th>
-          <th>Yield</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for field in base_field.fields %}
-          {% for cultivation in field.cultivations %}
+  <div class="row">
+    <div class="col-sm">
+      <div class="table-responsive">
+        <table class="table table-hover caption-top align-middle">
+          <caption>List of cultivated crops</caption>
+          <thead class="no-border-top">
             <tr>
-              <td>{{ field.year }}</td>
-              <td>{{ cultivation.crop_class.value }}</td>
-              <td>{{ cultivation.crop.name }}</td>
-              <td class="align-right">{{ "{area:.2f} ha".format(area=field.area) }}</td>
-              <td class="align-right">{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
-              <td class="table-action">
-                <button type="button" class="btn btn-primary">Edit</button>
-                <button type="button" class="btn btn-danger">Delete</button>
-              </td>
+              <th scope="col">Year</th>
+              <th scope="col">Class</th>
+              <th scope="col">Name</th>
+              <th scope="col">Size</th>
+              <th scope="col">Yield</th>
+              <th scope="col" class="d-print-none">Actions</th>
             </tr>
-          {% endfor %}
-        {% endfor %}
-      </tbody>
-    </table>
+          </thead>
+          <tbody>
+            {% for field in base_field.fields %}
+              {% for cultivation in field.cultivations %}
+                <tr>
+                  <th scope="row">{{ field.year }}</th>
+                  <td>{{ cultivation.crop_class.value }}</td>
+                  <td>{{ cultivation.crop.name }}</td>
+                  <td>{{ "{area:.2f} ha".format(area=field.area) }}</td>
+                  <td>{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
+                  <td class="table-action d-print-none">
+                    <button type="button" class="btn btn-primary">Edit</button>
+                    <button type="button" class="btn btn-danger">Delete</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {# <div class="col-sm"><p>Random none specific text</p></div> #}
   </div>
+
   {% set data = base_field.id %}
   <script id="data" type="application/json">{{ data|tojson }}</script>
 {% endblock app_content %}

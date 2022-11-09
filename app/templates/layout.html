@@ -25,28 +25,27 @@
   </head>
   <body>
     <header>
-      <!-- Your nav bar -->
+      <!-- Nav bar -->
       {% block navbar %}
       {% endblock navbar %}
     </header>
 
-    <div class="container-fluid d-flex p-0" id="main">
-      <!-- Your side bar -->
+    <div class="container-fluid d-flex p-0">
+      <!-- Side bar -->
       {% block sidebar %}
       {% endblock sidebar %}
 
-      <main class="col overflow-auto bg-light">
-        <!-- Your page content -->
+      <!-- Page content -->
+      <div class="col overflow-auto d-flex flex-column justify-content-between"
+           id="main">
+        <!-- Main content -->
         {% block content %}
         {% endblock content %}
-      </main>
+        <!-- Footer -->
+        {% block footer %}
+        {% endblock footer %}
+      </div>
     </div>
-
-    <footer>
-      <!-- Your footer -->
-      {% block footer %}
-      {% endblock footer %}
-    </footer>
 
     {% block scripts %}
       <!-- Optional JavaScript -->

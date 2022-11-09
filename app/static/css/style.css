@@ -7,32 +7,57 @@ html {
   --content-height: calc(100vh - 56px);
 }
 
-main {
+#main {
   height: var(--content-height);
   scrollbar-width: thin;
-  overflow: auto;
-}
-
-.navbar {
-  background-color: var(--bs-green);
-}
-
-.content {
-  /* background-color: antiquewhite; */
-}
-
-.align-right {
-  text-align: right;
-}
-
-.align-center {
-  text-align: center;
+  /* push footer to bottom */
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* justify-content: space-between; */
 }
 
 .table-action {
   white-space: nowrap;
   width: 1em;
 }
+
+.no-border-top {
+  border-top: 0px solid currentColor !important;
+}
+
+.bg-custom {
+  background-color: antiquewhite !important;
+}
+
+/* navbar styling */
+
+.navbar {
+  background-color: var(--bs-green);
+}
+
+.nav-masthead .nav-link {
+  padding: 0.1rem 0;
+  /* font-weight: 700; */
+  color: rgba(255, 255, 255, 0.5);
+  background-color: transparent;
+  border-bottom: 0.1rem solid transparent;
+}
+
+.nav-masthead .nav-link:hover.nav-link:not(.active),
+.nav-masthead .nav-link:focus.nav-link:not(.active) {
+  border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+
+.nav-masthead .nav-link + .nav-link {
+  margin-left: 1rem;
+}
+
+.nav-masthead .active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+/* sidebar styling */
 
 #sidebar {
   background-color: transparent;
@@ -61,7 +86,7 @@ main {
   margin: -1px 0 0;
 }
 
-/* custom scrollbar for chrome and firefox*/
+/* scrollbar styling */
 
 #sidebar::-webkit-scrollbar {
   width: 5px;
