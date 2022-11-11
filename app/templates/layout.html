@@ -14,6 +14,8 @@
             type="image/x-icon">
       <!-- Bootstrap CSS -->
       {{ bootstrap.load_css() }}
+      <link rel="custom stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}">
       {% block styles %}
       {% endblock styles %}
 
