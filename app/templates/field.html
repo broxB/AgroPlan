@@ -1,46 +1,135 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-
-  <h1 class="py-1">
-    {{ "{prefix:02d}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
-  </h1>
-  <div class="row">
-    <div class="col-sm">
-      <div class="table-responsive">
-        <table class="table table-hover caption-top align-middle">
-          <caption>List of cultivated crops</caption>
-          <thead class="no-border-top">
-            <tr>
-              <th scope="col">Year</th>
-              <th scope="col">Class</th>
-              <th scope="col">Name</th>
-              <th scope="col">Size</th>
-              <th scope="col">Yield</th>
-              <th scope="col" class="d-print-none">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for field in base_field.fields %}
-              {% for cultivation in field.cultivations %}
-                <tr>
-                  <th scope="row">{{ field.year }}</th>
-                  <td>{{ cultivation.crop_class.value }}</td>
-                  <td>{{ cultivation.crop.name }}</td>
-                  <td>{{ "{area:.2f} ha".format(area=field.area) }}</td>
-                  <td>{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
-                  <td class="table-action d-print-none">
-                    <button type="button" class="btn btn-primary">Edit</button>
-                    <button type="button" class="btn btn-danger">Delete</button>
-                  </td>
-                </tr>
+  <ul class="nav nav-tabs" id="fieldTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active"
+              id="overview-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#overview"
+              type="button"
+              role="tab"
+              aria-controls="overview"
+              aria-selected="true">
+        Overview
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link"
+              id="cultivation-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#cultivation"
+              type="button"
+              role="tab"
+              aria-controls="cultivation"
+              aria-selected="false">
+        Cultivation
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link"
+              id="Fertilization-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#Fertilization"
+              type="button"
+              role="tab"
+              aria-controls="Fertilization"
+              aria-selected="false">
+        Fertilization
+      </button>
+    </li>
+  </ul>
+  <div class="tab-content" id="fieldTabContent">
+    <div class="tab-pane fade show active"
+         id="overview"
+         role="tabpanel"
+         aria-labelledby="overview-tab">
+      <h1 class="mt-2">
+        {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+      </h1>
+      <div class="row">
+        <div class="col-lg-8 col-md-9 table-responsive">
+          <table class="table table-hover caption-top align-middle">
+            <caption>List of crops</caption>
+            <thead class="no-border-top">
+              <tr>
+                <th scope="col">Year</th>
+                <th scope="col">Class</th>
+                <th scope="col">Name</th>
+                <th scope="col">Size</th>
+                <th scope="col">Yield</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in base_field.fields %}
+                {% for cultivation in field.cultivations %}
+                  <tr data-id="{{ cultivation.id }}">
+                    <th scope="row">{{ field.year }}</th>
+                    <td>{{ cultivation.crop_class.value }}</td>
+                    <td>{{ cultivation.crop.name }}</td>
+                    <td>{{ "{area:.2f} ha".format(area=field.area) }}</td>
+                    <td>{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
+                    <td class="table-action d-print-none">
+                      <a href="#">
+                        <i class="fa-solid fa-pencil"></i>
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
               {% endfor %}
-            {% endfor %}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
+        {# <div class="col-sm"><p>Random none specific text</p></div> #}
+      </div>
+      <div class="row">
+        <div class="col-lg-8 col-md-9 table-responsive">
+          <table class="table table-hover caption-top align-middle">
+            <caption>List of fertilizations</caption>
+            <thead class="no-border-top">
+              <tr>
+                <th scope="col">Year</th>
+                <th scope="col">Crop</th>
+                <th scope="col">Measure</th>
+                <th scope="col">Fertilizer</th>
+                <th scope="col">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in base_field.fields %}
+                {% for fert in field.fertilizations %}
+                  <tr data-id="{{ fert.id }}">
+                    <th scope="row">{{ field.year }}</th>
+                    <td>{{ fert.cultivation.crop.name }}</td>
+                    <td>{{ fert.measure.value }}</td>
+                    <td>{{ fert.fertilizer.name }}</td>
+                    <td>{{ "{amount:.1f} dt/ha".format(amount=fert.amount) }}</td>
+                    <td class="table-action d-print-none">
+                      <a href="#">
+                        <i class="fa-solid fa-pencil"></i>
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {# <div class="col-sm"><p>Random none specific text</p></div> #}
       </div>
     </div>
-    {# <div class="col-sm"><p>Random none specific text</p></div> #}
+    <div class="tab-pane fade"
+         id="cultivation"
+         role="tabpanel"
+         aria-labelledby="cultivation-tab">
+      ...
+    </div>
+    <div class="tab-pane fade"
+         id="Fertilization"
+         role="tabpanel"
+         aria-labelledby="Fertilization-tab">
+      ...
+    </div>
   </div>
 
   {% set data = base_field.id %}
