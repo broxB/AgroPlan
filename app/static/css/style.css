@@ -10,6 +10,7 @@ html {
 #main {
   height: var(--content-height);
   scrollbar-width: thin;
+  padding: 1em;
   /* push footer to bottom */
   /* display: flex; */
   /* flex-direction: column; */
@@ -103,6 +104,7 @@ html {
 
 ::-webkit-scrollbar {
   width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -112,4 +114,16 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--bs-green);
+}
+
+/* media queries */
+
+@media (max-width: 992px) {
+  #main {
+    padding: 0.5em;
+  }
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
 }
