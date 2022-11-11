@@ -114,7 +114,7 @@ class BaseField(Base):
     prefix = Column("prefix", Integer)
     suffix = Column("suffix", Integer)
     name = Column("name", String)
-    fields = relationship("Field", back_populates="base_field")
+    fields = relationship("Field", back_populates="base_field", order_by="desc(Field.year)")
     user = relationship("User", back_populates="fields")
 
     def __repr__(self):
