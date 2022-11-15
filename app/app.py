@@ -8,6 +8,7 @@ from flask import Flask
 from app import auth, cli, errors, main
 from app.database.model import Field, User
 from app.extensions import bootstrap, db, login, migrate
+from app.utils import format_number, handle_error
 from config import Config
 
 # from app.extensions import mail, moment
@@ -26,6 +27,7 @@ def create_app(config_object=Config):
     register_errorhandlers(app)
     register_shellcontext(app)
     register_commands(app)
+    register_custom_filters(app)
     configure_logger(app)
     return app
 
@@ -64,6 +66,10 @@ def register_commands(app: Flask):
     cli.register(app)
     # app.cli.add_command(commands.test)
     # app.cli.add_command(commands.lint)
+
+
+def register_custom_filters(app: Flask):
+    app.jinja_env.filters["format_number"] = format_number
 
 
 def configure_logger(app: Flask):

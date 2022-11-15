@@ -1,6 +1,23 @@
 import json
 import re
 
+from loguru import logger
+
+
+def handle_error(caller, on_exception="None"):
+    try:
+        return caller()
+    except Exception as e:
+        logger.error(f"Jinja2 Template erroring with: {e}")
+        return on_exception
+
+
+def format_number(input, format=".2f"):
+    try:
+        return f"{input:{format}}"
+    except TypeError or ValueError:
+        return "None"
+
 
 def round_to_nearest(number, num_decimals):
     """python uses banking round; while this round 0.5 up"""
