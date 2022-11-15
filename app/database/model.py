@@ -86,6 +86,12 @@ class User(UserMixin, Base):
     def get_fields(self):
         return BaseField.query.filter(BaseField.user_id == self.id)
 
+    def get_years(self):
+        fields = (
+            Field.query.join(BaseField).filter(BaseField.user_id == self.id).group_by(Field.year)
+        )
+        return [field.year for field in fields]
+
     def __repr__(self):
         return f"<User {self.username}>"
 
