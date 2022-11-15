@@ -26,8 +26,16 @@ html {
   border-top: 0px solid currentColor !important;
 }
 
+.bg-grassland {
+  background-color: olivedrab !important;
+}
+
+.bg-cropland {
+  background-color: peru !important;
+}
+
 .bg-custom {
-  background-color: antiquewhite !important;
+  background-color: cadetblue !important;
 }
 
 /* navbar styling */
