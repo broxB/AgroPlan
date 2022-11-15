@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-  <ul class="nav nav-tabs" id="fieldTab" role="tablist">
+  <div class="row">
+    <h1 class="mt-2">
+      {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+    </h1>
+    <h6>{{ base_field.fields[0].field_type.value }} — {{ base_field.fields[0].area | format_number(".2f", "ha") }}</h6>
+  </div>
+  <ul class="nav nav-tabs my-2" id="fieldTab" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active"
               id="overview-tab"
@@ -38,15 +44,30 @@
         Fertilization
       </button>
     </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link"
+              id="Soil-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#Soil"
+              type="button"
+              role="tab"
+              aria-controls="Soil"
+              aria-selected="false">
+        Soil
+      </button>
+    </li>
   </ul>
   <div class="tab-content" id="fieldTabContent">
     <div class="tab-pane fade show active"
          id="overview"
          role="tabpanel"
          aria-labelledby="overview-tab">
-      <h1 class="mt-2">
-        {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
-      </h1>
+      <div class="row">...</div>
+    </div>
+    <div class="tab-pane fade"
+         id="cultivation"
+         role="tabpanel"
+         aria-labelledby="cultivation-tab">
       <div class="row">
         <div class="col-lg-8 col-md-9 table-responsive">
           <table class="table table-hover caption-top align-middle">
@@ -67,8 +88,8 @@
                     <th scope="row">{{ field.year }}</th>
                     <td>{{ cultivation.crop_class.value }}</td>
                     <td>{{ cultivation.crop.name }}</td>
-                    <td>{{ "{area:.2f} ha".format(area=field.area) }}</td>
-                    <td>{{ "{yield:.0f} dt/ha".format(yield=cultivation.crop_yield) }}</td>
+                    <td>{{ field.area | format_number(".2f") }}</td>
+                    <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
                     <td class="table-action d-print-none">
                       <a href="#">
                         <i class="fa-solid fa-pencil"></i>
@@ -82,10 +103,15 @@
         </div>
         {# <div class="col-sm"><p>Random none specific text</p></div> #}
       </div>
+    </div>
+    <div class="tab-pane fade"
+         id="Fertilization"
+         role="tabpanel"
+         aria-labelledby="Fertilization-tab">
       <div class="row">
         <div class="col-lg-8 col-md-9 table-responsive">
           <table class="table table-hover caption-top align-middle">
-            <caption>List of fertilizations</caption>
+            <caption>List of organic fertilizations</caption>
             <thead class="no-border-top">
               <tr>
                 <th scope="col">Year</th>
@@ -98,18 +124,76 @@
             <tbody>
               {% for field in base_field.fields %}
                 {% for fert in field.fertilizations %}
-                  <tr data-id="{{ fert.id }}">
-                    <th scope="row">{{ field.year }}</th>
-                    <td>{{ fert.cultivation.crop.name }}</td>
-                    <td>{{ fert.measure.value }}</td>
-                    <td>{{ fert.fertilizer.name }}</td>
-                    <td>{{ "{amount:.1f} dt/ha".format(amount=fert.amount) }}</td>
-                    <td class="table-action d-print-none">
-                      <a href="#">
-                        <i class="fa-solid fa-pencil"></i>
-                      </a>
-                    </td>
-                  </tr>
+                  {% if fert.fertilizer.fert_class.name == "organic" %}
+                    <tr data-id="{{ fert.id }}">
+                      <th scope="row">{{ field.year }}</th>
+                      <td>{{ fert.cultivation.crop.name }}</td>
+                      <td>{{ fert.measure.value }}</td>
+                      <td>
+                        {{ fert.fertilizer.name }}
+                      </td>
+                      <td>
+                        {{ fert.amount | format_number(".1f", "dt/ha") }}
+                      </td>
+                      <td class="table-action d-print-none">
+                        <a href="#">
+                          <i class="fa-solid fa-pencil"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+          <table class="table table-hover caption-top align-middle">
+            <caption>List of mineral fertilizations</caption>
+            <thead class="no-border-top">
+              <tr>
+                <th scope="col">
+                  Year
+                </th>
+                <th scope="col">
+                  Crop
+                </th>
+                <th scope="col">
+                  Measure
+                </th>
+                <th scope="col">
+                  Fertilizer
+                </th>
+                <th scope="col">
+                  Amount
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in base_field.fields %}
+                {% for fert in field.fertilizations %}
+                  {% if fert.fertilizer.fert_class.name != "organic" %}
+                    <tr data-id="{{ fert.id }}">
+                      <th scope="row">
+                        {{ field.year }}
+                      </th>
+                      <td>
+                        {{ fert.cultivation.crop.name }}
+                      </td>
+                      <td>
+                        {{ fert.measure.value }}
+                      </td>
+                      <td>
+                        {{ fert.fertilizer.name }}
+                      </td>
+                      <td>
+                        {{ fert.amount | format_number(".1f", "dt/ha") }}
+                      </td>
+                      <td class="table-action d-print-none">
+                        <a href="#">
+                          <i class="fa-solid fa-pencil"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  {% endif %}
                 {% endfor %}
               {% endfor %}
             </tbody>
@@ -119,16 +203,74 @@
       </div>
     </div>
     <div class="tab-pane fade"
-         id="cultivation"
+         id="Soil"
          role="tabpanel"
-         aria-labelledby="cultivation-tab">
-      ...
-    </div>
-    <div class="tab-pane fade"
-         id="Fertilization"
-         role="tabpanel"
-         aria-labelledby="Fertilization-tab">
-      ...
+         aria-labelledby="Soil-tab">
+      <div class="row">
+        <div class="col-lg-8 col-md-9 table-responsive">
+          <table class="table table-hover caption-top align-middle">
+            <caption>List of soil samples</caption>
+            <thead class="no-border-top">
+              <tr>
+                <th scope="col">
+                  Year
+                </th>
+                <th scope="col">
+                  Type
+                </th>
+                <th scope="col">
+                  Humus
+                </th>
+                <th scope="col">
+                  pH
+                </th>
+                <th scope="col">
+                  P2O5
+                </th>
+                <th scope="col">
+                  K2O
+                </th>
+                <th scope="col">
+                  Mg
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in base_field.soil_samples %}
+                <tr data-id="{{ sample.id }}">
+                  <th scope="row">
+                    {{ sample.year }}
+                  </th>
+                  <td>
+                    {{ sample.soil_type.value }}
+                  </td>
+                  <td>
+                    {{ sample.humus.value }}
+                  </td>
+                  <td>
+                    {{ sample.ph | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.p2o5 | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.k2o | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.mg | format_number(".1f") }}
+                  </td>
+                  <td class="table-action d-print-none">
+                    <a href="#">
+                      <i class="fa-solid fa-pencil"></i>
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {# <div class="col-sm"><p>Random none specific text</p></div> #}
+      </div>
     </div>
   </div>
 
