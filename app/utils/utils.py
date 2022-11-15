@@ -12,9 +12,9 @@ def handle_error(caller, on_exception="None"):
         return on_exception
 
 
-def format_number(input, format=".2f"):
+def format_number(input, format=".2f", ending=""):
     try:
-        return f"{input:{format}}"
+        return f"{input:{format}} {ending}"
     except TypeError or ValueError:
         return "None"
 
