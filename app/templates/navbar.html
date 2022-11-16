@@ -29,6 +29,18 @@
       {% if current_user.is_anonymous %}
         {{ render_nav_item("auth.login", "Login", _use_li=True) }}
       {% else %}
+        {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
+          <li class="nav-item text-white">
+            <form action="#" method="post">
+              <div class="d-flex">
+                {{ form_year.csrf_token }}
+                <div class="pe-2 my-auto">Select Year:</div>
+                <div class="col px-2">{{ form_year.year(class="form-select form-select-sm ") }}</div>
+                <div class="px-2">{{ form_year.submit(class="btn btn-sm btn-secondary") }}</div>
+              </div>
+            </form>
+          </li>
+        {% endif %}
         {{ render_nav_item("main.user", "Profile", _use_li=True, username=current_user.username) }}
         {{ render_nav_item("auth.logout", "Logout", _use_li=True) }}
       {% endif %}

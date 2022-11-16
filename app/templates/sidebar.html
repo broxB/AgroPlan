@@ -4,7 +4,7 @@
     <div class="list-group list-group-flush">
 
       {% for field in fields %}
-        <a href="{{ url_for('main.base_field', base_field_id=field.id) }}"
+        <a href="{{ url_for('main.field', base_field_id=field.id) }}"
            class="list-group-item list-group-item-action {% if field.fields[0].field_type.name == 'grassland' %} bg-grassland {% elif field.fields[0].field_type.name == 'cropland' %} bg-cropland {% else %} bg-custom {% endif %} text-white sidebar-item"
            id="{{ field.id }}">
           <div class="d-flex w-100 justify-content-between">

@@ -14,7 +14,7 @@ from flask_login import current_user, login_required
 from app.database.model import BaseField, User
 from app.extensions import db, login
 from app.main import bp
-from app.main.forms import EditProfileForm, EmptyForm
+from app.main.forms import EditProfileForm, YearForm
 
 
 @login.user_loader
@@ -41,13 +41,15 @@ def home():
 def index():
     page = request.args.get("page", 1, type=int)
     fields = current_user.get_fields()  # .paginate(page, 10, False)
+    form = YearForm(choices=current_user.get_years())
     # next_url = url_for("main.index", page=fields.next_num) if fields.has_next else None
     # prev_url = url_for("main.index", page=fields.prev_num) if fields.has_prev else None
     return render_template(
         "index.html",
         title="Home",
         fields=fields,
-        active_page="home"
+        active_page="home",
+        form_year=form
         # next_url=next_url,
         # prev_url=prev_url,
     )
@@ -88,13 +90,15 @@ def edit_profile():
 
 @bp.route("/field/<base_field_id>")
 @login_required
-def base_field(base_field_id):
+def field(base_field_id):
     base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
     fields = current_user.get_fields()
+    form = YearForm(choices=current_user.get_years())
     return render_template(
         "field.html",
         title=base_field.name,
         base_field=base_field,
         fields=fields,
         field_footer=True,
+        form_year=form,
     )

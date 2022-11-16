@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Email, Length, ValidationError
+from wtforms import SelectField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, ValidationError
 
 from app.database.model import User
 
@@ -32,6 +32,10 @@ class EmptyForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
-# class PostForm(FlaskForm):
-#     post = TextAreaField("Say something", validators=[DataRequired()])
-#     submit = SubmitField("Submit")
+class YearForm(FlaskForm):
+    year = SelectField("Select Year:", validators=[DataRequired()])
+    submit = SubmitField("Change")
+
+    def __init__(self, choices, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.year.choices = choices
