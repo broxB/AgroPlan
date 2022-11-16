@@ -22,8 +22,8 @@
 {% block content %}
   <main class="bg-white">
     <div class="container-fluid" id="content">
-      {% with message = utils.render_messages() %}
-        {% if message %}<div class="alert alert-info" role="alert">{{ message }}</div>{% endif %}
+      {% with message = utils.render_messages(dismissible=True) %}
+        {% if message %}{{ message }}{% endif %}
       {% endwith %}
 
       {# application content needs to be provided in the app_content block #}
