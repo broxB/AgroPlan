@@ -58,6 +58,7 @@ class User(UserMixin, Base):
     username = Column("username", String(64), index=True, unique=True)
     email = Column("email", String(120), index=True, unique=True)
     password_hash = Column("password_hash", String(128))
+    year = Column("set_year", Integer)
     fields = relationship("BaseField", back_populates="user")
 
     def set_password(self, password):
