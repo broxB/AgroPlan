@@ -42,6 +42,7 @@ html {
 
 .navbar {
   background-color: var(--bs-green);
+  border-bottom: 1px solid black;
 }
 
 .nav-masthead .nav-link {
@@ -78,6 +79,10 @@ html {
   scrollbar-track-color: var(--bs-gray-600);
 }
 
+#sidebarNav {
+  border-right: 1px solid black;
+}
+
 .sidebar-item {
   font-size: 0.8rem;
   border-color: var(--bs-gray-800);
@@ -91,7 +96,8 @@ html {
 .sidebar-item:hover {
   border-width: 1px 0;
   border-style: solid;
-  border-color: var(--bs-gray-500);
+  /* border-color: var(--bs-gray-500); */
+  border-color: white;
   margin: -1px 0 0;
 }
 
