@@ -5,7 +5,11 @@
     <h1 class="mt-2">
       {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
     </h1>
-    <h6>{{ base_field.fields[0].field_type.value }} — {{ base_field.fields[0].area | format_number(".2f", "ha") }}</h6>
+    {% for field in base_field.fields %}
+      {% if field.year == current_user.year %}
+        <h6>{{ field.field_type.value }} — {{ field.area | format_number(".2f", "ha") }}</h6>
+      {% endif %}
+    {% endfor %}
   </div>
   <ul class="nav nav-tabs my-2" id="fieldTab" role="tablist">
     <li class="nav-item" role="presentation">
@@ -83,20 +87,22 @@
             </thead>
             <tbody>
               {% for field in base_field.fields %}
-                {% for cultivation in field.cultivations %}
-                  <tr data-id="{{ cultivation.id }}">
-                    <th scope="row">{{ field.year }}</th>
-                    <td>{{ cultivation.crop_class.value }}</td>
-                    <td>{{ cultivation.crop.name }}</td>
-                    <td>{{ field.area | format_number(".2f") }}</td>
-                    <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
-                    <td class="table-action d-print-none">
-                      <a href="#">
-                        <i class="fa-solid fa-pencil"></i>
-                      </a>
-                    </td>
-                  </tr>
-                {% endfor %}
+                {% if field.year == current_user.year %}
+                  {% for cultivation in field.cultivations %}
+                    <tr data-id="{{ cultivation.id }}">
+                      <th scope="row">{{ field.year }}</th>
+                      <td>{{ cultivation.crop_class.value }}</td>
+                      <td>{{ cultivation.crop.name }}</td>
+                      <td>{{ field.area | format_number(".2f") }}</td>
+                      <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
+                      <td class="table-action d-print-none">
+                        <a href="#">
+                          <i class="fa-solid fa-pencil"></i>
+                        </a>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% endif %}
               {% endfor %}
             </tbody>
           </table>
@@ -123,26 +129,28 @@
             </thead>
             <tbody>
               {% for field in base_field.fields %}
-                {% for fert in field.fertilizations %}
-                  {% if fert.fertilizer.fert_class.name == "organic" %}
-                    <tr data-id="{{ fert.id }}">
-                      <th scope="row">{{ field.year }}</th>
-                      <td>{{ fert.cultivation.crop.name }}</td>
-                      <td>{{ fert.measure.value }}</td>
-                      <td>
-                        {{ fert.fertilizer.name }}
-                      </td>
-                      <td>
-                        {{ fert.amount | format_number(".1f", "dt/ha") }}
-                      </td>
-                      <td class="table-action d-print-none">
-                        <a href="#">
-                          <i class="fa-solid fa-pencil"></i>
-                        </a>
-                      </td>
-                    </tr>
-                  {% endif %}
-                {% endfor %}
+                {% if field.year == current_user.year %}
+                  {% for fert in field.fertilizations %}
+                    {% if fert.fertilizer.fert_class.name == "organic" %}
+                      <tr data-id="{{ fert.id }}">
+                        <th scope="row">{{ field.year }}</th>
+                        <td>{{ fert.cultivation.crop.name }}</td>
+                        <td>{{ fert.measure.value }}</td>
+                        <td>
+                          {{ fert.fertilizer.name }}
+                        </td>
+                        <td>
+                          {{ fert.amount | format_number(".1f", "dt/ha") }}
+                        </td>
+                        <td class="table-action d-print-none">
+                          <a href="#">
+                            <i class="fa-solid fa-pencil"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
               {% endfor %}
             </tbody>
           </table>
@@ -169,32 +177,34 @@
             </thead>
             <tbody>
               {% for field in base_field.fields %}
-                {% for fert in field.fertilizations %}
-                  {% if fert.fertilizer.fert_class.name != "organic" %}
-                    <tr data-id="{{ fert.id }}">
-                      <th scope="row">
-                        {{ field.year }}
-                      </th>
-                      <td>
-                        {{ fert.cultivation.crop.name }}
-                      </td>
-                      <td>
-                        {{ fert.measure.value }}
-                      </td>
-                      <td>
-                        {{ fert.fertilizer.name }}
-                      </td>
-                      <td>
-                        {{ fert.amount | format_number(".1f", "dt/ha") }}
-                      </td>
-                      <td class="table-action d-print-none">
-                        <a href="#">
-                          <i class="fa-solid fa-pencil"></i>
-                        </a>
-                      </td>
-                    </tr>
-                  {% endif %}
-                {% endfor %}
+                {% if field.year == current_user.year %}
+                  {% for fert in field.fertilizations %}
+                    {% if fert.fertilizer.fert_class.name != "organic" %}
+                      <tr data-id="{{ fert.id }}">
+                        <th scope="row">
+                          {{ field.year }}
+                        </th>
+                        <td>
+                          {{ fert.cultivation.crop.name }}
+                        </td>
+                        <td>
+                          {{ fert.measure.value }}
+                        </td>
+                        <td>
+                          {{ fert.fertilizer.name }}
+                        </td>
+                        <td>
+                          {{ fert.amount | format_number(".1f", "dt/ha") }}
+                        </td>
+                        <td class="table-action d-print-none">
+                          <a href="#">
+                            <i class="fa-solid fa-pencil"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
               {% endfor %}
             </tbody>
           </table>

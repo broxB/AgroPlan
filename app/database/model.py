@@ -84,8 +84,10 @@ class User(UserMixin, Base):
             return None
         return User.query.get(user_id)
 
-    def get_fields(self):
-        return BaseField.query.filter(BaseField.user_id == self.id)
+    def get_fields(self, year: int = None):
+        if year is None:
+            return BaseField.query.filter(BaseField.user_id == self.id)
+        return BaseField.query.join(Field).filter(BaseField.user_id == self.id, Field.year == year)
 
     def get_years(self):
         fields = (
