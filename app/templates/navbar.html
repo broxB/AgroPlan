@@ -31,7 +31,7 @@
       {% else %}
         {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
           <li class="nav-item text-white">
-            <form action="#" method="post">
+            <form action="{{ url_for('main.set_year') }}" method="post">
               <div class="d-flex">
                 {{ form_year.csrf_token }}
                 <div class="pe-2 my-auto">Select Year:</div>

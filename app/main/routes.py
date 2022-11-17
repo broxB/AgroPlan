@@ -92,8 +92,11 @@ def edit_profile():
 @login_required
 def field(base_field_id):
     base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
-    fields = current_user.get_fields()
+    fields = current_user.get_fields(year=current_user.year)
     form = YearForm(choices=current_user.get_years())
+    if current_user.year:
+        form.year.default = current_user.year
+        form.process()
     return render_template(
         "field.html",
         title=base_field.name,
@@ -102,3 +105,16 @@ def field(base_field_id):
         field_footer=True,
         form_year=form,
     )
+
+
+@bp.route("/set_year", methods=["POST"])
+@login_required
+def set_year():
+    form: YearForm = YearForm(choices=current_user.get_years())
+    if form.validate_on_submit():
+        current_user.year = form.year.data
+        db.session.commit()
+        flash(f"Cultivation year has been set to {form.year.data}")
+    else:
+        flash(f"Invalid selection")
+    return redirect(request.referrer)
