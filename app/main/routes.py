@@ -102,7 +102,6 @@ def field(base_field_id):
         title=base_field.name,
         base_field=base_field,
         fields=fields,
-        field_footer=True,
         form_year=form,
     )
 

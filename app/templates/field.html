@@ -2,7 +2,7 @@
 
 {% block app_content %}
   <div class="row">
-    <h1 class="mt-2">
+    <h1>
       {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
     </h1>
     {% for field in base_field.fields %}

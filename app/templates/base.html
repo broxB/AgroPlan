@@ -20,24 +20,24 @@
 {% endblock sidebar %}
 
 {% block content %}
-  <main class="bg-white">
-    <div class="container-fluid" id="content">
-      {% with message = utils.render_messages(dismissible=True) %}
-        {% if message %}{{ message }}{% endif %}
-      {% endwith %}
-
-      {# application content needs to be provided in the app_content block #}
-      {% block app_content %}
-      {% endblock app_content %}
-    </div>
-  </main>
+  <div class="col-xl-4 col-lg-6 col-md-8">
+    {% with message = utils.render_messages(dismissible=True) %}
+      {% if message %}{{ message }}{% endif %}
+    {% endwith %}
+  </div>
+  {# application content needs to be provided in the app_content block #}
+  {% block app_content %}
+  {% endblock app_content %}
 {% endblock content %}
 
 {% block footer %}
-  {% if field_footer %}
-    {% include "field_footer.html" %}
+  {% if current_user.is_anonymous %}
   {% else %}
-    {% include "footer.html" %}
+    {% if request.endpoint and request.endpoint == "main.field" or request.endpoint == "main.index" %}
+      {% include "field_footer.html" %}
+    {% else %}
+      {% include "footer.html" %}
+    {% endif %}
   {% endif %}
 {% endblock footer %}
 
