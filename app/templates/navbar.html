@@ -34,7 +34,7 @@
             <form action="{{ url_for('main.set_year') }}" method="post">
               <div class="d-flex">
                 {{ form_year.csrf_token }}
-                <div class="pe-2 my-auto">Select Year:</div>
+                <div class="fw-500 opacity-50 pe-2 my-auto">Cultivation:</div>
                 <div class="col px-2">{{ form_year.year(class="form-select form-select-sm ") }}</div>
                 <div class="px-2">{{ form_year.submit(class="btn btn-sm btn-secondary") }}</div>
               </div>
