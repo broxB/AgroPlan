@@ -15,6 +15,7 @@ from app.database.model import BaseField, User
 from app.extensions import db, login
 from app.main import bp
 from app.main.forms import EditProfileForm, YearForm
+from app.model import Field, create_field
 
 
 @login.user_loader
@@ -117,3 +118,14 @@ def set_year():
     else:
         flash(f"Invalid selection")
     return redirect(request.referrer)
+
+
+@bp.route("/field_data/<id>", methods=["GET", "POST"])
+@login_required
+def field_data(id):
+    field: Field = create_field(id)
+    if field is None:
+        return ["-"] * 6
+    elements = ["n", "p2o5", "k2o", "mgo", "s", "cao"]
+    json_reponse = {elements[i]: value for i, value in enumerate(field.total_saldo())}
+    return json_reponse

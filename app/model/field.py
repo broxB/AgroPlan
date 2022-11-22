@@ -29,6 +29,10 @@ class Field:
         self.saldo: db.Saldo = self.Field.saldo
         self.field_prev_year = self._field_prev_year()
 
+    def total_saldo(self) -> list[Decimal]:
+        saldo = zip(*[self.sum_demands(), self.sum_reductions(), self.sum_fertilizations()])
+        return [sum(num) for num in saldo]
+
     def n_total(
         self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
     ) -> Decimal:
