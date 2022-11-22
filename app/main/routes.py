@@ -120,7 +120,7 @@ def set_year():
     return redirect(request.referrer)
 
 
-@bp.route("/field_data/<id>", methods=["GET", "POST"])
+@bp.route("/field/data/<id>", methods=["GET"])
 @login_required
 def field_data(id):
     field: Field = create_field(id)
