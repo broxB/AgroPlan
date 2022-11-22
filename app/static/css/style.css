@@ -112,9 +112,9 @@ main {
 
 /* footer styling */
 
-#footer {
+footer {
   border-top: 1px solid black;
-  height: 2.55rem;
+  /* height: 2.55rem; */
 }
 
 /* scrollbar styling */

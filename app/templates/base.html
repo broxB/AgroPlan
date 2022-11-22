@@ -33,7 +33,7 @@
 {% block footer %}
   {% if current_user.is_anonymous %}
   {% else %}
-    {% if request.endpoint and request.endpoint == "main.field" or request.endpoint == "main.index" %}
+    {% if request.endpoint and request.endpoint == "main.field" %}
       {% include "field_footer.html" %}
     {% else %}
       {% include "footer.html" %}
