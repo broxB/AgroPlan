@@ -2,14 +2,14 @@ from dataclasses import dataclass
 from dataclasses import field as field_
 from decimal import Decimal
 
-import database.model as db
-import model as md
-from database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
-from database.utils import create_session
 from loguru import logger
-from model.cultivation import CatchCrop, MainCrop, SecondCrop, create_cultivation
-from model.fertilizer import create_fertilizer
-from model.soil import Soil
+
+import app.database.model as db
+import app.model as md
+from app.database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
+from app.model.cultivation import CatchCrop, MainCrop, SecondCrop, create_cultivation
+from app.model.fertilizer import create_fertilizer
+from app.model.soil import Soil
 
 
 @dataclass
@@ -217,13 +217,10 @@ class Field:
     def _field_prev_year(self):
         if not self.first_year:
             return
-        session = create_session()
         year = self.year - 1
-        db_field = (
-            session.query(db.Field)
-            .filter(db.Field.base_id == self.base_id, db.Field.year == year)
-            .one_or_none()
-        )
+        db_field = db.Field.query.filter(
+            db.Field.base_id == self.base_id, db.Field.year == year
+        ).one_or_none()
         if db_field:
             field = md.Field(db_field, False)
             for db_cultivation in db_field.cultivations:

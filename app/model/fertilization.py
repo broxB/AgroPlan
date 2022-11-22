@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-import database.model as db
-from database.types import CropClass, FertClass, FieldType, MeasureType
-from model.crop import Crop
-from model.fertilizer import Fertilizer
+import app.database.model as db
+from app.database.types import CropClass, FertClass, FieldType, MeasureType
+from app.model.crop import Crop
+from app.model.fertilizer import Fertilizer
 
 
 @dataclass

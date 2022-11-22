@@ -2,9 +2,9 @@ from bisect import bisect_left, bisect_right
 from dataclasses import dataclass
 from decimal import Decimal
 
-import database.model as db
-from database.types import FieldType, HumusType, SoilType
-from utils import load_json, round_to_nearest
+import app.database.model as db
+from app.database.types import FieldType, HumusType, SoilType
+from app.utils import load_json, round_to_nearest
 
 
 @dataclass

@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-import database.model as db
-from database.types import CropClass, CropType, DemandType, LegumeType, RemainsType
-from model.crop import Crop
-from utils import load_json
+import app.database.model as db
+from app.database.types import CropClass, CropType, DemandType, LegumeType, RemainsType
+from app.model.crop import Crop
+from app.utils import load_json
 
 
 def create_cultivation(cultivation, crop):

@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-import database.model as db
-from database.types import CropClass, CropType, DemandType, RemainsType
-from utils import load_json
+import app.database.model as db
+from app.database.types import CropClass, CropType, DemandType, RemainsType
+from app.utils import load_json
 
 
 @dataclass
