@@ -30,15 +30,35 @@
         {{ render_nav_item("auth.login", "Login", _use_li=True) }}
       {% else %}
         {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
-          <li class="nav-item text-white">
-            <form action="{{ url_for('main.set_year') }}" method="post">
-              <div class="d-flex">
-                {{ form_year.csrf_token }}
-                <div class="fw-500 opacity-50 pe-2 my-auto">Cultivation:</div>
-                <div class="col px-2">{{ form_year.year(class="form-select form-select-sm ") }}</div>
-                <div class="px-2">{{ form_year.submit(class="btn btn-sm btn-secondary") }}</div>
-              </div>
-            </form>
+          <li class="nav-item text-white dropdown">
+            <a class="nav-link dropdown-toggle"
+               href="#"
+               id="cultivationDropdown"
+               role="button"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+              Cultivation
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="cultivationDropdown">
+              <li>
+                <h6 class="dropdown-header">Select a year:</h6>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              {% for year in current_user.get_years() %}
+                <li>
+                  <form action="{{ url_for('main.set_year', year=year) }}", method="post">
+                    {{ form.hidden_tag() }}
+                    {% if year == current_user.year %}
+                      {{ form.submit(value=year, class="dropdown-item active") }}
+                    {% else %}
+                      {{ form.submit(value=year, class="dropdown-item") }}
+                    {% endif %}
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
           </li>
         {% endif %}
         {{ render_nav_item("main.user", "Profile", _use_li=True, username=current_user.username) }}

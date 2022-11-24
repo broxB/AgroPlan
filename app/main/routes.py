@@ -14,7 +14,7 @@ from flask_login import current_user, login_required
 from app.database.model import BaseField, User
 from app.extensions import db, login
 from app.main import bp
-from app.main.forms import EditProfileForm, YearForm
+from app.main.forms import EditProfileForm, EmptyForm
 from app.model import Field, create_field
 
 
@@ -42,7 +42,7 @@ def home():
 def index():
     page = request.args.get("page", 1, type=int)
     fields = current_user.get_fields()  # .paginate(page, 10, False)
-    form = YearForm(choices=current_user.get_years())
+    form = EmptyForm()
     # next_url = url_for("main.index", page=fields.next_num) if fields.has_next else None
     # prev_url = url_for("main.index", page=fields.prev_num) if fields.has_prev else None
     return render_template(
@@ -50,7 +50,7 @@ def index():
         title="Home",
         fields=fields,
         active_page="home",
-        form_year=form
+        form=form
         # next_url=next_url,
         # prev_url=prev_url,
     )
@@ -94,27 +94,20 @@ def edit_profile():
 def field(base_field_id):
     base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
     fields = current_user.get_fields(year=current_user.year)
-    form = YearForm(choices=current_user.get_years())
-    if current_user.year:
-        form.year.default = current_user.year
-        form.process()
+    form = EmptyForm()
     return render_template(
-        "field.html",
-        title=base_field.name,
-        base_field=base_field,
-        fields=fields,
-        form_year=form,
+        "field.html", title=base_field.name, base_field=base_field, fields=fields, form=form
     )
 
 
-@bp.route("/set_year", methods=["POST"])
+@bp.route("/set_year/<year>", methods=["POST"])
 @login_required
-def set_year():
-    form: YearForm = YearForm(choices=current_user.get_years())
+def set_year(year):
+    form = EmptyForm()
     if form.validate_on_submit():
-        current_user.year = form.year.data
+        current_user.year = year
         db.session.commit()
-        flash(f"Cultivation year has been set to {form.year.data}")
+        flash(f"Cultivation year has been set to {year}")
     else:
         flash(f"Invalid selection")
     return redirect(request.referrer)
