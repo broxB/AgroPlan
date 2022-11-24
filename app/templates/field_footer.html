@@ -1,4 +1,4 @@
-<div class="bg-custom">
+<div class="bg-custom border-top border-dark">
   <div class="row text-center m-0 py-2">
     <div class="col-md-3 col-sm-auto"></div>
     <div class="col-xl-4 col-md-6 col">
@@ -45,7 +45,7 @@
     fetch(room_url)
       .then(response => response.json())
       .then(data => {
-        console.log(data);
+        //console.log(data);
         for (let elem in data) {
           document.getElementById(elem).textContent = Number(data[elem]).toFixed(0)
         };

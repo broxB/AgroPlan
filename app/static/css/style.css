@@ -22,6 +22,10 @@ main {
 
 /* custom styling */
 
+.p-normal {
+  padding: 1em 1.5em !important;
+}
+
 .fw-500 {
   font-weight: 500;
 }
@@ -51,7 +55,7 @@ main {
 
 .navbar {
   background-color: var(--bs-green);
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid var(--bs-dark);
 }
 
 .nav-masthead .nav-link {
@@ -94,7 +98,7 @@ main {
 }
 
 #sidebarNav {
-  border-right: 1px solid black;
+  border-right: 1px solid var(--bs-dark);
 }
 
 .sidebar-item {
@@ -113,13 +117,6 @@ main {
   /* border-color: var(--bs-gray-500); */
   border-color: white;
   margin: -1px 0 0;
-}
-
-/* footer styling */
-
-footer {
-  border-top: 1px solid black;
-  /* height: 2.55rem; */
 }
 
 /* scrollbar styling */
