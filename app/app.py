@@ -6,8 +6,8 @@ from logging.handlers import RotatingFileHandler, SMTPHandler
 from flask import Flask
 
 from app import auth, cli, errors, main
-from app.database.model import Field, User
-from app.extensions import bootstrap, db, login, migrate
+from app.database.model import BaseField, User
+from app.extensions import bootstrap, csrf_protection, db, login, migrate
 from app.utils import format_number, handle_error
 from config import Config
 
@@ -40,6 +40,7 @@ def register_extensions(app: Flask):
     # mail.init_app(app)
     bootstrap.init_app(app)
     # moment.init_app(app)
+    csrf_protection.init_app(app)
 
 
 def register_blueprints(app: Flask):
@@ -58,7 +59,7 @@ def register_shellcontext(app: Flask):
 
     @app.shell_context_processor
     def make_shell_context():
-        return {"db": db, "User": User, "Field": Field}
+        return {"db": db, "User": User, "BaseField": BaseField}
 
 
 def register_commands(app: Flask):
