@@ -57,13 +57,13 @@ main {
 .nav-masthead .nav-link {
   padding: 0.1rem 0;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
+  color: #fff !important;
   background-color: transparent;
   border-bottom: 0.1rem solid transparent;
 }
 
-.nav-masthead .nav-link:hover.nav-link:not(.active),
-.nav-masthead .nav-link:focus.nav-link:not(.active) {
+.nav-masthead .nav-link:hover.nav-link:not(.active):not(.no-highlight),
+.nav-masthead .nav-link:focus.nav-link:not(.active):not(.no-highlight) {
   border-bottom-color: rgba(255, 255, 255, 0.25);
 }
 
@@ -71,9 +71,14 @@ main {
   margin-left: 1rem;
 }
 
+.nav-masthead .nav-link .badge {
+  padding: 0.2rem;
+  bottom: 40%;
+}
+
 .nav-masthead .active {
-  color: #fff;
   border-bottom-color: #fff;
+  border-bottom-width: 0.15rem;
 }
 
 /* sidebar styling */
