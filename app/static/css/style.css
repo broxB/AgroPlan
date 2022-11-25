@@ -51,6 +51,16 @@ main {
   background-color: cadetblue !important;
 }
 
+/* toast styling */
+
+.toast {
+  z-index: 11;
+}
+
+.toast .progress {
+  height: 2px;
+}
+
 /* navbar styling */
 
 .navbar {
@@ -69,6 +79,15 @@ main {
 .nav-masthead .nav-link:hover.nav-link:not(.active):not(.no-highlight),
 .nav-masthead .nav-link:focus.nav-link:not(.active):not(.no-highlight) {
   border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+
+#resetToast {
+  border: 0 solid transparent;
+}
+
+#resetToast:hover,
+#resetToast:focus {
+  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.25);
 }
 
 .nav-masthead .nav-link + .nav-link {

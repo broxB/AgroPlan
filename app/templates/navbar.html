@@ -26,7 +26,7 @@
       {{ render_nav_item("main.preset", "Preset", _use_li=True) }}
       {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle position-relative no-highlight"
+          <a class="nav-link dropdown-toggle position-relative"
              id="cultivationDropdown"
              role="button"
              data-bs-toggle="dropdown"
@@ -57,6 +57,9 @@
       {% endif %}
     </ul>
     <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <button class="nav-link fw-500" id="resetToast">Messages</button>
+      </li>
       {% if current_user.is_anonymous %}
         {{ render_nav_item("auth.login", "Login", _use_li=True) }}
       {% else %}
@@ -66,3 +69,5 @@
     </ul>
   </div>
 </nav>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
