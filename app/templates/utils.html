@@ -1,0 +1,52 @@
+{% macro render_messages(messages=None, container=False, transform={
+    'critical': 'danger',
+    'error': 'danger',
+    'info': 'info',
+    'warning': 'warning',
+    'debug': 'primary',
+    'notset': 'primary',
+    'message': 'none',
+  }, default_category="none") -%}
+
+  {% with messages = messages or get_flashed_messages(with_categories=True) -%}
+  {% if messages -%} {# don't output anything if there are no messages #}
+
+  {% if container -%}
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+  {% endif -%}
+
+  {% for cat, msg in messages %}
+      <div class="toast align-items-center bg-transparent show"
+      role="alert"
+      data-bs-autohide="false"
+      aria-live="assertive"
+      aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body">
+            {% if cat == "debug" %}
+              <i class="fa-solid fa-bug"></i>
+            {% elif cat in ("warning", "error", "critical") %}
+              <i class="fa-solid fa-triangle-exclamation me-1"></i>
+            {% else %}
+              <i class="fa-solid fa-circle-info me-1"></i>
+            {% endif %}
+            <span>{{ msg }}</span>
+          </div>
+          <button type="button"
+                  class="btn-close me-2 m-auto"
+                  data-bs-dismiss="toast"
+                  aria-label="Close"></button>
+        </div>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+  {%- endfor -%}
+
+  {% if container %}
+  </div>
+  {% endif -%}
+
+  {% endif -%}
+  {% endwith -%}
+{% endmacro -%}
