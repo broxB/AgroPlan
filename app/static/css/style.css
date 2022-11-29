@@ -22,6 +22,11 @@ main {
 
 /* custom styling */
 
+.btn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .p-normal {
   padding: 1em 1.5em !important;
 }
@@ -81,15 +86,6 @@ main {
   border-bottom-color: rgba(255, 255, 255, 0.25);
 }
 
-#resetToast {
-  border: 0 solid transparent;
-}
-
-#resetToast:hover,
-#resetToast:focus {
-  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.25);
-}
-
 .nav-masthead .nav-link + .nav-link {
   margin-left: 1rem;
 }
@@ -104,10 +100,20 @@ main {
   border-bottom-width: 0.15rem;
 }
 
+#resetToast {
+  border: 0 solid transparent;
+}
+
+#resetToast:hover,
+#resetToast:focus {
+  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.25);
+}
+
 /* sidebar styling */
 
 #sidebar {
   background-color: transparent;
+  /* border-right: 1px solid var(--bs-dark); */
   height: var(--content-height);
   overflow: auto;
   margin-right: 0;
@@ -126,8 +132,8 @@ main {
 }
 
 .sidebar-item.active {
-  background-color: var(--bs-secondary) !important;
-  border-color: var(--bs-gray-500) !important;
+  background-color: var(--bs-primary) !important;
+  border-color: var(--bs-white) !important;
 }
 
 .sidebar-item:hover {
@@ -181,4 +187,38 @@ main {
     width: 5px;
     height: 5px;
   }
+}
+
+/* special editable table form */
+
+.form-table {
+  display: table;
+  border-collapse: separate;
+  border-spacing: 2px;
+}
+
+.form-thead {
+  display: table-header-group;
+  /* color: white; */
+  font-weight: bold;
+  /* background-color: grey; */
+  border-bottom: 2px solid black;
+}
+
+.form-tbody {
+  display: table-row-group;
+}
+
+.form-tr {
+  display: table-row;
+  border-bottom: 1px solid #999;
+}
+
+.form-td {
+  display: table-cell;
+  padding: 1px;
+}
+
+.form-tr.editing .form-td INPUT {
+  width: 100px;
 }

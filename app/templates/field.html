@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-  <div class="row">
+  <div class="row" id="field">
     <h1>
       {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
     </h1>
@@ -11,70 +11,59 @@
       {% endif %}
     {% endfor %}
   </div>
-  <ul class="nav nav-tabs my-2" id="fieldTab" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active"
-              id="overview-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#overview"
-              type="button"
-              role="tab"
-              aria-controls="overview"
-              aria-selected="true">
-        Overview
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link"
-              id="cultivation-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#cultivation"
-              type="button"
-              role="tab"
-              aria-controls="cultivation"
-              aria-selected="false">
-        Cultivation
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link"
-              id="Fertilization-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#Fertilization"
-              type="button"
-              role="tab"
-              aria-controls="Fertilization"
-              aria-selected="false">
-        Fertilization
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link"
-              id="Soil-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#Soil"
-              type="button"
-              role="tab"
-              aria-controls="Soil"
-              aria-selected="false">
-        Soil
-      </button>
-    </li>
-  </ul>
-  <div class="tab-content" id="fieldTabContent">
+  <!-- field nav -->
+  <nav class="nav nav-pills flex-column flex-sm-row border my-2"
+       id="field-tab">
+    <button class="nav-link flex-sm-fill text-sm-center active"
+            id="cultivation-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#cultivation"
+            type="button"
+            role="tab"
+            aria-controls="cultivation"
+            aria-selected="true">
+      Cultivation
+    </button>
+    <button class="nav-link flex-sm-fill text-sm-center"
+            id="fertilization-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#fertilization"
+            type="button"
+            role="tab"
+            aria-controls="fertilization"
+            aria-selected="false">
+      Fertilization
+    </button>
+    <button class="nav-link flex-sm-fill text-sm-center"
+            id="soil-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#soil"
+            type="button"
+            role="tab"
+            aria-controls="soil"
+            aria-selected="false">
+      Soil
+    </button>
+    <button class="nav-link flex-sm-fill text-sm-center"
+            id="info-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#info"
+            type="button"
+            role="tab"
+            aria-controls="info"
+            aria-selected="false">
+      Info
+    </button>
+  </nav>
+  <div class="tab-content" id="field-tabContent">
+    <!-- cult data -->
     <div class="tab-pane fade show active"
-         id="overview"
-         role="tabpanel"
-         aria-labelledby="overview-tab">
-      <div class="row">...</div>
-    </div>
-    <div class="tab-pane fade"
          id="cultivation"
          role="tabpanel"
          aria-labelledby="cultivation-tab">
       <div class="row">
         <div class="col-lg-8 col-md-9 table-responsive">
-          <table class="table table-hover caption-top align-middle">
+          <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of crops</caption>
             <thead class="no-border-top">
               <tr>
@@ -96,9 +85,9 @@
                       <td>{{ field.area | format_number(".2f") }}</td>
                       <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
                       <td class="table-action d-print-none">
-                        <a href="#">
+                        <button class="btn btn-link p-0">
                           <i class="fa-solid fa-pencil"></i>
-                        </a>
+                        </button>
                       </td>
                     </tr>
                   {% endfor %}
@@ -110,13 +99,14 @@
         {# <div class="col-sm"><p>Random none specific text</p></div> #}
       </div>
     </div>
+    <!-- fert data -->
     <div class="tab-pane fade"
-         id="Fertilization"
+         id="fertilization"
          role="tabpanel"
-         aria-labelledby="Fertilization-tab">
+         aria-labelledby="fertilization-tab">
       <div class="row">
         <div class="col-lg-8 col-md-9 table-responsive">
-          <table class="table table-hover caption-top align-middle">
+          <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of organic fertilizations</caption>
             <thead class="no-border-top">
               <tr>
@@ -136,9 +126,7 @@
                         <th scope="row">{{ field.year }}</th>
                         <td>{{ fert.cultivation.crop.name }}</td>
                         <td>{{ fert.measure.value }}</td>
-                        <td>
-                          {{ fert.fertilizer.name }}
-                        </td>
+                        <td>{{ fert.fertilizer.name }}</td>
                         <td>
                           {{ fert.amount | format_number(".1f", "dt/ha") }}
                         </td>
@@ -154,7 +142,7 @@
               {% endfor %}
             </tbody>
           </table>
-          <table class="table table-hover caption-top align-middle">
+          <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of mineral fertilizations</caption>
             <thead class="no-border-top">
               <tr>
@@ -212,13 +200,14 @@
         {# <div class="col-sm"><p>Random none specific text</p></div> #}
       </div>
     </div>
+    <!-- soil data -->
     <div class="tab-pane fade"
-         id="Soil"
+         id="soil"
          role="tabpanel"
-         aria-labelledby="Soil-tab">
+         aria-labelledby="soil-tab">
       <div class="row">
         <div class="col-lg-8 col-md-9 table-responsive">
-          <table class="table table-hover caption-top align-middle">
+          <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of soil samples</caption>
             <thead class="no-border-top">
               <tr>
@@ -282,8 +271,74 @@
         {# <div class="col-sm"><p>Random none specific text</p></div> #}
       </div>
     </div>
+    <!-- info data -->
+    <div class="tab-pane fade"
+         id="info"
+         role="tabpanel"
+         aria-labelledby="info-tab">
+      <div class="row">
+      <!-- test table form -->
+        <div class="form-table">
+          <div class="form-thead">
+            <div class="form-tr">
+              <div class="form-td">One</div>
+              <div class="form-td">Two</div>
+              <div class="form-td">Three</div>
+              <div class="form-td">Four</div>
+              <div class="form-td"></div>
+            </div>
+          </div>
+          <div class="form-tbody">
+            <form class="form-tr">
+              <div class="form-td">1</div>
+              <div class="form-td">2</div>
+              <div class="form-td">3</div>
+              <div class="form-td">1234</div>
+              <div class="form-td action">
+                {# <button type="button" id="test-btn" onclick="edit(this);">edit</button> #}
+                <button class="btn btn-sm btn-primary" type="button" id="test-btn" onclick="edit(this);"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="btn btn-sm btn-success visually-hidden" type="button" onclick="save(this);">save</button>
+                <button class="btn btn-sm btn-danger visually-hidden" type="button" onclick="cancel(this);">cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  {% set data = base_field.id %}
-  <script id="data" type="application/json">{{ data|tojson }}</script>
+  <script src="{{ url_for('static', filename='/js/field.js') }}"></script>
+  {# <script>
+    function edit(element){
+      var tr = element.parentElement.parentElement;
+      if(!tr.classList.contains("editing")) {
+        tr.classList.toggle("editing");
+        var td = tr.getElementsByClassName("form-td")
+        for (let elem of td) {
+          if(!elem.classList.contains("action")){
+            var value = elem.textContent;
+            elem.textContent = "";
+            var input = document.createElement("input")
+            input.type = "text"
+            input.setAttribute("value", value)
+            elem.appendChild(input);
+          } else {
+            elem.querySelector("BUTTON").textContent = "save";
+          }
+        }
+      } else {
+        tr.classList.toggle("editing");
+        var td = tr.getElementsByClassName("form-td")
+        for (let elem of td) {
+          if(!elem.classList.contains("action")){
+            var input = elem.querySelector("INPUT");
+            elem.textContent = input.value;
+          } else {
+            elem.querySelector("BUTTON").textContent = "edit";
+          }
+        }
+      }
+    }
+  </script> #}
+
 {% endblock app_content %}
