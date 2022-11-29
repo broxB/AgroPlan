@@ -2,13 +2,15 @@
 
 <nav class="navbar nav-masthead sticky-top navbar-expand-lg navbar-dark p-2">
   <div class="d-flex flex-row">
-    <button class="navbar-toggler"
-            type="button"
-            id="sidebarToggle"
-            aria-expanded="false"
-            aria-label="Toggle sidebar">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
+      <button class="navbar-toggler"
+              type="button"
+              id="sidebarToggle"
+              aria-expanded="false"
+              aria-label="Toggle sidebar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+    {% endif %}
     <a class="navbar-brand ps-2" href="{{ url_for('main.home') }}">AgroPlan</a>
   </div>
   <button class="navbar-toggler"
