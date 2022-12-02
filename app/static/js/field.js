@@ -1,3 +1,23 @@
+window.addEventListener("load", () => {
+  var id = localStorage.getItem("activeTab");
+  if (id) {
+    var elem = document.querySelector(`${id}-tab`);
+    var tab = new bootstrap.Tab(elem);
+    tab.show();
+  } else {
+    var elem = document.querySelector("#field-nav > button");
+    var tab = new bootstrap.Tab(elem);
+    tab.show();
+  }
+});
+
+document.querySelectorAll("#field-nav > button").forEach((btn) => {
+  btn.addEventListener("shown.bs.tab", () => {
+    var id = btn.dataset["bsTarget"];
+    localStorage.setItem("activeTab", id);
+  });
+});
+
 function edit(element) {
   var tr = element.parentElement.parentElement;
   if (!tr.classList.contains("editing")) {

@@ -1,4 +1,10 @@
 // toggle sidebar
+document.querySelectorAll("#sidebarNav > .list-group > a").forEach((link) => {
+  link.addEventListener("click", () => {
+    localStorage.removeItem("activeTab");
+  });
+});
+
 document.getElementById("sidebarToggle").addEventListener("click", () => {
   toggleSidebar(this);
   activateSidebarItem();
