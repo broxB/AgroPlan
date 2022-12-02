@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-  <div class="row" id="field">
+  <div class="row" id="field" data-field-id="{{ base_field.id }}">
     <h1>
       {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
     </h1>
