@@ -188,37 +188,3 @@ main {
     height: 5px;
   }
 }
-
-/* special editable table form */
-
-.form-table {
-  display: table;
-  border-collapse: separate;
-  border-spacing: 2px;
-}
-
-.form-thead {
-  display: table-header-group;
-  /* color: white; */
-  font-weight: bold;
-  /* background-color: grey; */
-  border-bottom: 2px solid black;
-}
-
-.form-tbody {
-  display: table-row-group;
-}
-
-.form-tr {
-  display: table-row;
-  border-bottom: 1px solid #999;
-}
-
-.form-td {
-  display: table-cell;
-  padding: 1px;
-}
-
-.form-tr.editing .form-td INPUT {
-  width: 100px;
-}

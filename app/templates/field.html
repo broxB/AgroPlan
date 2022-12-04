@@ -62,7 +62,7 @@
          role="tabpanel"
          aria-labelledby="cultivation-tab">
       <div class="row">
-        <div class="col-lg-8 col-md-9 table-responsive">
+        <div class="col-xl-9 table-responsive">
           <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of crops</caption>
             <thead class="no-border-top">
@@ -105,7 +105,7 @@
          role="tabpanel"
          aria-labelledby="fertilization-tab">
       <div class="row">
-        <div class="col-lg-8 col-md-9 table-responsive">
+        <div class="col-xl-9 table-responsive">
           <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of organic fertilizations</caption>
             <thead class="no-border-top">
@@ -206,7 +206,7 @@
          role="tabpanel"
          aria-labelledby="soil-tab">
       <div class="row">
-        <div class="col-lg-8 col-md-9 table-responsive">
+        <div class="col-xl-9 table-responsive">
           <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of soil samples</caption>
             <thead class="no-border-top">
@@ -277,134 +277,87 @@
          role="tabpanel"
          aria-labelledby="info-tab">
       <div class="row">
-      <div class="col-md-8">
-      <!-- test table form -->
-        {# <div class="container-fluid form-table text-nowrap">
-          <div class="form-thead">
-            <div class="form-tr">
-              <div class="form-td">One</div>
-              <div class="form-td">Two</div>
-              <div class="form-td">Three</div>
-              <div class="form-td">Four</div>
-              <div class="form-td"></div>
-            </div>
-          </div>
-          <div class="form-tbody">
-            <form class="form-tr">
-              <div class="form-td">1</div>
-              <div class="form-td">2</div>
-              <div class="form-td">3</div>
-              <div class="form-td">1234</div>
-              <div class="form-td action">
-                <!-- <button type="button" id="test-btn" onclick="edit(this);">edit</button> -->
-                <button class="text-primary border-0 bg-transparent" type="button" id="test-btn" onclick="edit(this);"><i class="fa-solid fa-pen-to-square fa-lg"></i></button>
-                <button class="text-success border-0 bg-transparent visually-hidden" type="button" onclick="save(this);"><i class="fa-solid fa-square-check fa-xl"></i></button>
-                <button class="text-danger border-0 bg-transparent visually-hidden" type="button" onclick="cancel(this);"><i class="fa-solid fa-square-xmark fa-xl"></i></button>
-              </div>
-            </form>
-          </div>
-        </div> #}
-      <!-- test table form -->
-      <form></form>
-      <div class="table-responsive">
-      <table class="table table-sm table-hover caption-top align-middle">
-        <caption>List of soil samples</caption>
-        <thead class="no-border-top">
-          <tr>
-            <th scope="col">
-              Year
-            </th>
-            <th scope="col">
-              Type
-            </th>
-            <th scope="col">
-              Humus
-            </th>
-            <th scope="col">
-              pH
-            </th>
-            <th scope="col">
-              P2O5
-            </th>
-            <th scope="col">
-              K2O
-            </th>
-            <th scope="col">
-              Mg
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for sample in base_field.soil_samples %}
-            <tr data-sample-id="{{ sample.id }}">
-              <th scope="row">
-                {{ sample.year }}
-              </th>
-              <td class="select">
-                {{ sample.soil_type.value }}
-              </td>
-              <td class="select">
-                {{ sample.humus.value }}
-              </td>
-              <td class="input">
-                {{ sample.ph | format_number(".1f") }}
-              </td>
-              <td class="input">
-                {{ sample.p2o5 | format_number(".1f") }}
-              </td>
-              <td class="input">
-                {{ sample.k2o | format_number(".1f") }}
-              </td>
-              <td class="input">
-                {{ sample.mg | format_number(".1f") }}
-              </td>
-              <td class="action table-action d-print-none">
-                <button class="text-primary border-0 bg-transparent" type="button" id="test-btn" onclick="edit(this);"><i class="fa-solid fa-pen-to-square fa-lg"></i></button>
-                <button class="text-success border-0 bg-transparent visually-hidden" type="button" onclick="save(this);"><i class="fa-solid fa-square-check fa-xl"></i></button>
-                <button class="text-danger border-0 bg-transparent visually-hidden" type="button" onclick="cancel(this);"><i class="fa-solid fa-square-xmark fa-xl"></i></button>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      </div>
-      </div>
+        <div class="col-xxl-9 table-responsive">
+          <form>
+          </form>
+          <table class="table table-sm table-hover caption-top align-middle">
+            <caption>List of soil samples</caption>
+            <thead class="no-border-top">
+              <tr>
+                <th scope="col">
+                  Year
+                </th>
+                <th scope="col" class="select">
+                  Type
+                </th>
+                <th scope="col" class="select">
+                  Humus
+                </th>
+                <th scope="col" class="input">
+                  pH
+                </th>
+                <th scope="col" class="input">
+                  P2O5
+                </th>
+                <th scope="col" class="input">
+                  K2O
+                </th>
+                <th scope="col" class="input">
+                  Mg
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in base_field.soil_samples %}
+                <tr data-sample-id="{{ sample.id }}">
+                  <th scope="row">
+                    {{ sample.year }}
+                  </th>
+                  <td>
+                    {{ sample.soil_type.value }}
+                  </td>
+                  <td>
+                    {{ sample.humus.value }}
+                  </td>
+                  <td>
+                    {{ sample.ph | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.p2o5 | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.k2o | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.mg | format_number(".1f") }}
+                  </td>
+                  <td class="action table-action d-print-none">
+                    <button class="text-primary border-0 bg-transparent"
+                            type="button"
+                            id="test-btn"
+                            onclick="edit(this);">
+                      <i class="fa-solid fa-pen-to-square fa-lg"></i>
+                    </button>
+                    <button class="text-success border-0 bg-transparent visually-hidden"
+                            type="button"
+                            onclick="save(this);">
+                      <i class="fa-solid fa-square-check fa-xl"></i>
+                    </button>
+                    <button class="text-danger border-0 bg-transparent visually-hidden"
+                            type="button"
+                            onclick="cancel(this);">
+                      <i class="fa-solid fa-square-xmark fa-xl"></i>
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="{{ url_for('static', filename='/js/field.js') }}"></script>
-  {# <script>
-    function edit(element){
-      var tr = element.parentElement.parentElement;
-      if(!tr.classList.contains("editing")) {
-        tr.classList.toggle("editing");
-        var td = tr.getElementsByClassName("form-td")
-        for (let elem of td) {
-          if(!elem.classList.contains("action")){
-            var value = elem.textContent;
-            elem.textContent = "";
-            var input = document.createElement("input")
-            input.type = "text"
-            input.setAttribute("value", value)
-            elem.appendChild(input);
-          } else {
-            elem.querySelector("BUTTON").textContent = "save";
-          }
-        }
-      } else {
-        tr.classList.toggle("editing");
-        var td = tr.getElementsByClassName("form-td")
-        for (let elem of td) {
-          if(!elem.classList.contains("action")){
-            var input = elem.querySelector("INPUT");
-            elem.textContent = input.value;
-          } else {
-            elem.querySelector("BUTTON").textContent = "edit";
-          }
-        }
-      }
-    }
-  </script> #}
 
 {% endblock app_content %}
