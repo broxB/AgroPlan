@@ -19,17 +19,19 @@ class Soil:
         self.p2o5: Decimal = self.SoilSample.p2o5
         self.k2o: Decimal = self.SoilSample.k2o
         self.mg: Decimal = self.SoilSample.mg
-        self._p2o5_dict = load_json("data/Richtwerte/Abschläge/abschlag_p2o5.json")
-        self._k2o_dict = load_json("data/Richtwerte/Abschläge/abschlag_k2o.json")
-        self._mgo_dict = load_json("data/Richtwerte/Abschläge/abschlag_mgo.json")
-        self._cao_dict = load_json("data/Richtwerte/Abschläge/abschlag_cao_4jahre.json")
-        self._s_dict = load_json("data/Richtwerte/Abschläge/abschlag_s.json")
-        self._soil_dict = load_json("data/Richtwerte/Abschläge/bodenvorrat.json")
-        self._classes = ["A", "B", "C", "D", "E"]
-        self._p2o5_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_p2o5.json")
-        self._k2o_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_k2o.json")
-        self._mgo_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_mgo.json")
-        self._cao_class_dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_ph_wert.json")
+        self._p2o5_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_p2o5.json")
+        self._k2o_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_k2o.json")
+        self._mgo_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_mgo.json")
+        self._cao_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_cao_4jahre.json")
+        self._s_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_s.json")
+        self._soil_dict: dict = load_json("data/Richtwerte/Abschläge/bodenvorrat.json")
+        self._classes: list[str] = ["A", "B", "C", "D", "E"]
+        self._p2o5_class_dict: dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_p2o5.json")
+        self._k2o_class_dict: dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_k2o.json")
+        self._mgo_class_dict: dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_mgo.json")
+        self._cao_class_dict: dict = load_json(
+            "data/Richtwerte/Gehaltsklassen/klassen_ph_wert.json"
+        )
 
     def reduction_n(self, field_type: FieldType) -> Decimal:
         return Decimal(self._soil_dict[self.humus.value][field_type.value])
@@ -89,7 +91,7 @@ class Soil:
         except IndexError:
             return Decimal(-reduction[-1] * 100 / 4)
 
-    def optimal_ph(self, field_type) -> Decimal:
+    def optimal_ph(self, field_type: FieldType) -> Decimal:
         return Decimal(
             str(self._cao_class_dict[field_type.value][self.soil_type.value][self.humus.value][2])
         )
@@ -123,5 +125,5 @@ class Soil:
         return self._classes[index]
 
     @staticmethod
-    def to_decimal(values: list[float]):
+    def to_decimal(values: list[float]) -> list[Decimal]:
         return [Decimal(str(value)) for value in values]

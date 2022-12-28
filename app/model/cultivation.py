@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -7,7 +9,9 @@ from app.model.crop import Crop
 from app.utils import load_json
 
 
-def create_cultivation(cultivation, crop):
+def create_cultivation(
+    cultivation: db.Cultivation, crop: Crop
+) -> MainCrop | SecondCrop | CatchCrop:
     if cultivation.crop_class == CropClass.catch_crop:
         return CatchCrop(cultivation, crop)
     elif cultivation.crop_class == CropClass.main_crop:
@@ -34,8 +38,8 @@ class Cultivation:
         self.nmin: list[int] = self.Cultivation.nmin
         self.legume_rate: LegumeType = self.Cultivation.legume_rate
         self.remains: RemainsType = self.Cultivation.remains
-        self._pre_crop_dict = load_json("data/Richtwerte/Abschläge/vorfrucht.json")
-        self._legume_dict = load_json("data/Richtwerte/Abschläge/leguminosen.json")
+        self._pre_crop_dict: dict = load_json("data/Richtwerte/Abschläge/vorfrucht.json")
+        self._legume_dict: dict = load_json("data/Richtwerte/Abschläge/leguminosen.json")
 
     def demand(self, demand_option, negative_output: bool = True) -> list[Decimal]:
         demands = []

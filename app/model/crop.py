@@ -34,7 +34,7 @@ class Crop:
         self.byp_p2o5: Decimal = self.Crop.byp_p2o5
         self.byp_k2o: Decimal = self.Crop.byp_k2o
         self.byp_mgo: Decimal = self.Crop.byp_mgo
-        self._s_dict = load_json("data/Richtwerte/Nährstoffwerte/schwefelbedarf.json")
+        self._s_dict: dict = load_json("data/Richtwerte/Nährstoffwerte/schwefelbedarf.json")
 
     def demand_crop(
         self,

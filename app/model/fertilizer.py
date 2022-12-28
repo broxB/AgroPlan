@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -6,7 +8,7 @@ from app.database.types import FertClass, FertType, FieldType
 from app.utils import load_json
 
 
-def create_fertilizer(fertilizer):
+def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
     if fertilizer.fert_class == FertClass.organic:
         return Organic(fertilizer)
     elif fertilizer.fert_class == FertClass.mineral:

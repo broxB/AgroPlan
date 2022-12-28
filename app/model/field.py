@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from dataclasses import field as field_
 from decimal import Decimal
@@ -17,7 +19,7 @@ from app.model.fertilizer import create_fertilizer
 from app.model.soil import Soil
 
 
-def create_field(base_field_id, year, first_year=True):
+def create_field(base_field_id: int, year: int, first_year: bool = True) -> Field | None:
     field = (
         FieldModel.query.join(BaseFieldModel)
         .filter(
@@ -63,7 +65,7 @@ class Field:
         self.red_region: bool = self.Field.red_region
         self.demand_option: DemandType = self.Field.demand_type
         self.saldo: db.Saldo = self.Field.saldo
-        self.field_prev_year = self._field_prev_year()
+        self.field_prev_year: Field = self._field_prev_year()
 
     def total_saldo(self) -> list[Decimal]:
         saldo = zip(*[self.sum_demands(), self.sum_reductions(), self.sum_fertilizations()])
@@ -211,7 +213,7 @@ class Field:
         return None
 
     @property
-    def soil_sample(self):
+    def soil_sample(self) -> Soil | None:
         soil_sample = (
             max(self.Field.soil_samples, key=lambda x: x.year) if self.Field.soil_samples else None
         )
@@ -240,7 +242,7 @@ class Field:
             return True
         return False
 
-    def _sum_fall_fertilizations(self):
+    def _sum_fall_fertilizations(self) -> list[Decimal]:
         sum_n = [(0, 0)]
         for fertilization in self.fertilizations:
             if (
@@ -254,7 +256,7 @@ class Field:
                 sum_n.append((n_total, nh4))
         return [sum(n) for n in zip(*sum_n)]
 
-    def _field_prev_year(self):
+    def _field_prev_year(self) -> Field | None:
         if not self.first_year:
             return
         year = self.year - 1

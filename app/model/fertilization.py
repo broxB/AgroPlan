@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
-from app.database.types import CropClass, FertClass, FieldType, MeasureType
+from app.database.types import CropClass, FieldType, MeasureType
 from app.model.crop import Crop
 from app.model.fertilizer import Fertilizer
 
