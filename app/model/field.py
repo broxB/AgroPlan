@@ -2,14 +2,50 @@ from dataclasses import dataclass
 from dataclasses import field as field_
 from decimal import Decimal
 
+from flask_login import current_user
 from loguru import logger
 
 import app.database.model as db
 import app.model as md
+from app.database.model import BaseField as BaseFieldModel
+from app.database.model import Field as FieldModel
 from app.database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
+from app.model.crop import Crop
 from app.model.cultivation import CatchCrop, MainCrop, SecondCrop, create_cultivation
+from app.model.fertilization import Fertilization
 from app.model.fertilizer import create_fertilizer
 from app.model.soil import Soil
+
+
+def create_field(base_field_id, year, first_year=True):
+    field = (
+        FieldModel.query.join(BaseFieldModel)
+        .filter(
+            BaseFieldModel.id == base_field_id,
+            BaseFieldModel.user_id == current_user.id,
+            FieldModel.year == year,
+        )
+        .one_or_none()
+    )
+
+    if field is None:
+        return None
+    field_data = Field(field, first_year=first_year)
+
+    for cultivation in field.cultivations:
+        crop_data = Crop(cultivation.crop, cultivation.crop_class)
+        cultivation_data = create_cultivation(cultivation, crop_data)
+        field_data.cultivations.append(cultivation_data)
+
+    for fertilization in field.fertilizations:
+        fertilizer_data = create_fertilizer(fertilization.fertilizer)
+        crop_data = Crop(fertilization.cultivation.crop, fertilization.cultivation.crop_class)
+        fertilization_data = Fertilization(
+            fertilization, fertilizer_data, crop_data, fertilization.cultivation.crop_class
+        )
+        field_data.fertilizations.append(fertilization_data)
+
+    return field_data
 
 
 @dataclass
@@ -222,24 +258,5 @@ class Field:
         if not self.first_year:
             return
         year = self.year - 1
-        db_field = db.Field.query.filter(
-            db.Field.base_id == self.base_id, db.Field.year == year
-        ).one_or_none()
-        if db_field:
-            field = md.Field(db_field, False)
-            for db_cultivation in db_field.cultivations:
-                crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-                cultivation = create_cultivation(db_cultivation, crop)
-                field.cultivations.append(cultivation)
-            for db_fertilization in db_field.fertilizations:
-                fertilizer = create_fertilizer(db_fertilization.fertilizer)
-                crop = md.Crop(
-                    db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-                )
-                fertilization = md.Fertilization(
-                    db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class
-                )
-                field.fertilizations.append(fertilization)
-        else:
-            field = None
+        field = create_field(self.base_id, year, first_year=False)
         return field
