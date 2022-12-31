@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
+import app.model.guidelines as guidelines
 from app.database.types import CropClass, CropType, DemandType, RemainsType
-from app.utils import load_json
 
 
 @dataclass
@@ -34,7 +34,7 @@ class Crop:
         self.byp_p2o5: Decimal = self.Crop.byp_p2o5
         self.byp_k2o: Decimal = self.Crop.byp_k2o
         self.byp_mgo: Decimal = self.Crop.byp_mgo
-        self._s_dict: dict = load_json("data/Richtwerte/Nährstoffwerte/schwefelbedarf.json")
+        self._s_dict: dict = guidelines.sulfur_needs()
 
     def demand_crop(
         self,

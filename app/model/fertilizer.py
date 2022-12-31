@@ -4,8 +4,8 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
+import app.model.guidelines as guidelines
 from app.database.types import FertClass, FertType, FieldType
-from app.utils import load_json
 
 
 def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
@@ -50,7 +50,7 @@ class Fertilizer:
 class Organic(Fertilizer):
     def __post_init__(self):
         super().__post_init__()
-        self._factor_dict = load_json("data/Richtwerte/Abschläge/wirkungsfaktoren.json")
+        self._factor_dict = guidelines.org_factor()
 
     def factor(self, field_type: FieldType) -> Decimal:
         return Decimal(str(self._factor_dict[self.fert_type.value][field_type.value]))

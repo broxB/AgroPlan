@@ -3,8 +3,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
+import app.model.guidelines as guidelines
 from app.database.types import FieldType, HumusType, SoilType
-from app.utils import load_json, round_to_nearest
+from app.utils import round_to_nearest
 
 
 @dataclass
@@ -19,19 +20,17 @@ class Soil:
         self.p2o5: Decimal = self.SoilSample.p2o5
         self.k2o: Decimal = self.SoilSample.k2o
         self.mg: Decimal = self.SoilSample.mg
-        self._p2o5_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_p2o5.json")
-        self._k2o_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_k2o.json")
-        self._mgo_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_mgo.json")
-        self._cao_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_cao_4jahre.json")
-        self._s_dict: dict = load_json("data/Richtwerte/Abschläge/abschlag_s.json")
-        self._soil_dict: dict = load_json("data/Richtwerte/Abschläge/bodenvorrat.json")
+        self._p2o5_dict: dict = guidelines.p2o5_reductions()
+        self._k2o_dict: dict = guidelines.k2o_redctions()
+        self._mgo_dict: dict = guidelines.mgo_redctions()
+        self._cao_dict: dict = guidelines.cao_redctions()
+        self._s_dict: dict = guidelines.sulfur_redctions()
+        self._soil_dict: dict = guidelines.soil_redctions()
         self._classes: list[str] = ["A", "B", "C", "D", "E"]
-        self._p2o5_class_dict: dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_p2o5.json")
-        self._k2o_class_dict: dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_k2o.json")
-        self._mgo_class_dict: dict = load_json("data/Richtwerte/Gehaltsklassen/klassen_mgo.json")
-        self._cao_class_dict: dict = load_json(
-            "data/Richtwerte/Gehaltsklassen/klassen_ph_wert.json"
-        )
+        self._p2o5_class_dict: dict = guidelines.p2o5_classes()
+        self._k2o_class_dict: dict = guidelines.k2o_classes()
+        self._mgo_class_dict: dict = guidelines.mgo_classes()
+        self._cao_class_dict: dict = guidelines.ph_classes()
 
     def reduction_n(self, field_type: FieldType) -> Decimal:
         return Decimal(self._soil_dict[self.humus.value][field_type.value])

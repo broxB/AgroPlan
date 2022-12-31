@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
+import app.model.guidelines as guidelines
 from app.database.types import CropClass, CropType, DemandType, LegumeType, RemainsType
 from app.model.crop import Crop
-from app.utils import load_json
 
 
 def create_cultivation(
@@ -38,8 +38,8 @@ class Cultivation:
         self.nmin: list[int] = self.Cultivation.nmin
         self.legume_rate: LegumeType = self.Cultivation.legume_rate
         self.remains: RemainsType = self.Cultivation.remains
-        self._pre_crop_dict: dict = load_json("data/Richtwerte/Abschläge/vorfrucht.json")
-        self._legume_dict: dict = load_json("data/Richtwerte/Abschläge/leguminosen.json")
+        self._pre_crop_dict: dict = guidelines.pre_crop_effect()
+        self._legume_dict: dict = guidelines.legume_delivery()
 
     def demand(self, demand_option, negative_output: bool = True) -> list[Decimal]:
         demands = []
