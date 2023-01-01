@@ -1,22 +1,25 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from dataclasses import field as field_
 from decimal import Decimal
 
 from flask_login import current_user
 from loguru import logger
 
 import app.database.model as db
-import app.model as md
 from app.database.model import BaseField as BaseFieldModel
 from app.database.model import Field as FieldModel
 from app.database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
 from app.model.crop import Crop
-from app.model.cultivation import CatchCrop, MainCrop, SecondCrop, create_cultivation
+from app.model.cultivation import (
+    CatchCrop,
+    Cultivation,
+    MainCrop,
+    SecondCrop,
+    create_cultivation,
+)
 from app.model.fertilization import Fertilization
 from app.model.fertilizer import create_fertilizer
-from app.model.soil import Soil
+from app.model.soil import Soil, create_soil_sample
 
 
 def create_field(base_field_id: int, year: int, first_year: bool = True) -> Field | None:
@@ -33,6 +36,7 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
     if field is None:
         return None
     field_data = Field(field, first_year=first_year)
+    field_data.soil_sample = create_soil_sample(field.soil_samples, year)
 
     for cultivation in field.cultivations:
         crop_data = Crop(cultivation.crop, cultivation.crop_class)
@@ -50,21 +54,20 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
     return field_data
 
 
-@dataclass
 class Field:
-    Field: db.Field
-    first_year: bool = True
-    cultivations: list[md.Cultivation] = field_(default_factory=list)
-    fertilizations: list[md.Fertilization] = field_(default_factory=list)
-
-    def __post_init__(self):
-        self.base_id: int = self.Field.base_id
-        self.area: Decimal = self.Field.area
-        self.year: int = self.Field.year
-        self.field_type: FieldType = self.Field.field_type
-        self.red_region: bool = self.Field.red_region
-        self.demand_option: DemandType = self.Field.demand_type
-        self.saldo: db.Saldo = self.Field.saldo
+    def __init__(self, Field: db.Field, first_year: bool = False):
+        self.base_id: int = Field.base_id
+        self.name: str = Field.base_field.name
+        self.area: Decimal = Field.area
+        self.year: int = Field.year
+        self.field_type: FieldType = Field.field_type
+        self.red_region: bool = Field.red_region
+        self.demand_option: DemandType = Field.demand_type
+        self.saldo: db.Saldo = Field.saldo
+        self.first_year: bool = first_year
+        self.soil_sample: Soil = None
+        self.cultivations: list[Cultivation] = []
+        self.fertilizations: list[Fertilization] = []
         self.field_prev_year: Field = self._field_prev_year()
 
     def total_saldo(self) -> list[Decimal]:
@@ -123,26 +126,27 @@ class Field:
 
     def soil_reductions(self, soil: Soil) -> list[Decimal]:
         reductions = [Decimal()] * 6
-        if soil and self.field_type in [FieldType.cropland, FieldType.grassland]:
-            if self.demand_option == DemandType.demand:
-                for i, reduction in enumerate(
-                    (
-                        soil.reduction_p2o5(self.field_type),
-                        soil.reduction_k2o(self.field_type),
-                        soil.reduction_mgo(self.field_type),
-                    ),
-                    start=1,
-                ):
-                    reductions[i] += reduction
-            reductions[0] += soil.reduction_n(self.field_type)
-            if self.main_crop:
-                reductions[4] += soil.reduction_s(
-                    self.n_total(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
-                )
-            if soil.year + 3 < self.year:
-                reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
-            else:
-                reductions[5] += soil.reduction_cao(self.field_type)
+        if not (soil and self.field_type in (FieldType.cropland, FieldType.grassland)):
+            return reductions
+        reductions[0] += soil.reduction_n(self.field_type)
+        if self.demand_option == DemandType.demand:
+            for i, reduction in enumerate(
+                (
+                    soil.reduction_p2o5(self.field_type),
+                    soil.reduction_k2o(self.field_type),
+                    soil.reduction_mgo(self.field_type),
+                ),
+                start=1,
+            ):
+                reductions[i] += reduction
+        if self.main_crop:
+            reductions[4] += soil.reduction_s(
+                self.n_total(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
+            )
+        if soil.year + 3 < self.year:
+            reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
+        else:
+            reductions[5] += soil.reduction_cao(self.field_type)
         return reductions
 
     def redelivery(self) -> list[Decimal]:
@@ -153,13 +157,13 @@ class Field:
             reductions[0] += self.n_redelivery()
         return reductions
 
-    def crop_reductions(self, cultivation: md.Cultivation) -> list[Decimal]:
+    def crop_reductions(self, cultivation: Cultivation) -> list[Decimal]:
         reductions = [Decimal()] * 6
         reductions[0] += cultivation.reduction()
         reductions[0] += self.pre_crop_effect(cultivation)
         return reductions
 
-    def pre_crop_effect(self, cultivation: md.Cultivation) -> Decimal:
+    def pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
         if self.field_type != FieldType.cropland or cultivation.crop_class == CropClass.catch_crop:
             return Decimal()
         if cultivation.crop_class == CropClass.main_crop:
@@ -212,17 +216,7 @@ class Field:
                 return self.field_prev_year.main_crop
         return None
 
-    @property
-    def soil_sample(self) -> Soil | None:
-        soil_sample = (
-            max(self.Field.soil_samples, key=lambda x: x.year) if self.Field.soil_samples else None
-        )
-        if soil_sample:
-            return md.Soil(soil_sample)
-        return None
-
-    @property
-    def overfertilization(self) -> bool:
+    def fall_fertilization(self) -> bool:
         """Checks if fertilization applied in fall exceeds the regulations"""
         n_total, nh4 = self._sum_fall_fertilizations()
         if (
@@ -232,12 +226,12 @@ class Field:
         ):
             if n_total > (80 if not self.red_region else 60):
                 logger.info(
-                    f"{self.Field.base_field.name}: {n_total=:.0f} is violating the maximum value for fall fertilizations."
+                    f"{self.name}: {n_total=:.0f} is violating the maximum value of Nges for fall fertilizations."
                 )
                 return True
         elif n_total > 60 or nh4 > 30:
             logger.info(
-                f"{self.Field.base_field.name}: {n_total=:.0f} or {nh4=:.0f} are violating the maximum values for fall fertilizations."
+                f"{self.name}: {n_total=:.0f} or {nh4=:.0f} are violating the maximum values of NH4 for fall fertilizations."
             )
             return True
         return False

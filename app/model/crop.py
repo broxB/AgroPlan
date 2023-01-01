@@ -1,40 +1,35 @@
-from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
 import app.model.guidelines as guidelines
-from app.database.types import CropClass, CropType, DemandType, RemainsType
+from app.database.types import CropClass, CropType, RemainsType
 
 
-@dataclass
 class Crop:
-    Crop: db.Crop
-    crop_class: CropClass
-
-    def __post_init__(self):
-        self.name: str = self.Crop.name  # W.-Gerste
-        self.kind: str = self.Crop.kind  # Wintergerste
-        self.crop_class: CropClass = self.crop_class  # Hauptfrucht
-        self.crop_type: CropType = self.Crop.crop_type  # Getreide
-        self.feedable: bool = self.Crop.feedable  # Feldfutter
-        self.remains: list[RemainsType] = self.Crop.remains
-        self.nmin_depth: int = self.Crop.nmin_depth
-        self.target_demand: Decimal = self.Crop.target_demand
-        self.target_yield: Decimal = self.Crop.target_yield
-        self.var_yield: list[Decimal] = self.Crop.var_yield
-        self.target_protein: Decimal = self.Crop.target_protein
-        self.var_protein: list[Decimal] = self.Crop.var_protein
-        self.n: Decimal = self.Crop.n
-        self.p2o5: Decimal = self.Crop.p2o5
-        self.k2o: Decimal = self.Crop.k2o
-        self.mgo: Decimal = self.Crop.mgo
-        self.byproduct: Decimal = self.Crop.byproduct
-        self.byp_ratio: Decimal = self.Crop.byp_ratio
-        self.byp_n: Decimal = self.Crop.byp_n
-        self.byp_p2o5: Decimal = self.Crop.byp_p2o5
-        self.byp_k2o: Decimal = self.Crop.byp_k2o
-        self.byp_mgo: Decimal = self.Crop.byp_mgo
-        self._s_dict: dict = guidelines.sulfur_needs()
+    def __init__(self, Crop: db.Crop, crop_class: CropClass, guidelines: guidelines = guidelines):
+        self.name: str = Crop.name  # W.-Gerste
+        self.kind: str = Crop.kind  # Wintergerste
+        self.crop_class: CropClass = crop_class  # Hauptfrucht
+        self.crop_type: CropType = Crop.crop_type  # Getreide
+        self.feedable: bool = Crop.feedable  # Feldfutter
+        self.remains: list[RemainsType] = Crop.remains
+        self.nmin_depth: int = Crop.nmin_depth
+        self.target_demand: Decimal = Crop.target_demand
+        self.target_yield: Decimal = Crop.target_yield
+        self.var_yield: list[Decimal] = Crop.var_yield
+        self.target_protein: Decimal = Crop.target_protein
+        self.var_protein: list[Decimal] = Crop.var_protein
+        self.n: Decimal = Crop.n
+        self.p2o5: Decimal = Crop.p2o5
+        self.k2o: Decimal = Crop.k2o
+        self.mgo: Decimal = Crop.mgo
+        self.byproduct: str = Crop.byproduct
+        self.byp_ratio: Decimal = Crop.byp_ratio
+        self.byp_n: Decimal = Crop.byp_n
+        self.byp_p2o5: Decimal = Crop.byp_p2o5
+        self.byp_k2o: Decimal = Crop.byp_k2o
+        self.byp_mgo: Decimal = Crop.byp_mgo
+        self.guidelines = guidelines
 
     def demand_crop(
         self,
@@ -42,7 +37,7 @@ class Crop:
         crop_protein: Decimal,
     ) -> list[Decimal]:
         demands = [
-            self._n(crop_yield, crop_protein),
+            self._n_demand(crop_yield, crop_protein),
             self._nutrient(crop_yield, self.p2o5),
             self._nutrient(crop_yield, self.k2o),
             self._nutrient(crop_yield, self.mgo),
@@ -67,9 +62,10 @@ class Crop:
 
     @property
     def s_demand(self) -> Decimal:
-        return Decimal(str(self._s_dict.get(self.name, 0)))
+        sulfur_needs: dict = self.guidelines.sulfur_needs()
+        return Decimal(str(sulfur_needs.get(self.name, 0)))
 
-    def _n(self, crop_yield: Decimal, crop_protein: Decimal) -> Decimal:
+    def _n_demand(self, crop_yield: Decimal, crop_protein: Decimal) -> Decimal:
         i = 0 if self.target_yield > crop_yield else 1
         return (
             self.target_demand

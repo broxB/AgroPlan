@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
@@ -10,26 +9,23 @@ from app.database.types import FertClass, FertType, FieldType
 
 def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
     if fertilizer.fert_class == FertClass.organic:
-        return Organic(fertilizer)
+        return Organic(fertilizer, guidelines=guidelines)
     elif fertilizer.fert_class == FertClass.mineral:
         return Mineral(fertilizer)
 
 
-@dataclass
 class Fertilizer:
-    Fertilizer: db.Fertilizer
-
-    def __post_init__(self):
-        self.name: str = self.Fertilizer.name
-        self.fert_class: FertClass = self.Fertilizer.fert_class
-        self.fert_type: FertType = self.Fertilizer.fert_type
-        self.n: Decimal = self.Fertilizer.n
-        self.p2o5: Decimal = self.Fertilizer.p2o5
-        self.k2o: Decimal = self.Fertilizer.k2o
-        self.mgo: Decimal = self.Fertilizer.mgo
-        self.s: Decimal = self.Fertilizer.s
-        self.cao: Decimal = self.Fertilizer.cao
-        self.nh4: Decimal = self.Fertilizer.nh4
+    def __init__(self, Fertilizer: db.Fertilizer):
+        self.name: str = Fertilizer.name
+        self.fert_class: FertClass = Fertilizer.fert_class
+        self.fert_type: FertType = Fertilizer.fert_type
+        self.n: Decimal = Fertilizer.n
+        self.p2o5: Decimal = Fertilizer.p2o5
+        self.k2o: Decimal = Fertilizer.k2o
+        self.mgo: Decimal = Fertilizer.mgo
+        self.s: Decimal = Fertilizer.s
+        self.cao: Decimal = Fertilizer.cao
+        self.nh4: Decimal = Fertilizer.nh4
 
     def is_class(self, fert_class: FertClass) -> bool:
         return self.fert_class == fert_class if fert_class else True
@@ -48,15 +44,15 @@ class Fertilizer:
 
 
 class Organic(Fertilizer):
-    def __post_init__(self):
-        super().__post_init__()
-        self._factor_dict = guidelines.org_factor()
+    def __init__(self, *args, guidelines: guidelines):
+        super().__init__(*args)
+        self._org_factor: dict = guidelines.org_factor()
 
     def factor(self, field_type: FieldType) -> Decimal:
-        return Decimal(str(self._factor_dict[self.fert_type.value][field_type.value]))
+        return Decimal(str(self._org_factor[self.fert_type.value][field_type.value]))
 
     def storage_loss(self) -> Decimal:
-        return Decimal(str(self._factor_dict[self.fert_type.value]["Lagerverluste"]))
+        return Decimal(str(self._org_factor[self.fert_type.value]["Lagerverluste"]))
 
     def n_total(self, netto: bool = False) -> Decimal:
         if netto:
@@ -68,8 +64,8 @@ class Organic(Fertilizer):
 
 
 class Mineral(Fertilizer):
-    def n_total(self, netto: bool = False) -> Decimal:
+    def n_total(self, *arg, **kwargs) -> Decimal:
         return self.n
 
-    def n_verf(self, field_type: FieldType) -> Decimal:
+    def n_verf(self, *arg, **kwargs) -> Decimal:
         return max(self.n, self.nh4)

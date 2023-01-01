@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from decimal import Decimal
 
 import app.database.model as db
@@ -7,16 +6,19 @@ from app.model.crop import Crop
 from app.model.fertilizer import Fertilizer
 
 
-@dataclass
 class Fertilization:
-    Fertilization: db.Fertilization
-    fertilizer: Fertilizer
-    crop: Crop
-    crop_class: CropClass
-
-    def __post_init__(self):
-        self.amount: Decimal = self.Fertilization.amount
-        self.measure: MeasureType = self.Fertilization.measure
+    def __init__(
+        self,
+        Fertilization: db.Fertilization,
+        fertilizer: Fertilizer,
+        crop: Crop,
+        crop_class: CropClass,
+    ):
+        self.fertilizer = fertilizer
+        self.crop = crop
+        self.crop_class = crop_class
+        self.amount: Decimal = Fertilization.amount
+        self.measure: MeasureType = Fertilization.measure
 
     def n_total(self, measure: MeasureType, crop_class: CropClass, netto: bool) -> Decimal:
         if self.fertilizer.is_organic:
