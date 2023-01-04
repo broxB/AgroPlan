@@ -60,6 +60,12 @@ main {
   background-color: var(--bs-green) !important;
 }
 
+/* field-nav styling */
+
+#field-nav .nav-link.active {
+  background-color: #24c278;
+}
+
 /* toast styling */
 
 .toast {
