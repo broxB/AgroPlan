@@ -56,6 +56,10 @@ main {
   background-color: cadetblue !important;
 }
 
+.bg-green {
+  background-color: var(--bs-green) !important;
+}
+
 /* toast styling */
 
 .toast {
