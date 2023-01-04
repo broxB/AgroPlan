@@ -14,7 +14,7 @@ from flask_login import current_user, login_required
 from app.database.model import BaseField, User
 from app.extensions import db, login
 from app.main import bp
-from app.main.forms import EditProfileForm, EmptyForm
+from app.main.forms import EditProfileForm, YearForm
 from app.model import Field, create_field
 
 
@@ -25,9 +25,11 @@ def load_user(user_id):
 
 # @bp.before_app_request
 # def before_request():
-# if current_user.is_authenticated:
-# current_user.last_seen = datetime.utcnow()
-# db.session.commit()
+#     user_agent = request.headers.get("User-Agent")
+#     print (user_agent)
+#     if current_user.is_authenticated:
+#     current_user.last_seen = datetime.utcnow()
+#     db.session.commit()
 
 
 @bp.route("/", methods=["GET", "POST"])
@@ -40,9 +42,9 @@ def home():
 @bp.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
-    page = request.args.get("page", 1, type=int)
+    # page = request.args.get("page", 1, type=int)
     fields = current_user.get_fields()  # .paginate(page, 10, False)
-    form = EmptyForm()
+    form = YearForm()
     # next_url = url_for("main.index", page=fields.next_num) if fields.has_next else None
     # prev_url = url_for("main.index", page=fields.prev_num) if fields.has_prev else None
     return render_template(
@@ -80,7 +82,7 @@ def edit_profile():
         current_user.email = form.email.data
         db.session.commit()
         flash("Your changes have been saved.")
-        return redirect(url_for("main.edit_profile"))
+        return redirect(url_for("main.user", username=current_user.username))
     if request.method == "GET":
         form.username.data = current_user.username
         form.email.data = current_user.email
@@ -94,29 +96,30 @@ def edit_profile():
 def field(base_field_id):
     base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
     fields = current_user.get_fields(year=current_user.year)
-    form = EmptyForm()
+    form = YearForm()
     return render_template(
         "field.html", title=base_field.name, base_field=base_field, fields=fields, form=form
     )
 
 
-@bp.route("/set_year/<year>", methods=["POST"])
+@bp.route("/set_year", methods=["POST"])
 @login_required
-def set_year(year):
-    form = EmptyForm()
+def set_year():
+    form = YearForm()
+    year = int(form.year.data)
     if form.validate_on_submit():
         current_user.year = year
         db.session.commit()
-        flash(f"Cultivation year has been set to {year}")
+        flash(f"Cultivation year has been set to {year}.")
     else:
-        flash(f"Invalid selection")
+        flash(f"Invalid year selected.")
     return redirect(request.referrer)
 
 
 @bp.route("/field/data/<id>", methods=["GET"])
 @login_required
 def field_data(id):
-    field: Field = create_field(id)
+    field: Field = create_field(id, current_user.year)
     if field is None:
         return ["-"] * 6
     elements = ["n", "p2o5", "k2o", "mgo", "s", "cao"]

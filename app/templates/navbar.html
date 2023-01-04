@@ -44,8 +44,9 @@
             </li>
             {% for year in current_user.get_years() %}
               <li>
-                <form action="{{ url_for('main.set_year', year=year) }}", method="post">
-                  {{ form.hidden_tag() }}
+                <form action="{{ url_for('main.set_year') }}", method="post">
+                  {{ form.csrf_token() }}
+                  {{ form.year(value=year)}}
                   {% if year == current_user.year %}
                     {{ form.submit(value=year, class="dropdown-item active") }}
                   {% else %}

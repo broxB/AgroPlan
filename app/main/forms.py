@@ -1,5 +1,6 @@
+from flask_login import current_user
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, SubmitField
+from wtforms import HiddenField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, ValidationError
 
 from app.database.model import User
@@ -33,9 +34,11 @@ class EmptyForm(FlaskForm):
 
 
 class YearForm(FlaskForm):
-    year = SelectField("Select Year:", validators=[DataRequired()])
-    submit = SubmitField("Change")
+    year = HiddenField("Year")
+    submit = SubmitField("Submit")
 
-    def __init__(self, choices, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.year.choices = choices
+    def validate_year(self, year):
+        year = int(year.data)
+        if year != current_user.year:
+            if year not in current_user.get_years():
+                raise ValidationError("Invalid year selected.")
