@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import app.database.model as db
 import app.model.guidelines as guidelines
-from app.database.types import CropClass, CropType, DemandType, LegumeType, RemainsType
+from app.database.types import CropClass, CropType, DemandType, LegumeType, ResidueType
 from app.model.crop import Crop
 
 
@@ -31,7 +31,7 @@ class Cultivation:
         self.nmin_depth: int = crop.nmin_depth
         self.nmin: list[int] = Cultivation.nmin
         self.legume_rate: LegumeType = Cultivation.legume_rate
-        self.remains: RemainsType = Cultivation.remains
+        self.residues: ResidueType = Cultivation.residues
         self.guidelines = guidelines
 
     def demand(self, demand_option, negative_output: bool = True) -> list[Decimal]:
@@ -42,7 +42,7 @@ class Cultivation:
                 crop_protein=self.crop_protein,
             )
         )
-        if demand_option == DemandType.demand or self.remains == RemainsType.removed:
+        if demand_option == DemandType.demand or self.residues == ResidueType.removed:
             demands.append(self.crop.demand_byproduct(self.crop_yield))
         demands = [sum(demand) for demand in zip(*demands)]
         if negative_output:
@@ -101,4 +101,4 @@ class CatchCrop(Cultivation):
         return [Decimal("-60"), *[Decimal()] * 5]
 
     def pre_crop_effect(self) -> Decimal:
-        return Decimal(self._pre_crop_dict[self.crop_type.value][self.remains.value])
+        return Decimal(self._pre_crop_dict[self.crop_type.value][self.residues.value])

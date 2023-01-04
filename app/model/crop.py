@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import app.database.model as db
 import app.model.guidelines as guidelines
-from app.database.types import CropClass, CropType, RemainsType
+from app.database.types import CropClass, CropType, ResidueType
 
 
 class Crop:
@@ -12,7 +12,7 @@ class Crop:
         self.crop_class: CropClass = crop_class  # Hauptfrucht
         self.crop_type: CropType = Crop.crop_type  # Getreide
         self.feedable: bool = Crop.feedable  # Feldfutter
-        self.remains: list[RemainsType] = Crop.remains
+        self.residue: bool = Crop.residue  # Hat Erntereste?
         self.nmin_depth: int = Crop.nmin_depth
         self.target_demand: Decimal = Crop.target_demand
         self.target_yield: Decimal = Crop.target_yield

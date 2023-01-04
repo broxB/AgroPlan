@@ -6,7 +6,7 @@ __all__ = [
     "HumusType",
     "CropType",
     "CropClass",
-    "RemainsType",
+    "ResidueType",
     "LegumeType",
     "FertClass",
     "FertType",
@@ -86,14 +86,13 @@ class CropClass(enum.Enum):
     fourth_cut = "4. Schnitt"
 
 
-class RemainsType(enum.Enum):
-    # Rename to ResidueType
+class ResidueType(enum.Enum):
     """Crop residues for preceding crop effect: `stayed`, `removed` or `frozen`, `catch_crop_used` etc."""
 
     # Hauptfrüchte
     stayed = "verbleibt"
     removed = "abgefahren"
-    no_remains = None
+    no_residues = None
     # Zwischenfrüchte
     frozen = "abgefroren"
     not_frozen_fall = "nicht abgf., eing. Herbst"

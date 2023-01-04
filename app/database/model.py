@@ -30,7 +30,7 @@ from app.database.types import (
     HumusType,
     LegumeType,
     MeasureType,
-    RemainsType,
+    ResidueType,
     SoilType,
     UnitType,
 )
@@ -176,7 +176,7 @@ class Cultivation(Base):
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
     crop_yield = Column("yield", Float(asdecimal=True))
     crop_protein = Column("protein", Float(asdecimal=True))
-    remains = Column("remains", Enum(RemainsType))
+    residues = Column("residues", Enum(ResidueType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
     nmin = Column("nmin", MutableList.as_mutable(PickleType), default=[])
     field = relationship("Field", back_populates="cultivations")
@@ -186,7 +186,7 @@ class Cultivation(Base):
         return (
             f"Cultivation(id='{self.id}', field='{self.field.base_field.name}', year='{self.field.year}', "
             f"type='{self.crop_class.value}', name='{self.crop.name}', yield='{self.crop_yield:.2f}', "
-            f"remains='{self.remains.value}', legume='{self.legume_rate.value}', nmin='{self.nmin}')"
+            f"residues='{self.residues.value}', legume='{self.legume_rate.value}', nmin='{self.nmin}')"
         )
 
 
@@ -201,7 +201,7 @@ class Crop(Base):
     crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
     kind = Column("kind", String)
     feedable = Column("feedable", Boolean)
-    remains = Column("remains", Boolean)
+    residue = Column("residue", Boolean)
     legume_rate = Column("legume_rate", Enum(LegumeType))
     nmin_depth = Column("nmin_depth", Integer)
     target_demand = Column("target_demand", Float(asdecimal=True))

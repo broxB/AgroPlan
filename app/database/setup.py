@@ -28,7 +28,7 @@ from app.database.types import (
     HumusType,
     LegumeType,
     MeasureType,
-    RemainsType,
+    ResidueType,
     SoilType,
     UnitType,
 )
@@ -110,11 +110,11 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
     def get_crop_class(class_: str) -> CropClass:
         return CropClass(class_)
 
-    def get_remains_type(remains: str) -> RemainsType:
+    def get_remains_type(remains: str) -> ResidueType:
         try:
-            return RemainsType(remains)
+            return ResidueType(remains)
         except ValueError:
-            return RemainsType(None)
+            return ResidueType(None)
 
     def get_legume_type(legume: str) -> LegumeType:
         try:
@@ -266,7 +266,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                         crop_type=get_crop_type(cult.name),
                         kind=crop_dict.get("Art", None),
                         feedable=crop_dict.get("Feldfutter", None),
-                        remains=crop_dict.get("Erntereste", None),
+                        residue=crop_dict.get("Erntereste", None),
                         legume_rate=get_legume_type(crop_dict.get("Leguminosenanteil", None)),
                         nmin_depth=crop_dict.get("Nmin_Tiefe", 0),
                         target_demand=crop_dict.get("Richtbedarf", None),
@@ -290,7 +290,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     field_id=field,
                     crop_class=CropClass(cult.class_),
                     crop_yield=cult.yield_,
-                    remains=get_remains_type(cult.remains),
+                    residues=get_remains_type(cult.remains),
                     legume_rate=get_legume_type(cult.legume),
                     nmin=get_nmin(field_dict, CropClass(cult.class_)),
                 )
