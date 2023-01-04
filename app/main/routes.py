@@ -120,8 +120,5 @@ def set_year():
 @login_required
 def field_data(id):
     field: Field = create_field(id, current_user.year)
-    if field is None:
-        return ["-"] * 6
     elements = ["n", "p2o5", "k2o", "mgo", "s", "cao"]
-    json_reponse = {elements[i]: value for i, value in enumerate(field.total_saldo())}
-    return json_reponse
+    return dict(zip(elements, field.total_saldo()))

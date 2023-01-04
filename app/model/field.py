@@ -71,7 +71,7 @@ class Field:
         self.field_prev_year: Field = self._field_prev_year()
 
     def total_saldo(self) -> list[Decimal]:
-        saldo = zip(*[self.sum_demands(), self.sum_reductions(), self.sum_fertilizations()])
+        saldo = zip(self.sum_demands(), self.sum_reductions(), self.sum_fertilizations())
         return [sum(num) for num in saldo]
 
     def n_total(
@@ -216,7 +216,7 @@ class Field:
                 return self.field_prev_year.main_crop
         return None
 
-    def fall_fertilization(self) -> bool:
+    def fall_violation(self) -> bool:
         """Checks if fertilization applied in fall exceeds the regulations"""
         n_total, nh4 = self._sum_fall_fertilizations()
         if (
