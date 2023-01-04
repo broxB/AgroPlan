@@ -17,6 +17,8 @@ __all__ = [
 
 
 class FieldType(enum.Enum):
+    """Field types: `cropland`, `fallow_grassland`, `exchanged_land` etc."""
+
     grassland = "Grünland"
     cropland = "Ackerland"
     exchanged_land = "Tauschfläche"
@@ -25,6 +27,8 @@ class FieldType(enum.Enum):
 
 
 class SoilType(enum.Enum):
+    """Soil compositions: `sand`, `strong_loamy_sand` etc."""
+
     sand = "Sand"
     light_loamy_sand = "schwach lehmiger Sand"
     strong_loamy_sand = "stark lehmiger Sand"
@@ -34,6 +38,8 @@ class SoilType(enum.Enum):
 
 
 class HumusType(enum.Enum):
+    """Humus content ratios for soil samples: `less_4`, `less_15` etc."""
+
     less_4 = r"< 4%"
     less_8 = r"4% bis < 8%"
     less_15 = r"8% bis < 15%"
@@ -42,6 +48,8 @@ class HumusType(enum.Enum):
 
 
 class CropType(enum.Enum):
+    """Fruit groups for preceding crop effect: `canola`, `grain` and `permanent_grassland` etc."""
+
     # Hauptfrüchte
     rotating_fallow_with_legume = "Rotationsbrache mit Leguminosen"
     rotating_fallow = "Rotationsbrache ohne Leguminosen"
@@ -67,6 +75,8 @@ class CropType(enum.Enum):
 
 
 class CropClass(enum.Enum):
+    """Fruit classes for crop rotation: `main_crop` or `first_cut` etc."""
+
     catch_crop = "Zwischenfrucht"
     main_crop = "Hauptfrucht"
     second_crop = "Zweitfrucht"
@@ -77,6 +87,9 @@ class CropClass(enum.Enum):
 
 
 class RemainsType(enum.Enum):
+    # Rename to ResidueType
+    """Crop residues for preceding crop effect: `stayed`, `removed` or `frozen`, `catch_crop_used` etc."""
+
     # Hauptfrüchte
     stayed = "verbleibt"
     removed = "abgefahren"
@@ -89,6 +102,8 @@ class RemainsType(enum.Enum):
 
 
 class LegumeType(enum.Enum):
+    """Ratio of legumes in fruits: `grass_less_10`, `crop_10`, `catch_25` etc."""
+
     # Grünland
     grass_less_5 = "< 5%"
     grass_less_10 = r"5% bis 10%"
@@ -114,11 +129,15 @@ class LegumeType(enum.Enum):
 
 
 class FertClass(enum.Enum):
+    """Fertilizer basic classifications: `organic` or `mineral`"""
+
     organic = "Wirtschaftsdünger"
     mineral = "Mineraldünger"
 
 
 class FertType(enum.Enum):
+    """Fertilizer subtype classifications: `slurry`, `digestate` or `n_p_k`, `lime` etc."""
+
     # organic
     digestate = "Gärrest"
     slurry = "Gülle"
@@ -141,6 +160,8 @@ class FertType(enum.Enum):
 
 
 class MeasureType(enum.Enum):
+    """Measures for fertilization: `fall`, `first_n_fert`, `lime_fert` etc."""
+
     fall = "Herbst"
     spring = "Frühjahr"
     first_first_n_fert = "1.1 N-Gabe"
@@ -158,11 +179,15 @@ class MeasureType(enum.Enum):
 
 
 class UnitType(enum.Enum):
+    """Units for fertilizer and fruit: `dt`, `to` and `cbm`"""
+
     dt = "dt"
     to = "to"
     cbm = "m³"
 
 
 class DemandType(enum.Enum):
+    """Demand types for fertilization calculation: `removal` and `demand`"""
+
     removal = "Abfuhr"
     demand = "Bedarf"
