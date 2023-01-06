@@ -10,6 +10,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    Numeric,
     PickleType,
     String,
     Table,
@@ -95,6 +96,16 @@ class User(UserMixin, Base):
         )
         return [field.year for field in fields]
 
+    def get_crops(self, crop_class: CropClass = None):
+        if crop_class is None:
+            return Crop.query.filter_by(user_id=self.id).all()
+        return Crop.query.filter_by(user_id=self.id, crop_class=crop_class).all()
+
+    def get_fertilizer(self, fert_class: FertClass = None):
+        if fert_class is None:
+            return Fertilizer.query.filter_by(user_id=self.id).all()
+        return Fertilizer.query.filter_by(user_id=self.id, fert_class=fert_class).all()
+
     def __repr__(self):
         return f"<User {self.username}>"
 
@@ -123,6 +134,7 @@ class BaseField(Base):
     prefix = Column("prefix", Integer)
     suffix = Column("suffix", Integer)
     name = Column("name", String)
+
     fields = relationship("Field", back_populates="base_field", order_by="desc(Field.year)")
     soil_samples = relationship("SoilSample")
     user = relationship("User", back_populates="fields")
@@ -141,11 +153,12 @@ class Field(Base):
     id = Column("field_id", Integer, primary_key=True)
     base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
     sub_suffix = Column("sub_suffix", Integer, default=0)
-    area = Column("area", Float(asdecimal=True))
+    area = Column("area", Float(asdecimal=True, decimal_return_scale=2))
     year = Column("year", Integer)
     red_region = Column("red_region", Boolean)
     field_type = Column("field_type", Enum(FieldType))
     demand_type = Column("demand_type", Enum(DemandType))
+
     base_field = relationship("BaseField", back_populates="fields")
     cultivations = relationship("Cultivation", back_populates="field")
     fertilizations = relationship(
@@ -174,11 +187,12 @@ class Cultivation(Base):
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     crop_class = Column("crop_class", Enum(CropClass))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
-    crop_yield = Column("yield", Float(asdecimal=True))
-    crop_protein = Column("protein", Float(asdecimal=True))
+    crop_yield = Column("yield", Float(asdecimal=True, decimal_return_scale=2))
+    crop_protein = Column("protein", Float(asdecimal=True, decimal_return_scale=2))
     residues = Column("residues", Enum(ResidueType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
     nmin = Column("nmin", MutableList.as_mutable(PickleType), default=[])
+
     field = relationship("Field", back_populates="cultivations")
     crop = relationship("Crop", back_populates="cultivations")
 
@@ -204,21 +218,22 @@ class Crop(Base):
     residue = Column("residue", Boolean)
     legume_rate = Column("legume_rate", Enum(LegumeType))
     nmin_depth = Column("nmin_depth", Integer)
-    target_demand = Column("target_demand", Float(asdecimal=True))
-    target_yield = Column("target_yield", Float(asdecimal=True))
+    target_demand = Column("target_demand", Float(asdecimal=True, decimal_return_scale=2))
+    target_yield = Column("target_yield", Float(asdecimal=True, decimal_return_scale=2))
     var_yield = Column("var_yield", MutableList.as_mutable(PickleType), default=[])
-    target_protein = Column("target_protein", Float(asdecimal=True))
-    var_protein = Column("var_protein", Float(asdecimal=True))
-    n = Column("n", Float(asdecimal=True))
-    p2o5 = Column("p2o5", Float(asdecimal=True))
-    k2o = Column("k2o", Float(asdecimal=True))
-    mgo = Column("mgo", Float(asdecimal=True))
+    target_protein = Column("target_protein", Float(asdecimal=True, decimal_return_scale=2))
+    var_protein = Column("var_protein", Float(asdecimal=True, decimal_return_scale=2))
+    n = Column("n", Float(asdecimal=True, decimal_return_scale=2))
+    p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
+    k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
+    mgo = Column("mgo", Float(asdecimal=True, decimal_return_scale=2))
     byproduct = Column("byproduct", String)
-    byp_ratio = Column("byp_ratio", Float(asdecimal=True))
-    byp_n = Column("byp_n", Float(asdecimal=True))
-    byp_p2o5 = Column("byp_p2o5", Float(asdecimal=True))
-    byp_k2o = Column("byp_k2o", Float(asdecimal=True))
-    byp_mgo = Column("byp_mgo", Float(asdecimal=True))
+    byp_ratio = Column("byp_ratio", Float(asdecimal=True, decimal_return_scale=2))
+    byp_n = Column("byp_n", Float(asdecimal=True, decimal_return_scale=2))
+    byp_p2o5 = Column("byp_p2o5", Float(asdecimal=True, decimal_return_scale=2))
+    byp_k2o = Column("byp_k2o", Float(asdecimal=True, decimal_return_scale=2))
+    byp_mgo = Column("byp_mgo", Float(asdecimal=True, decimal_return_scale=2))
+
     cultivations = relationship("Cultivation", back_populates="crop")
 
     def __repr__(self):
@@ -234,9 +249,10 @@ class Fertilization(Base):
     id = Column("fertilization_id", Integer, primary_key=True)
     cultivation_id = Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id"))
     fertilizer_id = Column("fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id"))
-    amount = Column("amount", Float(asdecimal=True))
+    amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
     measure = Column("measure", Enum(MeasureType))
     month = Column("month", Integer)
+
     field = relationship(
         "Field",
         secondary=field_fertilization,
@@ -265,14 +281,15 @@ class Fertilizer(Base):
     fert_type = Column("type", Enum(FertType))
     active = Column("active", Boolean)
     unit = Column("unit", Enum(UnitType))
-    price = Column("price", Float(asdecimal=True))
-    n = Column("n", Float(asdecimal=True))
-    p2o5 = Column("p2o5", Float(asdecimal=True))
-    k2o = Column("k2o", Float(asdecimal=True))
-    mgo = Column("mgo", Float(asdecimal=True))
-    s = Column("s", Float(asdecimal=True))
-    cao = Column("cao", Float(asdecimal=True))
-    nh4 = Column("nh4", Float(asdecimal=True))
+    price = Column("price", Float(asdecimal=True, decimal_return_scale=2))
+    n = Column("n", Float(asdecimal=True, decimal_return_scale=2))
+    p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
+    k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
+    mgo = Column("mgo", Float(asdecimal=True, decimal_return_scale=2))
+    s = Column("s", Float(asdecimal=True, decimal_return_scale=2))
+    cao = Column("cao", Float(asdecimal=True, decimal_return_scale=2))
+    nh4 = Column("nh4", Float(asdecimal=True, decimal_return_scale=2))
+
     usage = relationship("FertilizerUsage", backref="fertilizer")
 
     def __repr__(self):
@@ -291,7 +308,7 @@ class FertilizerUsage(Base):
     id = Column("id", Integer, primary_key=True)
     name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
     year = Column("year", Integer)
-    amount = Column("amount", Float(asdecimal=True))
+    amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
 
     def __repr__(self):
         return (
@@ -306,12 +323,13 @@ class SoilSample(Base):
     id = Column("sample_id", Integer, primary_key=True)
     base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
     year = Column("year", Integer)
-    ph = Column("ph", Float(asdecimal=True))
-    p2o5 = Column("p2o5", Float(asdecimal=True))
-    k2o = Column("k2o", Float(asdecimal=True))
-    mg = Column("mg", Float(asdecimal=True))
+    ph = Column("ph", Float(asdecimal=True, decimal_return_scale=2))
+    p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
+    k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
+    mg = Column("mg", Float(asdecimal=True, decimal_return_scale=2))
     soil_type = Column("soil_type", Enum(SoilType))
     humus = Column("humus", Enum(HumusType))
+
     fields = relationship("Field", secondary=field_soil_sample, back_populates="soil_samples")
 
     def __repr__(self):
@@ -326,11 +344,12 @@ class Saldo(Base):
     __tablename__ = "saldo"
 
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"), primary_key=True)
-    n = Column("n", Float(asdecimal=True))
-    p2o5 = Column("p2o5", Float(asdecimal=True))
-    k2o = Column("k2o", Float(asdecimal=True))
-    mgo = Column("mgo", Float(asdecimal=True))
-    s = Column("s", Float(asdecimal=True))
-    cao = Column("cao", Float(asdecimal=True))
-    n_total = Column("nges", Float(asdecimal=True))
+    n = Column("n", Float(asdecimal=True, decimal_return_scale=2))
+    p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
+    k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
+    mgo = Column("mgo", Float(asdecimal=True, decimal_return_scale=2))
+    s = Column("s", Float(asdecimal=True, decimal_return_scale=2))
+    cao = Column("cao", Float(asdecimal=True, decimal_return_scale=2))
+    n_total = Column("nges", Float(asdecimal=True, decimal_return_scale=2))
+
     field = relationship("Field", back_populates="saldo")
