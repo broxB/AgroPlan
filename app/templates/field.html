@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-  <div class="row" id="field" data-field-id="{{ base_field.id }}">
-    <h1>
-      {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
-    </h1>
-    {% for field in base_field.fields %}
-      {% if field.year == current_user.year %}
+  {% for field in base_field.fields %}
+    {% if field.year == current_user.year %}
+      <div class="row"
+           id="field"
+           data-base-id="{{ base_field.id }}"
+           data-field-id="{{ field.id }}">
+        <h1>
+          {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+        </h1>
         <h6>{{ field.field_type.value }} — {{ field.area | format_number(".2f", "ha") }}</h6>
       {% endif %}
     {% endfor %}
@@ -85,7 +88,11 @@
                       <td>{{ field.area | format_number(".2f") }}</td>
                       <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
                       <td class="table-action d-print-none">
-                        <button class="btn btn-link p-0">
+                        <button class="btn btn-link p-0"
+                                type="button"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modal"
+                                data-modal="cultivation">
                           <i class="fa-solid fa-pencil"></i>
                         </button>
                       </td>
@@ -131,9 +138,13 @@
                           {{ fert.amount | format_number(".1f", "dt/ha") }}
                         </td>
                         <td class="table-action d-print-none">
-                          <a href="#">
+                          <button class="btn btn-link p-0"
+                                  type="button"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#modal"
+                                  data-modal="fertilization">
                             <i class="fa-solid fa-pencil"></i>
-                          </a>
+                          </button>
                         </td>
                       </tr>
                     {% endif %}
@@ -185,9 +196,13 @@
                           {{ fert.amount | format_number(".1f", "dt/ha") }}
                         </td>
                         <td class="table-action d-print-none">
-                          <a href="#">
+                          <button class="btn btn-link p-0"
+                                  type="button"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#modal"
+                                  data-modal="fertilization">
                             <i class="fa-solid fa-pencil"></i>
-                          </a>
+                          </button>
                         </td>
                       </tr>
                     {% endif %}
@@ -259,9 +274,13 @@
                     {{ sample.mg | format_number(".1f") }}
                   </td>
                   <td class="table-action d-print-none">
-                    <a href="#">
+                    <button class="btn btn-link p-0"
+                            type="button"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modal"
+                            data-modal="soil">
                       <i class="fa-solid fa-pencil"></i>
-                    </a>
+                    </button>
                   </td>
                 </tr>
               {% endfor %}
@@ -278,8 +297,8 @@
          aria-labelledby="info-tab">
       <div class="row">
         <div class="col-xxl-9 table-responsive">
-          <form>
-          </form>
+          {# <form>
+          </form> #}
           <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of soil samples</caption>
             <thead class="no-border-top">
@@ -358,6 +377,18 @@
     </div>
   </div>
 
-  <script src="{{ url_for('static', filename='/js/field.js') }}"></script>
+  <div class="modal fade"
+       id="modal"
+       tabindex="-1"
+       aria-labelledby="modalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- js fetched modal content here !-->
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/field.js') }}"></script>
 
 {% endblock app_content %}

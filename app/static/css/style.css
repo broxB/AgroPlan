@@ -66,6 +66,10 @@ main {
   background-color: #24c278;
 }
 
+#field-nav .nav-link:hover:not(.active) {
+  background-color: #20ac6b;
+}
+
 /* toast styling */
 
 .toast {

@@ -1,0 +1,18 @@
+{% from "bootstrap5/form.html" import render_form %}
+
+<div class="modal-header">
+  <h5 class="modal-title" id="editModalLabel">{{ modal_type }}</h5>
+  <button type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"></button>
+</div>
+<div class="modal-body">
+  <div class="container-fluid">{{ render_form(form) }}</div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+  <button type="submit" class="btn btn-primary">Save changes</button>
+</div>
+
+{# <script src="{{ url_for('static', filename='/js/modal.js') }}"></script> #}
