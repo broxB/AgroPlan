@@ -1,4 +1,5 @@
 __all__ = [
+    "create_form",
     "BaseFieldForm",
     "FieldForm",
     "CultivationForm",
@@ -45,11 +46,51 @@ from app.database.types import (
 )
 
 
-class BaseFieldForm(FlaskForm):
+def create_form(modal: str, params: list) -> FlaskForm | None:
+    modal_types = {
+        "base_field": BaseFieldForm,
+        "field": FieldForm,
+        "cultivation": CultivationForm,
+        "fertilization": FertilizationForm,
+        "crop": CropForm,
+        "fertilizer": FertilizerForm,
+        "soil": SoilForm,
+    }
+    try:
+        form = modal_types[modal](*params)
+    except KeyError:
+        form = None
+    return form
+
+
+class FormHelper:
+    def populate(self: FlaskForm, id):
+        self.model_data = self.model_type.query.filter_by(id=int(id)).first()
+        self.process(obj=self.model_data)
+
+    # credit: https://stackoverflow.com/a/71562719/16256581
+    def disable(self, input_field):
+        """
+        disable the given input
+
+        Args:
+            inputField(Input): the WTForms input to disable
+            disabled(bool): if true set the disabled attribute of the input
+        """
+        if input_field.render_kw is None:
+            input_field.render_kw = {}
+        input_field.render_kw["disabled"] = "disabled"
+
+
+class BaseFieldForm(FlaskForm, FormHelper):
     prefix = IntegerField("Prefix:", validators=[DataRequired()])
     suffix = IntegerField("Suffix:", validators=[DataRequired()])
     name = StringField("Name:", validators=[DataRequired()])
     submit = SubmitField("Add")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model_type = BaseField
 
     def validate(self):
         valid = super().validate()
@@ -69,19 +110,19 @@ class BaseFieldForm(FlaskForm):
         return True
 
 
-class FieldForm(FlaskForm):
+class FieldForm(FlaskForm, FormHelper):
     sub_suffix = IntegerField("Sub-Suffix:")
     year = IntegerField("Year:", validators=[DataRequired()])
     area = FloatField("Area:", validators=[DataRequired()])
     red_region = BooleanField("In red region?", validators=[DataRequired()])
     field_type = SelectField(
         "Select field type:",
-        choices=[enum.value for enum in FieldType],
+        choices=[(enum.name, enum.value) for enum in FieldType],
         validators=[DataRequired()],
     )
     demand_type = SelectField(
         "Select demand type:",
-        choices=[enum.value for enum in DemandType],
+        choices=[(enum.name, enum.value) for enum in DemandType],
         validators=[DataRequired()],
     )
     submit = SubmitField("Submit")
@@ -89,6 +130,7 @@ class FieldForm(FlaskForm):
     def __init__(self, base_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.base_id = base_id
+        self.model_type = Field
         self.sub_suffix.data = 0
 
     def validate_sub_suffix(self, sub_suffix):
@@ -111,23 +153,23 @@ class FieldForm(FlaskForm):
             ValidationError(f"Field in {year} already exists.")
 
 
-class CultivationFrom(FlaskForm):
+class CultivationForm(FlaskForm, FormHelper):
     crop_class = SelectField(
         "Select crop class:",
-        choices=[enum.value for enum in CropClass],
+        choices=[(enum.name, enum.value) for enum in list(CropClass)[:3]],
         validators=[DataRequired()],
     )
     crop = SelectField("Select fruit to grow:", validators=[DataRequired()])
-    est_yield = IntegerField("Estimated yield:", validators=[DataRequired()])
-    est_protein = FloatField("Estimated protein:")
+    crop_yield = IntegerField("Estimated yield:", validators=[DataRequired()])
+    crop_protein = FloatField("Estimated protein:")
     residues = SelectField(
         "Estimated residues:",
-        choices=[enum.value for enum in ResidueType],
+        choices=[(enum.name, enum.value) for enum in ResidueType],
         validators=[DataRequired()],
     )
     legume_rate = SelectField(
         "Share of legumes:",
-        choices=[enum.value for enum in LegumeType],
+        choices=[(enum.name, enum.value) for enum in LegumeType],
         validators=[DataRequired()],
     )
     nmin_30 = IntegerField("Nmin 30cm:", validators=[DataRequired()])
@@ -138,6 +180,7 @@ class CultivationFrom(FlaskForm):
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.field_id = field_id
+        self.model_type = Cultivation
         # js implementation
         # choices = [
         #     (crop.id, crop.name)
@@ -158,25 +201,27 @@ class CultivationFrom(FlaskForm):
             raise ValidationError("Class already exists.")
 
 
-class FertilizationFrom(FlaskForm):
+class FertilizationForm(FlaskForm, FormHelper):
+    crop = SelectField("Select crop to fertilize:", validators=[DataRequired()])
     fert_class = SelectField(
         "Select fertilizer type:",
-        choices=[enum.value for enum in FertClass],
+        choices=[(enum.name, enum.value) for enum in FertClass],
         validators=[DataRequired()],
     )
     fertilizer = SelectField("Select fertilizer:", validators=[DataRequired()])
-    amount = FloatField("Amount:", validators=[DataRequired()])
     measure = SelectField(
         "Select measure:",
-        choices=[enum.value for enum in MeasureType],
+        choices=[(enum.name, enum.value) for enum in MeasureType],
         validators=[DataRequired()],
     )
+    amount = FloatField("Amount:", validators=[DataRequired()])
     month = IntegerField("Month:")
-    submit = SubmitField("Submit:")
+    submit = SubmitField("Submit")
 
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.field_id = field_id
+        self.model_type = Fertilization
         # js implementation
         # choices = [
         #     (fert.id, fert.name)
@@ -201,32 +246,38 @@ class FertilizationFrom(FlaskForm):
                 raise ValidationError(f"{measure} for mineral fertilization already exists.")
 
 
-class FertilizerForm(FlaskForm):
+class FertilizerForm(FlaskForm, FormHelper):
     name = StringField("Name:", validators=[DataRequired()])
     year = IntegerField("Year:", validators=[DataRequired()])
     fert_class = SelectField(
         "Select fertilizer class:",
-        choices=[enum.value for enum in FertClass],
+        choices=[(enum.name, enum.value) for enum in FertClass],
         validators=[DataRequired()],
     )
     fert_type = SelectField(
         "Select fertilizer type:",
-        choices=[enum.value for enum in FertType],
-        validators=[DataRequired()],
-    )
-    unit = SelectField(
-        "Select measurement unit:",
-        choices=[enum.value for enum in UnitType],
+        choices=[(enum.name, enum.value) for enum in FertType],
         validators=[DataRequired()],
     )
     active = BooleanField("Show fertilizer in list?")
+    unit = SelectField(
+        "Select measurement unit:",
+        choices=[(enum.name, enum.value) for enum in UnitType],
+        validators=[DataRequired()],
+    )
+    price = FloatField("Price in €:", default=0.00)
     n = FloatField("N:", validators=[DataRequired()])
     p2o5 = FloatField("P2O5:", validators=[DataRequired()])
     k2o = FloatField("K2O:", validators=[DataRequired()])
     mgo = FloatField("MgO:", validators=[DataRequired()])
-    sulfur = FloatField("S:", validators=[DataRequired()])
+    s = FloatField("S:", validators=[DataRequired()])
     cao = FloatField("CaO:", validators=[DataRequired()])
     nh4 = FloatField("NH4:", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model_type = Fertilizer
 
     def validate(self):
         valid = super().validate()
@@ -254,42 +305,47 @@ class FertilizerForm(FlaskForm):
         return True
 
 
-class CropForm(FlaskForm):
+class CropForm(FlaskForm, FormHelper):
     name = StringField("Name:", validators=[DataRequired()])
     crop_class = SelectField(
         "Select a fruit class:",
-        choices=[enum.value for enum in CropClass],
+        choices=[(enum.name, enum.value) for enum in CropClass],
         validators=[DataRequired()],
     )
     crop_type = SelectField(
         "Select a fruit type:",
-        choices=[enum.value for enum in CropType],
+        choices=[(enum.name, enum.value) for enum in CropType],
         validators=[DataRequired()],
     )
-    crop_kind = StringField("Fruit subtype:", validators=[DataRequired()])
+    kind = StringField("Fruit subtype:", validators=[DataRequired()])
     feedable = BooleanField("Is feedable?", validators=[DataRequired()])
     residue = BooleanField("Has residues?", validators=[DataRequired()])
     nmin_depth = IntegerField("Nmin to depth:", validators=[DataRequired()])
     target_demand = IntegerField("Target demand:", validators=[DataRequired()])
     target_yield = IntegerField("Target yield:", validators=[DataRequired()])
-    positiv_yield = StringField(
+    positive_yield = StringField(
         "Demand change if yield delta is positive:", validators=[DataRequired()]
     )
-    negativ_yield = IntegerField(
+    negative_yield = IntegerField(
         "Demand change if yield delta is negative:", validators=[DataRequired()]
     )
     target_protein = IntegerField("Target protein:", validators=[DataRequired()])
-    delta_protein = FloatField("Demand change with protein delta:", validators=[DataRequired()])
-    n_fruit = FloatField("Fruit N:", validators=[DataRequired()])
-    p_fruit = FloatField("Fruit P2O5:", validators=[DataRequired()])
-    k_fruit = FloatField("Fruit K2O:", validators=[DataRequired()])
-    mg_fruit = FloatField("Fruit MgO:", validators=[DataRequired()])
+    var_protein = FloatField("Demand change with protein delta:", validators=[DataRequired()])
+    n = FloatField("Fruit N:", validators=[DataRequired()])
+    p2o5 = FloatField("Fruit P2O5:", validators=[DataRequired()])
+    k2o = FloatField("Fruit K2O:", validators=[DataRequired()])
+    mgo = FloatField("Fruit MgO:", validators=[DataRequired()])
     byproduct = StringField("Residue:")
-    byproduct_ratio = FloatField("Residue ratio:", validators=[DataRequired()])
-    n_byp = FloatField("Residue N:", validators=[DataRequired()])
-    p_byp = FloatField("Residue P2O5:", validators=[DataRequired()])
-    k_byp = FloatField("Residue K2O:", validators=[DataRequired()])
-    mg_byp = FloatField("Residue MgO:", validators=[DataRequired()])
+    byp_ratio = FloatField("Residue ratio:", validators=[DataRequired()])
+    byp_n = FloatField("Residue N:", validators=[DataRequired()])
+    byp_p2o5 = FloatField("Residue P2O5:", validators=[DataRequired()])
+    byp_k2o = FloatField("Residue K2O:", validators=[DataRequired()])
+    byp_mgo = FloatField("Residue MgO:", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model_type = Crop
 
     def validate_name(self, name):
         crop = Crop.query.filter(Crop.user_id == current_user.id, Crop.name == name).first()
@@ -297,26 +353,28 @@ class CropForm(FlaskForm):
             raise ValidationError(f"{name} already exists.")
 
 
-class SoilForm(FlaskForm):
+class SoilForm(FlaskForm, FormHelper):
     year = IntegerField("Year:", validators=[DataRequired()])
-    ph = FloatField("pH:", validators=[DataRequired()])
-    p2o5 = FloatField("P2O5:", validators=[DataRequired()])
-    k2o = FloatField("K2O:", validators=[DataRequired()])
-    mg = FloatField("Mg:", validators=[DataRequired()])
     soil_type = SelectField(
         "Select soil composition:",
-        choices=[enum.value for enum in SoilType],
+        choices=[(enum.name, enum.value) for enum in SoilType],
         validators=[DataRequired()],
     )
     humus = SelectField(
         "Select humus ratio:",
-        choices=[enum.value for enum in HumusType],
+        choices=[(enum.name, enum.value) for enum in HumusType],
         validators=[DataRequired()],
     )
+    ph = FloatField("pH:", validators=[DataRequired()])
+    p2o5 = FloatField("P2O5:", validators=[DataRequired()])
+    k2o = FloatField("K2O:", validators=[DataRequired()])
+    mg = FloatField("Mg:", validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
-    def __init__(self, base_id, *args, **kwargs):
+    def __init__(self, base_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.base_id = base_id
+        self.model_type = SoilSample
+        self.base_id = int(base_id)
 
     def validate_year(self, year):
         soil_sample = SoilSample.query.filter(

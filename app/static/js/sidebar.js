@@ -21,7 +21,7 @@ window.addEventListener("beforeunload", () => {
 // scroll to selected field and add active tag
 function activateSidebarItem() {
   try {
-    const fieldId = document.getElementById("field").dataset.fieldId;
+    const fieldId = document.getElementById("field").dataset.baseId;
     var element = document.getElementById(fieldId);
     element.classList.add("active");
     document.getElementById("sidebar").scrollTop = localStorage.getItem("scrollPositon") || 0;

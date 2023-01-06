@@ -3,6 +3,7 @@ from datetime import datetime
 from flask import (
     current_app,
     flash,
+    g,
     jsonify,
     redirect,
     render_template,
@@ -10,12 +11,14 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
+from loguru import logger
 
 from app.database.model import BaseField, User
 from app.extensions import db, login
 from app.main import bp
-from app.main.forms import EditProfileForm, YearForm
+from app.main.forms import EditProfileForm, YearForm, create_edit_form
 from app.model import Field, create_field
+from app.model.forms import create_form
 
 
 @login.user_loader
@@ -91,17 +94,6 @@ def edit_profile():
     )
 
 
-@bp.route("/field/<base_field_id>")
-@login_required
-def field(base_field_id):
-    base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
-    fields = current_user.get_fields(year=current_user.year)
-    form = YearForm()
-    return render_template(
-        "field.html", title=base_field.name, base_field=base_field, fields=fields, form=form
-    )
-
-
 @bp.route("/set_year", methods=["POST"])
 @login_required
 def set_year():
@@ -116,9 +108,35 @@ def set_year():
     return redirect(request.referrer)
 
 
-@bp.route("/field/data/<id>", methods=["GET"])
+@bp.route("/field/<base_field_id>", methods=["GET", "POST"])
 @login_required
-def field_data(id):
-    field: Field = create_field(id, current_user.year)
+def field(base_field_id):
+    if request.method == "GET":
+        base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
+        fields = current_user.get_fields(year=current_user.year)
+        form = YearForm()
+        return render_template(
+            "field.html", title=base_field.name, base_field=base_field, fields=fields, form=form
+        )
+    elif request.method == "POST":
+        pass
+
+
+@bp.route("/field/<base_field_id>/data", methods=["GET"])
+@login_required
+def field_data(base_field_id):
+    field: Field = create_field(base_field_id, current_user.year)
     elements = ["n", "p2o5", "k2o", "mgo", "s", "cao"]
-    return dict(zip(elements, field.total_saldo()))
+    return jsonify(dict(zip(elements, field.total_saldo())))
+
+
+@bp.route("/modal", methods=["GET"])
+@login_required
+def edit_modal():
+    modal_type = request.args.get("type")
+    param = request.args.get("params")
+    id = request.args.get("id")
+    form = create_edit_form(modal_type, param)
+    form.populate(id)
+    modal = render_template("edit_modal.html", form=form, modal_type=modal_type)
+    return jsonify(modal)

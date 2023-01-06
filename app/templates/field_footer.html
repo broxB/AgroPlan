@@ -36,29 +36,3 @@
     <div class="col-md-3 col-sm-auto"></div>
   </div>
 </div>
-
-<script>
-  window.addEventListener("load", () => {
-    //const field_id = JSON.parse(document.getElementById("data").textContent);
-    //const room_url = "/field_data/" + field_id.toString();
-    const room_url = "{{ url_for('main.field_data', id=base_field.id) }}";
-    fetch(room_url)
-      .then(response => response.json())
-      .then(data => {
-        for (let elem in data) {
-          var element = document.getElementById(elem)
-          var value = Number(data[elem]).toFixed(0)
-          element.textContent = value
-          if (value > 0) {
-            element.classList.add("text-danger")
-          }
-          else if (value < 0) {
-            element.classList.add("text-primary")
-          }
-          else {
-            element.classList.add("text-success")
-          }
-        };
-      });
-  });
-</script>

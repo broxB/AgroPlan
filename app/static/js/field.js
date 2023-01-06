@@ -21,6 +21,7 @@ document.querySelectorAll("#field-nav > button").forEach((btn) => {
 // global for original values
 var fallback = [];
 
+//
 function edit(element) {
   var tr = element.parentElement.parentElement;
   if (!tr.classList.contains("editing")) {
@@ -123,3 +124,60 @@ function toggleButtons(elem) {
     btn.classList.toggle("visually-hidden");
   });
 }
+
+// request: field footer saldo
+window.addEventListener("load", fetchSaldo());
+async function fetchSaldo() {
+  const field = document.getElementById("field").dataset.baseId;
+  // const room_url = "{{ url_for('main.field_data', id=base_field.id) }}";
+  const room_url = "/field/" + field + "/data";
+  const data = await fetch(room_url).then((response) => response.json());
+  for (let elem in data) {
+    var element = document.getElementById(elem);
+    var value = Number(data[elem]).toFixed(0);
+    element.textContent = value;
+    if (value > 0) {
+      element.classList.add("text-danger");
+    } else if (value < 0) {
+      element.classList.add("text-primary");
+    } else {
+      element.classList.add("text-success");
+    }
+  }
+}
+
+// request: modal content
+var modal = document.getElementById("modal");
+modal.addEventListener("show.bs.modal", function (event) {
+  var button = event.relatedTarget;
+  var modalContent = modal.querySelector(".modal-content");
+  // get params for form
+  var modalType = button.dataset.modal;
+  var id = button.closest("tr").dataset.id;
+  var field = document.getElementById("field");
+  var params = [];
+  // console.log(modal)
+  if (modalType == "cultivation") {
+    params.push(field.dataset.fieldId);
+  } else if (modalType == "fertilization") {
+    params.push(field.dataset.fieldId);
+  } else if (modalType == "soil") {
+    params.push(field.dataset.baseId);
+  }
+  // var modalTitle = editModal.querySelector('.modal-title')
+  // var modalBodyInput = editModal.querySelector('.modal-body input')
+  const room_url =
+    "/modal?" + new URLSearchParams({ type: modalType, params: params, id: id }).toString();
+  console.log(room_url);
+  fetch(room_url)
+    .then((response) => response.json())
+    .then((data) => {
+      // console.log(data)
+      modalContent.innerHTML = data;
+    });
+});
+
+modal.addEventListener("hidden.bs.modal", function () {
+  var modalContent = modal.querySelector(".modal-content");
+  modalContent.innerHTML = "";
+});
