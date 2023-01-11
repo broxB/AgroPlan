@@ -14,7 +14,7 @@
 {% endblock navbar %}
 
 {% block sidebar %}
-  {% if not sidebar_disabled %}
+  {% if fields %}
     {% include "sidebar.html" %}
   {% endif %}
 {% endblock sidebar %}
@@ -28,6 +28,7 @@
   <!-- App content -->
   {% block app_content %}
   {% endblock app_content %}
+  {% include "modal.html" %}
 {% endblock content %}
 
 {% block footer %}
