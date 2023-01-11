@@ -101,10 +101,13 @@ class User(UserMixin, Base):
             return Crop.query.filter_by(user_id=self.id).all()
         return Crop.query.filter_by(user_id=self.id, crop_class=crop_class).all()
 
-    def get_fertilizer(self, fert_class: FertClass = None):
+    def get_fertilizers(self, fert_class: FertClass = None):
         if fert_class is None:
             return Fertilizer.query.filter_by(user_id=self.id).all()
         return Fertilizer.query.filter_by(user_id=self.id, fert_class=fert_class).all()
+
+    def get_fertilizer_usage(self):
+        return FertilizerUsage.query.filter_by(user_id=self.id).all()
 
     def __repr__(self):
         return f"<User {self.username}>"
