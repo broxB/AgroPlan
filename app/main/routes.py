@@ -71,9 +71,7 @@ def preset():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template(
-        "user.html", title="Profile", user=user, sidebar_disabled=True, active_page="profile"
-    )
+    return render_template("user.html", title="Profile", user=user, active_page="profile")
 
 
 @bp.route("/edit_profile", methods=["GET", "POST"])
@@ -89,9 +87,7 @@ def edit_profile():
     if request.method == "GET":
         form.username.data = current_user.username
         form.email.data = current_user.email
-    return render_template(
-        "edit_profile.html", title="Edit Profile", form=form, sidebar_disabled=True
-    )
+    return render_template("edit_profile.html", title="Edit Profile", form=form)
 
 
 @bp.route("/set_year", methods=["POST"])
@@ -108,18 +104,28 @@ def set_year():
     return redirect(request.referrer)
 
 
+@bp.route("/field", methods=["GET", "POST"])
+@login_required
+def field_overview():
+    fields = current_user.get_fields()
+    form = YearForm()
+    return render_template(
+        "index.html", title="Home", fields=fields, active_page="home", form=form
+    )
+
+
 @bp.route("/field/<base_field_id>", methods=["GET", "POST"])
 @login_required
 def field(base_field_id):
-    if request.method == "GET":
-        base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
-        fields = current_user.get_fields(year=current_user.year)
-        form = YearForm()
-        return render_template(
-            "field.html", title=base_field.name, base_field=base_field, fields=fields, form=form
-        )
-    elif request.method == "POST":
-        pass
+    # if request.method == "GET":
+    base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
+    fields = current_user.get_fields(year=current_user.year)
+    form = YearForm()
+    # elif request.method == "POST":
+    # pass
+    return render_template(
+        "field.html", title=base_field.name, base_field=base_field, fields=fields, form=form
+    )
 
 
 @bp.route("/field/<base_field_id>/data", methods=["GET"])
@@ -133,10 +139,49 @@ def field_data(base_field_id):
 @bp.route("/modal", methods=["GET"])
 @login_required
 def edit_modal():
-    modal_type = request.args.get("type")
+    modal_type = request.args.get("modal")
+    form_type = request.args.get("form")
     param = request.args.get("params")
     id = request.args.get("id")
-    form = create_edit_form(modal_type, param)
-    form.populate(id)
-    modal = render_template("edit_modal.html", form=form, modal_type=modal_type)
+    if modal_type == "edit":
+        form = create_edit_form(form_type, param)
+        form.populate(id)
+    elif modal_type == "new":
+        form = create_form(form_type, param)
+        form.default_selects()
+    modal = render_template("modal_content.html", form=form, modal_type=form_type)
     return jsonify(modal)
+
+
+@bp.route("/crop", methods=["GET", "POST"])
+@login_required
+def crop():
+    crops = current_user.get_crops()
+    return render_template("crops.html", title="Crops", crops=crops)
+
+
+@bp.route("/fertilizer", methods=["GET", "POST"])
+@login_required
+def fertilizer():
+    fertilizers = current_user.get_fertilizers()
+    usage = current_user.get_fertilizer_usage()
+    return render_template(
+        "fertilizers.html", title="Fertilizers", fertilizers=fertilizers, usage=usage
+    )
+
+
+@bp.route("/crop/<crop_class>", methods=["GET"])
+@login_required
+def get_crops(crop_class):
+    crop_class = "main_crop" if crop_class == "second_crop" else crop_class
+    crops = current_user.get_crops(crop_class=crop_class)
+    crop_data = [{"id": crop.id, "name": crop.name} for crop in crops]
+    return jsonify(crop_data)
+
+
+@bp.route("/fertilizer/<fert_class>", methods=["GET"])
+@login_required
+def get_fertilizers(fert_class):
+    fertilizers = current_user.get_fertilizers(fert_class=fert_class)
+    fertilizer_data = [{"id": fert.id, "name": fert.name} for fert in fertilizers]
+    return jsonify(fertilizer_data)
