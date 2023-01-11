@@ -124,7 +124,7 @@ class LegumeType(enum.Enum):
     catch_25 = r"< 25%"
     catch_50 = r"25% bis 75%"
     catch_75 = r"> 75%"
-    none = None
+    none = "0%"
 
 
 class FertClass(enum.Enum):
@@ -190,3 +190,26 @@ class DemandType(enum.Enum):
 
     removal = "Abfuhr"
     demand = "Bedarf"
+
+
+class NminType(enum.Enum):
+    """Depths to which fruits converts mineral nitrogen."""
+
+    nmin_0 = "0cm"
+    nmin_30 = "30cm"
+    nmin_60 = "60cm"
+    nmin_90 = "90cm"
+
+
+def find_nmin_type(nmin: int) -> NminType:
+    match nmin:
+        case 0:
+            return NminType.nmin_0
+        case 30:
+            return NminType.nmin_30
+        case 60:
+            return NminType.nmin_60
+        case 90:
+            return NminType.nmin_90
+        case _:
+            raise ValueError("Invalid Nmin value.")
