@@ -1,0 +1,20 @@
+{% from "utils.html" import render_form %}
+
+<div class="modal-header">
+  <h5 class="modal-title" id="modalLabel">Edit {{ modal_type }}</h5>
+  <button type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"></button>
+</div>
+<div class="modal-body">
+  <div class="container-fluid">{{ render_form(form, form_type="floating", id="modalForm") }}</div>
+</div>
+<div class="modal-footer">
+  <input class="btn btn-success"
+         type="submit"
+         for="submit"
+         form="modalForm"
+         value="Save changes"/>
+  <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+</div>

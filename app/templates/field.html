@@ -92,7 +92,8 @@
                                 type="button"
                                 data-bs-toggle="modal"
                                 data-bs-target="#modal"
-                                data-modal="cultivation">
+                                data-modal="edit"
+                                data-form="cultivation">
                           <i class="fa-solid fa-pencil"></i>
                         </button>
                       </td>
@@ -135,14 +136,15 @@
                         <td>{{ fert.measure.value }}</td>
                         <td>{{ fert.fertilizer.name }}</td>
                         <td>
-                          {{ fert.amount | format_number(".1f", "dt/ha") }}
+                          {{ fert.amount | format_number(".1f", fert.fertilizer.unit.value+"/ha") }}
                         </td>
                         <td class="table-action d-print-none">
                           <button class="btn btn-link p-0"
                                   type="button"
                                   data-bs-toggle="modal"
                                   data-bs-target="#modal"
-                                  data-modal="fertilization">
+                                  data-form="fertilization"
+                                  data-modal="edit">
                             <i class="fa-solid fa-pencil"></i>
                           </button>
                         </td>
@@ -193,14 +195,15 @@
                           {{ fert.fertilizer.name }}
                         </td>
                         <td>
-                          {{ fert.amount | format_number(".1f", "dt/ha") }}
+                          {{ fert.amount | format_number(".1f", fert.fertilizer.unit.name+"/ha") }}
                         </td>
                         <td class="table-action d-print-none">
                           <button class="btn btn-link p-0"
                                   type="button"
                                   data-bs-toggle="modal"
                                   data-bs-target="#modal"
-                                  data-modal="fertilization">
+                                  data-form="fertilization"
+                                  data-modal="edit">
                             <i class="fa-solid fa-pencil"></i>
                           </button>
                         </td>
@@ -278,7 +281,8 @@
                             type="button"
                             data-bs-toggle="modal"
                             data-bs-target="#modal"
-                            data-modal="soil">
+                            data-form="soil"
+                            data-modal="edit">
                       <i class="fa-solid fa-pencil"></i>
                     </button>
                   </td>
@@ -373,18 +377,6 @@
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade"
-       id="modal"
-       tabindex="-1"
-       aria-labelledby="modalLabel"
-       aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <!-- js fetched modal content here !-->
       </div>
     </div>
   </div>
