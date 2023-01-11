@@ -1,8 +1,8 @@
-{% from "bootstrap5/nav.html" import render_nav_item %}
+{% from "utils.html" import render_nav_item %}
 
 <nav class="navbar nav-masthead sticky-top navbar-expand-lg navbar-dark p-2">
   <div class="d-flex flex-row">
-    {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
+    {% if fields or (request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field") %}
       <button class="navbar-toggler"
               type="button"
               id="sidebarToggle"
@@ -24,8 +24,13 @@
   </button>
   <div class="navbar-collapse collapse" id="navbarNav">
     <ul class="navbar-nav">
-      {{ render_nav_item("main.index", "Home", _use_li=True)}}
-      {{ render_nav_item("main.preset", "Preset", _use_li=True) }}
+      {% if not current_user.is_anonymous %}
+        {{ render_nav_item("main.field_overview", "Field", _use_li=True)}}
+        {{ render_nav_item("main.crop", "Crop", _use_li=True) }}
+        {{ render_nav_item("main.fertilizer", "Fertilizer", _use_li=True) }}
+      {% endif %}
+    </ul>
+    <ul class="navbar-nav ms-auto">
       {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle position-relative"
@@ -58,8 +63,6 @@
           </ul>
         </li>
       {% endif %}
-    </ul>
-    <ul class="navbar-nav ms-auto">
       <li class="nav-item">
         <button class="nav-link fw-500" id="resetToast">Messages</button>
       </li>
