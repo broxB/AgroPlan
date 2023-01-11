@@ -1,3 +1,27 @@
+from flask_login import current_user
+from flask_wtf import FlaskForm
+from wtforms import HiddenField, StringField, SubmitField
+from wtforms.validators import DataRequired, Email, ValidationError
+
+from app.database.model import User
+from app.database.types import (
+    CropClass,
+    FertClass,
+    NminType,
+    ResidueType,
+    find_nmin_type,
+)
+from app.model.forms import (
+    BaseFieldForm,
+    CropForm,
+    CultivationForm,
+    FertilizationForm,
+    FertilizerForm,
+    FieldForm,
+    Form,
+    SoilForm,
+)
+
 __all__ = [
     "create_edit_form",
     "EditProfileForm",
@@ -12,26 +36,10 @@ __all__ = [
     "EditSoilForm",
 ]
 
-from flask_login import current_user
-from flask_wtf import FlaskForm
-from wtforms import HiddenField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, ValidationError
 
-from app.database.model import Crop, Fertilizer, User
-from app.database.types import CropClass
-from app.model.forms import (
-    BaseFieldForm,
-    CropForm,
-    CultivationForm,
-    FertilizationForm,
-    FertilizerForm,
-    FieldForm,
-    SoilForm,
-)
-
-
-def create_edit_form(modal: str, param: list) -> FlaskForm | None:
-    modal_types = {
+def create_edit_form(form_type: str, param: list) -> Form:
+    """Factory for forms that edit existing data."""
+    form_types = {
         "base_field": EditBaseFieldForm,
         "field": EditFieldForm,
         "cultivation": EditCultivationForm,
@@ -41,7 +49,7 @@ def create_edit_form(modal: str, param: list) -> FlaskForm | None:
         "soil": EditSoilForm,
     }
     try:
-        form = modal_types[modal](param)
+        form = form_types[form_type](param)
     except KeyError:
         form = None
     return form
@@ -77,6 +85,9 @@ class EmptyForm(FlaskForm):
 class YearForm(FlaskForm):
     year = HiddenField("Year")
     submit = SubmitField("Submit")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(prefix="year", *args, **kwargs)
 
     def validate_year(self, year):
         year = int(year.data)
@@ -143,7 +154,7 @@ class EditCultivationForm(CultivationForm):
             for crop in current_user.get_crops(
                 (
                     CropClass.main_crop
-                    if self.model_data.crop_class == CropClass.second_crop
+                    if self.model_data.crop_class is CropClass.second_crop
                     else self.model_data.crop_class
                 )
             )
@@ -153,18 +164,24 @@ class EditCultivationForm(CultivationForm):
         # remove non-relevant inputs
         feedable = self.model_data.crop.feedable
         crop_class = self.model_data.crop_class
-        residues = self.model_data.residues.value
-        if feedable or crop_class != CropClass.main_crop:
+        residues = self.model_data.residues
+        nmin_depth = find_nmin_type(self.model_data.crop.nmin_depth)
+        if feedable or crop_class is not CropClass.main_crop:
             del self.nmin_30
             del self.nmin_60
             del self.nmin_90
+        if nmin_depth is NminType.nmin_30:
+            del self.nmin_60
+            del self.nmin_90
+        if nmin_depth is NminType.nmin_60:
+            del self.nmin_90
         if not feedable:
             del self.crop_protein
-        if not (feedable or crop_class == CropClass.catch_crop):
+        if not (feedable or crop_class is CropClass.catch_crop):
             del self.legume_rate
-        if crop_class == CropClass.catch_crop:
+        if crop_class is CropClass.catch_crop:
             del self.crop_yield
-        if residues is None:
+        if residues is ResidueType.no_residues:
             del self.residues
 
 
@@ -185,16 +202,18 @@ class EditFertilizationForm(FertilizationForm):
         self.fert_class.data = self.model_data.fertilizer.fert_class.name
         self.measure.data = self.model_data.measure.name
         self.fertilizer.choices = [
-            (fert.id, fert.name) for fert in current_user.get_fertilizer(self.fert_class.data)
+            (fert.id, fert.name) for fert in current_user.get_fertilizers(self.fert_class.data)
         ]
         self.original_measure = self.measure.data
+        self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}:"
+        # remove non-relevant inputs
+        if self.model_data.fertilizer.fert_class is FertClass.mineral:
+            del self.month
 
 
 class EditFertilizerForm(FertilizerForm):
-    def __init__(self, name, year, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.original_name = name
-        self.original_year = year
 
     def validate(self):
         if self.name.data != self.original_name or self.year.data != self.original_year:
@@ -203,15 +222,24 @@ class EditFertilizerForm(FertilizerForm):
 
     def populate(self, id: int):
         super().populate(id)
-        self.fert_class.data = self.data.fert_class.name
-        self.fert_type.data = self.data.fert_type.name
-        self.unit.data = self.data.unit.name
+        self.fert_class.data = self.model_data.fert_class.name
+        self.fert_type.data = self.model_data.fert_type.name
+        self.unit.data = self.model_data.unit.name
+        self.original_year = self.model_data.year
+        self.original_name = self.model_data.name
+        # remove non-relevant inputs
+        fert_class = self.model_data.fert_class
+        del self.fert_class
+        if fert_class is FertClass.mineral:
+            del self.year
+        if fert_class is FertClass.organic:
+            del self.active
+            del self.price
 
 
 class EditCropForm(CropForm):
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.original_name = name
 
     def validate_name(self, name):
         if name != self.original_name:
@@ -219,10 +247,12 @@ class EditCropForm(CropForm):
 
     def populate(self, id: int):
         super().populate(id)
-        self.positiv_yield.data = self.model_data.var_yield[0]
-        self.negativ_yield.data = self.model_data.var_yield[1]
+        self.positive_yield.data = self.model_data.var_yield[1]
+        self.negative_yield.data = self.model_data.var_yield[0]
         self.crop_class.data = self.model_data.crop_class.name
         self.crop_type.data = self.model_data.crop_type.name
+        self.nmin_depth.data = find_nmin_type(self.model_data.nmin_depth).name
+        self.original_name = self.model_data.name
 
 
 class EditSoilForm(SoilForm):
