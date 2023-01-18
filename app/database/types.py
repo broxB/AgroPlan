@@ -77,6 +77,14 @@ class CropType(enum.Enum):
     catch_other = "andere Zwischenfrüchte"
 
 
+MainCropType: enum.Enum = enum.Enum(
+    "MainCropType", [(e.name, e.value) for e in CropType if e.name in "main_"]
+)
+CatchCropType: enum.Enum = enum.Enum(
+    "CatchCropType", [(e.name, e.value) for e in CropType if e.name in "main_"]
+)
+
+
 class CultivationType(enum.Enum):
     """Cultivation classes for crop rotation: `main_crop` etc."""
 
@@ -93,6 +101,7 @@ class CutTiming(enum.Enum):
     second_cut = "2. Schnitt"
     third_cut = "3. Schnitt"
     fourth_cut = "4. Schnitt"
+    non_mowable = "nicht mähbar"
 
 
 class CropClass(enum.Enum):
@@ -115,6 +124,14 @@ class ResidueType(enum.Enum):
     catch_not_frozen_fall = "nicht abgf., eing. Herbst"
     catch_not_frozen_spring = "nicht abgf., eing. Frühjahr"
     catch_used = "mit Nutzung"
+
+
+MainCropResidueType: enum.Enum = enum.Enum(
+    "MainCropResidueType", [(e.name, e.value) for e in ResidueType if e.name in "main_"]
+)
+CatchCropResidueType: enum.Enum = enum.Enum(
+    "CatchCropResidueType", [(e.name, e.value) for e in ResidueType if e.name in "catch_"]
+)
 
 
 class LegumeType(enum.Enum):
@@ -142,6 +159,17 @@ class LegumeType(enum.Enum):
     catch_50 = r"25% bis 75%"
     catch_75 = r"> 75%"
     none = "0%"
+
+
+GrasslandLegumeType: enum.Enum = enum.Enum(
+    "GrasslandLegumeType", [(e.name, e.value) for e in LegumeType if e.name in "grass_"]
+)
+MainCropLegumeType: enum.Enum = enum.Enum(
+    "MainCropLegumeType", [(e.name, e.value) for e in LegumeType if e.name in "main_"]
+)
+CatchCropLegumeType: enum.Enum = enum.Enum(
+    "CatchCropLegumeType", [(e.name, e.value) for e in LegumeType if e.name in "catch_"]
+)
 
 
 class FertClass(enum.Enum):
@@ -175,6 +203,14 @@ class FertType(enum.Enum):
     auxiliary = "Hilfsstoffe"
 
 
+OrganicFertType: enum.Enum = enum.Enum(
+    "OrganicFertType", [(e.name, e.value) for e in FertType if "org_" in e.name]
+)
+MineralFertType: enum.Enum = enum.Enum(
+    "MineralFertType", [(e.name, e.value) for e in FertType if "org_" not in e.name]
+)
+
+
 class MeasureType(enum.Enum):
     """Measures for fertilization: `fall`, `first_n_fert`, `lime_fert` etc."""
 
@@ -192,6 +228,14 @@ class MeasureType(enum.Enum):
     fourth_base_fert = "4. Grundd."
     lime_fert = "Kalkung"
     misc_fert = "Sonstige"
+
+
+OrganicMeasureType: enum.Enum = enum.Enum(
+    "OrganicMeasureType", [(e.name, e.value) for e in MeasureType if "org_" in e.name]
+)
+MineralMeasureType: enum.Enum = enum.Enum(
+    "MineralMeasureType", [(e.name, e.value) for e in MeasureType if "org_" not in e.name]
+)
 
 
 class UnitType(enum.Enum):
