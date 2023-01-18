@@ -27,7 +27,7 @@ modal.addEventListener("show.bs.modal", async function (event) {
   console.log(modalURL);
   const modalData = await fetch(modalURL).then((response) => response.json());
   modalContent.innerHTML = modalData;
-  if (modalType == "new") {
+  if (modalType == "edit") {
     // add change event for crop and fert classes
     var crop_class = modalContent.querySelector("#crop_class");
     var fert_class = modalContent.querySelector("#fert_class");
@@ -44,6 +44,7 @@ modal.addEventListener("show.bs.modal", async function (event) {
       nextSelect = modalContent.querySelector("#fertilizer");
     }
     selectElem.addEventListener("change", () => {
+      deleteInputs(modalContent, [selectElem, nextSelect]);
       changeSelect(selectURL, selectElem, nextSelect);
     });
   }
@@ -54,6 +55,15 @@ modal.addEventListener("hidden.bs.modal", function () {
   var modalContent = modal.querySelector(".modal-content");
   modalContent.innerHTML = "";
 });
+
+// delete all inputs, except specified
+function deleteInputs(content, omitted) {
+  content.querySelectorAll("input.form-control").forEach((element) => {
+    if (!omitted.includes(element)) {
+      element.parentNode.remove();
+    }
+  });
+}
 
 // fetches and changes select content, when select value changes
 async function changeSelect(selectUrl, selectElem, nextSelect) {

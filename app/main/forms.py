@@ -5,10 +5,11 @@ from wtforms.validators import DataRequired, Email, ValidationError
 
 from app.database.model import User
 from app.database.types import (
-    CropClass,
+    CultivationType,
     FertClass,
     NminType,
     ResidueType,
+    find_crop_class,
     find_nmin_type,
 )
 from app.model.forms import (
@@ -137,36 +138,30 @@ class EditCultivationForm(CultivationForm):
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(field_id, *args, **kwargs)
 
-    def validate_crop_class(self, crop_class):
-        if crop_class != self.original_crop_class:
-            super().validate_crop_class(crop_class)
+    def validate_cultivation_type(self, cultivation_type):
+        if cultivation_type != self.original_cultivation_type:
+            super().validate_cultivation_type(cultivation_type)
 
     def populate(self, id: int):
         super().populate(id)
-        self.crop_class.data = self.model_data.crop_class.name
+        self.cultivation_type.data = self.model_data.cultivation_type.name
         self.residues.data = self.model_data.residues.name
         self.legume_rate.data = self.model_data.legume_rate.name
-        self.nmin_30.data = self.model_data.nmin[0]
-        self.nmin_60.data = self.model_data.nmin[1]
-        self.nmin_90.data = self.model_data.nmin[2]
         self.crop.choices = [
             (crop.id, crop.name)
             for crop in current_user.get_crops(
-                (
-                    CropClass.main_crop
-                    if self.model_data.crop_class is CropClass.second_crop
-                    else self.model_data.crop_class
-                )
+                crop_class=find_crop_class(self.model_data.cultivation_type),
+                field_type=self.model_data.field_type,
             )
         ]
         self.crop.data = str(self.model_data.crop.id)
-        self.original_crop_class = self.crop_class.data
+        self.original_cultivation_type = self.cultivation_type.data
         # remove non-relevant inputs
         feedable = self.model_data.crop.feedable
-        crop_class = self.model_data.crop_class
+        cultivation = self.model_data.cultivation_type
         residues = self.model_data.residues
-        nmin_depth = find_nmin_type(self.model_data.crop.nmin_depth)
-        if feedable or crop_class is not CropClass.main_crop:
+        nmin_depth = self.model_data.crop.nmin_depth
+        if feedable or cultivation is not CultivationType.main_crop:
             del self.nmin_30
             del self.nmin_60
             del self.nmin_90
@@ -177,11 +172,11 @@ class EditCultivationForm(CultivationForm):
             del self.nmin_90
         if not feedable:
             del self.crop_protein
-        if not (feedable or crop_class is CropClass.catch_crop):
+        if not (feedable or cultivation is CultivationType.catch_crop):
             del self.legume_rate
-        if crop_class is CropClass.catch_crop:
+        if cultivation is CultivationType.catch_crop:
             del self.crop_yield
-        if residues is ResidueType.no_residues:
+        if residues is ResidueType.main_no_residues:
             del self.residues
 
 
@@ -247,11 +242,10 @@ class EditCropForm(CropForm):
 
     def populate(self, id: int):
         super().populate(id)
-        self.positive_yield.data = self.model_data.var_yield[1]
-        self.negative_yield.data = self.model_data.var_yield[0]
+        self.field_type.data = self.model_data.field_type.name
         self.crop_class.data = self.model_data.crop_class.name
         self.crop_type.data = self.model_data.crop_type.name
-        self.nmin_depth.data = find_nmin_type(self.model_data.nmin_depth).name
+        self.nmin_depth.data = self.model_data.nmin_depth.name
         self.original_name = self.model_data.name
 
 

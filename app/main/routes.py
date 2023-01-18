@@ -173,8 +173,8 @@ def fertilizer():
 @bp.route("/crop/<crop_class>", methods=["GET"])
 @login_required
 def get_crops(crop_class):
-    crop_class = "main_crop" if crop_class == "second_crop" else crop_class
-    crops = current_user.get_crops(crop_class=crop_class)
+    kwargs = {k: v for k, v in request.args.items()}
+    crops = current_user.get_crops(crop_class=crop_class, **kwargs)
     crop_data = [{"id": crop.id, "name": crop.name} for crop in crops]
     return jsonify(crop_data)
 
@@ -182,6 +182,13 @@ def get_crops(crop_class):
 @bp.route("/fertilizer/<fert_class>", methods=["GET"])
 @login_required
 def get_fertilizers(fert_class):
-    fertilizers = current_user.get_fertilizers(fert_class=fert_class)
+    kwargs = {k: v for k, v in request.args.items()}
+    fertilizers = current_user.get_fertilizers(fert_class=fert_class, **kwargs)
     fertilizer_data = [{"id": fert.id, "name": fert.name} for fert in fertilizers]
     return jsonify(fertilizer_data)
+
+
+@bp.route("/test", methods=["GET", "POST"])
+def test():
+    logger.info(f"Received request args: {request.args.to_dict().items()}")
+    return {"task": "finished"}, 201

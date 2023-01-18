@@ -71,7 +71,7 @@
             <thead class="no-border-top">
               <tr>
                 <th scope="col">Year</th>
-                <th scope="col">Class</th>
+                <th scope="col">Cultivation</th>
                 <th scope="col">Name</th>
                 <th scope="col">Size</th>
                 <th scope="col">Yield</th>
@@ -83,7 +83,7 @@
                   {% for cultivation in field.cultivations %}
                     <tr data-id="{{ cultivation.id }}">
                       <th scope="row">{{ field.year }}</th>
-                      <td>{{ cultivation.crop_class.value }}</td>
+                      <td>{{ cultivation.cultivation_type.value }}</td>
                       <td>{{ cultivation.crop.name }}</td>
                       <td>{{ field.area | format_number(".2f") }}</td>
                       <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>

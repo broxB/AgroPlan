@@ -19,6 +19,7 @@ from app.database.model import (
 from app.database.types import (
     CropClass,
     CropType,
+    CultivationType,
     DemandType,
     FertClass,
     FertType,
@@ -171,9 +172,9 @@ class FieldForm(FlaskForm, FormHelper):
 
 
 class CultivationForm(FlaskForm, FormHelper):
-    crop_class = SelectField(
-        "Select class of crop:",
-        choices=[(enum.name, enum.value) for enum in list(CropClass)[:3]],
+    cultivation_type = SelectField(
+        "Select type of cultivation:",
+        choices=[(enum.name, enum.value) for enum in CultivationType],
         validators=[DataRequired()],
     )
     crop = SelectField("Select crop to grow:", validators=[DataRequired()])
@@ -198,10 +199,10 @@ class CultivationForm(FlaskForm, FormHelper):
         self.field_id = field_id
         self.model_type = Cultivation
 
-    def validate_crop_class(self, crop_class):
+    def validate_cultivation_type(self, cultivation_type):
         cultivation = (
             Cultivation.query.join(Field)
-            .filter(Field.id == self.field_id, Cultivation.crop_class == crop_class)
+            .filter(Field.id == self.field_id, Cultivation.cultivation_type == cultivation_type)
             .first()
         )
         if cultivation is not None:
@@ -241,6 +242,44 @@ class FertilizationForm(FlaskForm, FormHelper):
             )
             if fertilization is not None:
                 raise ValidationError(f"{measure} for mineral fertilization already exists.")
+
+    def validate_amount(self, amount):
+        ...
+        # implement from field model class
+
+        # def fall_violation(self) -> bool:
+        #     """Checks if fertilization applied in fall exceeds the regulations"""
+        #     n_total, nh4 = self._sum_fall_fertilizations()
+        #     if (
+        #         self.field_type == FieldType.grassland
+        #         or self.main_crop
+        #         and self.main_crop.crop.feedable
+        #     ):
+        #         if n_total > (80 if not self.red_region else 60):
+        #             logger.info(
+        #                 f"{self.name}: {n_total=:.0f} is violating the maximum value of Nges for fall fertilizations."
+        #             )
+        #             return True
+        #     elif n_total > 60 or nh4 > 30:
+        #         logger.info(
+        #             f"{self.name}: {n_total=:.0f} or {nh4=:.0f} are violating the maximum values of NH4 for fall fertilizations."
+        #         )
+        #         return True
+        #     return False
+
+        # def _sum_fall_fertilizations(self) -> list[Decimal]:
+        #     sum_n = [(0, 0)]
+        #     for fertilization in self.fertilizations:
+        #         if (
+        #             fertilization.fertilizer.is_class(FertClass.organic)
+        #             and fertilization.measure == MeasureType.org_fall
+        #         ):
+        #             n_total, nh4 = [
+        #                 fertilization.amount * n
+        #                 for n in (fertilization.fertilizer.n, fertilization.fertilizer.nh4)
+        #             ]
+        #             sum_n.append((n_total, nh4))
+        #     return [sum(n) for n in zip(*sum_n)]
 
 
 class FertilizerForm(FlaskForm, FormHelper):
@@ -305,6 +344,11 @@ class FertilizerForm(FlaskForm, FormHelper):
 
 class CropForm(FlaskForm, FormHelper):
     name = StringField("Name:", validators=[DataRequired()])
+    field_type = SelectField(
+        "Select on which type of field the crop grows:",
+        choices=[(enum.name, enum.value) for enum in FieldType],
+        validators=[DataRequired()],
+    )
     crop_class = SelectField(
         "Select a crop class:",
         choices=[(enum.name, enum.value) for enum in CropClass],
@@ -327,10 +371,10 @@ class CropForm(FlaskForm, FormHelper):
     )
     target_demand = IntegerField("Target demand in kg N/ha:", validators=[DataRequired()])
     target_yield = IntegerField("Target yield in dt/ha:", validators=[DataRequired()])
-    positive_yield = FloatField(
+    pos_yield = FloatField(
         "Change in demand with positive yield difference in kg N/ha:", validators=[DataRequired()]
     )
-    negative_yield = FloatField(
+    neg_yield = FloatField(
         "Change in demand with negative yield difference in kg N/ha:", validators=[DataRequired()]
     )
     target_protein = FloatField("Target protein in 0.1% DM/ha:", validators=[DataRequired()])
