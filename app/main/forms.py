@@ -7,7 +7,13 @@ from app.database.model import User
 from app.database.types import (
     CultivationType,
     FertClass,
+    FertType,
+    MeasureType,
+    MineralFertType,
+    MineralMeasureType,
     NminType,
+    OrganicFertType,
+    OrganicMeasureType,
     ResidueType,
     find_crop_class,
     find_nmin_type,
@@ -195,15 +201,34 @@ class EditFertilizationForm(FertilizationForm):
         ]
         self.crop.data = str(self.model_data.cultivation.id)
         self.fert_class.data = self.model_data.fertilizer.fert_class.name
+        self.cut_timing.data = self.model_data.cut_timing.name
+        measure_type = (
+            OrganicMeasureType
+            if self.model_data.fertilizer.fert_class == FertClass.organic
+            else MineralMeasureType
+        )
+        self.measure.choices = [(enum.name, enum.value) for enum in measure_type]
         self.measure.data = self.model_data.measure.name
-        self.fertilizer.choices = [
-            (fert.id, fert.name) for fert in current_user.get_fertilizers(self.fert_class.data)
-        ]
+        if self.model_data.fertilizer.fert_class == FertClass.organic:
+            fertilizers = current_user.get_fertilizers(
+                fert_class=self.fert_class.data, year=self.model_data.field[0].year
+            )
+        else:
+            fertilizers = current_user.get_fertilizers(
+                fert_class=self.fert_class.data, fert_type=self.model_data.fertilizer.fert_type
+            )
+        self.fertilizer.choices = [(fert.id, fert.name) for fert in fertilizers]
+        self.fertilizer.data = str(self.model_data.fertilizer.id)
         self.original_measure = self.measure.data
         self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}:"
         # remove non-relevant inputs
-        if self.model_data.fertilizer.fert_class is FertClass.mineral:
+        fert_class = self.model_data.fertilizer.fert_class
+        feedable = self.model_data.cultivation.crop.feedable
+        if fert_class is FertClass.mineral:
             del self.month
+        if not feedable:
+            del self.cut_timing
+        del self.fert_class
 
 
 class EditFertilizerForm(FertilizerForm):

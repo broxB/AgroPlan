@@ -20,6 +20,7 @@ from app.database.types import (
     CropClass,
     CropType,
     CultivationType,
+    CutTiming,
     DemandType,
     FertClass,
     FertType,
@@ -210,20 +211,23 @@ class CultivationForm(FlaskForm, FormHelper):
 
 
 class FertilizationForm(FlaskForm, FormHelper):
-    crop = SelectField("Select crop to fertilize:", validators=[DataRequired()])
+    crop = SelectField("Select a crop to fertilize:", validators=[DataRequired()])
     fert_class = SelectField(
-        "Select fertilizer type:",
+        "Select a fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertClass],
         validators=[DataRequired()],
     )
+    cut_timing = SelectField(
+        "Select a cut timing:", choices=[(enum.name, enum.value) for enum in CutTiming]
+    )
     measure = SelectField(
-        "Select measure:",
+        "Select a measure:",
         choices=[(enum.name, enum.value) for enum in MeasureType],
         validators=[DataRequired()],
     )
-    fertilizer = SelectField("Select fertilizer:", validators=[DataRequired()])
-    amount = FloatField("Amount", validators=[DataRequired()])
     month = IntegerField("Month:")
+    fertilizer = SelectField("Select a fertilizer:", validators=[DataRequired()])
+    amount = FloatField("Amount", validators=[DataRequired()])
 
     def __init__(self, field_id, *args, **kwargs):
         super(FlaskForm, self).__init__(*args, **kwargs)
