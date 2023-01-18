@@ -22,6 +22,7 @@ from app.database.types import (
     CropClass,
     CropType,
     CultivationType,
+    CutTiming,
     DemandType,
     FertClass,
     FertType,
@@ -188,7 +189,9 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
         org_data = [v for k, v in field_data.items() if k.startswith("OrgDüngung_")]
         min_data = [v for k, v in field_data.items() if k.startswith("MinDüngung_")]
         fertilizations = []
-        Fertilizer = namedtuple("Fertilizer", "class_, crop, measure, name, month, amount")
+        Fertilizer = namedtuple(
+            "Fertilizer", "class_, cut_timing, crop, measure, name, month, amount"
+        )
         fert_data = org_data + min_data
         for i, fert in enumerate(fert_data):
             if fert in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"] or str(fert).endswith(
@@ -202,12 +205,22 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     fert_class = FertClass.mineral
                     fert_month = None
                     offset = -1
+                if str(fert).endswith("Schnitt"):
+                    fert_timing = CutTiming(fert)
+                else:
+                    fert_timing = CutTiming.non_mowable
                 fert_crop = fert_data[i]
                 fert_measure = fert_data[i + 1]
                 fert_name = fert_data[i + 2]
                 fert_amount = str(fert_data[i + offset + 4])
                 fert = Fertilizer(
-                    fert_class, fert_crop, fert_measure, fert_name, fert_month, fert_amount
+                    fert_class,
+                    fert_timing,
+                    fert_crop,
+                    fert_measure,
+                    fert_name,
+                    fert_month,
+                    fert_amount,
                 )
                 fertilizations.append(fert)
         return fertilizations
@@ -366,6 +379,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     update_session(session, fertilizer_usage)
 
                     fertilization = Fertilization(
+                        cut_timing=CutTiming(fert.cut_timing),
                         measure=MeasureType(fert.measure),
                         amount=fert.amount,
                         month=fert.month,

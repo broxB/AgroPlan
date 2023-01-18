@@ -22,6 +22,7 @@ from app.database.types import (
     CropClass,
     CropType,
     CultivationType,
+    CutTiming,
     DemandType,
     FertClass,
     FertType,
@@ -261,6 +262,7 @@ class Fertilization(Base):
     id = Column("fertilization_id", Integer, primary_key=True)
     cultivation_id = Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id"))
     fertilizer_id = Column("fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id"))
+    cut_timing = Column("cut_timing", Enum(CutTiming))
     amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
     measure = Column("measure", Enum(MeasureType))
     month = Column("month", Integer)
