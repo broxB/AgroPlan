@@ -151,7 +151,7 @@ class EditCultivationForm(CultivationForm):
             (crop.id, crop.name)
             for crop in current_user.get_crops(
                 crop_class=find_crop_class(self.model_data.cultivation_type),
-                field_type=self.model_data.field_type,
+                field_type=self.model_data.field.field_type,
             )
         ]
         self.crop.data = str(self.model_data.crop.id)

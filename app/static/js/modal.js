@@ -29,12 +29,17 @@ modal.addEventListener("show.bs.modal", async function (event) {
   modalContent.innerHTML = modalData;
   if (modalType == "edit") {
     // add change event for crop and fert classes
+    var cultivation_type = modalContent.querySelector("#cultivation_type");
     var crop_class = modalContent.querySelector("#crop_class");
     var fert_class = modalContent.querySelector("#fert_class");
     var selectElem;
     var selectURL;
     var nextSelect;
-    if (crop_class != null) {
+    if (cultivation_type != null) {
+      selectElem = cultivation_type;
+      selectURL = "/crop/";
+      nextSelect = modalContent.querySelector("#crop");
+    } else if (crop_class != null) {
       selectElem = crop_class;
       selectURL = "/crop/";
       nextSelect = modalContent.querySelector("#crop");
@@ -43,10 +48,12 @@ modal.addEventListener("show.bs.modal", async function (event) {
       selectURL = "/fertilizer/";
       nextSelect = modalContent.querySelector("#fertilizer");
     }
-    selectElem.addEventListener("change", () => {
-      deleteInputs(modalContent, [selectElem, nextSelect]);
-      changeSelect(selectURL, selectElem, nextSelect);
-    });
+    if (selectElem != null) {
+      selectElem.addEventListener("change", () => {
+        deleteInputs(modalContent, [selectElem, nextSelect]);
+        changeSelect(selectURL, selectElem, nextSelect);
+      });
+    }
   }
 });
 
