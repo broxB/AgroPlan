@@ -6,11 +6,14 @@ __all__ = [
     "HumusType",
     "CropType",
     "CropClass",
+    "CultivationType",
+    "CutTiming",
     "ResidueType",
     "LegumeType",
     "FertClass",
     "FertType",
     "MeasureType",
+    "NminType",
     "UnitType",
     "DemandType",
 ]
@@ -69,35 +72,49 @@ class CropType(enum.Enum):
     potato = "Kartoffel"
     vegetable = "Gemüse ohne Kohlarten"
     # Zwischenfrüchte
-    non_legume = "Nichtleguminosen"
-    legume = "Leguminosen"
-    other_catch_crop = "andere Zwischenfrüchte"
+    catch_non_legume = "Nichtleguminosen"
+    catch_legume = "Leguminosen"
+    catch_other = "andere Zwischenfrüchte"
 
 
-class CropClass(enum.Enum):
-    """Fruit classes for crop rotation: `main_crop` or `first_cut` etc."""
+class CultivationType(enum.Enum):
+    """Cultivation classes for crop rotation: `main_crop` etc."""
 
     catch_crop = "Zwischenfrucht"
     main_crop = "Hauptfrucht"
+    second_main_crop = "Zweite Hauptfrucht"
     second_crop = "Zweitfrucht"
+
+
+class CutTiming(enum.Enum):
+    """Different cut timings for mowable crops: `first_cut`, `second_cut` etc."""
+
     first_cut = "1. Schnitt"
     second_cut = "2. Schnitt"
     third_cut = "3. Schnitt"
     fourth_cut = "4. Schnitt"
 
 
+class CropClass(enum.Enum):
+    """Crop classes for classification: `catch_crop` and `main_crop`"""
+
+    catch_crop = "Zwischenfrucht"
+    main_crop = "Hauptfrucht"
+    second_crop = "Zweitfrucht"
+
+
 class ResidueType(enum.Enum):
     """Crop residues for preceding crop effect: `stayed`, `removed` or `frozen`, `catch_crop_used` etc."""
 
     # Hauptfrüchte
-    stayed = "verbleibt"
-    removed = "abgefahren"
-    no_residues = None
+    main_stayed = "verbleibt"
+    main_removed = "abgefahren"
+    main_no_residues = "keine"
     # Zwischenfrüchte
-    frozen = "abgefroren"
-    not_frozen_fall = "nicht abgf., eing. Herbst"
-    not_frozen_spring = "nicht abgf., eing. Frühjahr"
-    catch_crop_used = "mit Nutzung"
+    catch_frozen = "abgefroren"
+    catch_not_frozen_fall = "nicht abgf., eing. Herbst"
+    catch_not_frozen_spring = "nicht abgf., eing. Frühjahr"
+    catch_used = "mit Nutzung"
 
 
 class LegumeType(enum.Enum):
@@ -109,17 +126,17 @@ class LegumeType(enum.Enum):
     grass_less_20 = r"> 10% bis 20%"
     grass_greater_20 = r"> 20%"
     # Ackerland
-    crop_0 = r"< 10%"
-    crop_10 = r"10% - 19%"
-    crop_20 = r"20% - 29%"
-    crop_30 = r"30% - 39%"
-    crop_40 = r"40% - 49%"
-    crop_50 = r"50% - 59%"
-    crop_60 = r"60% - 69%"
-    crop_70 = r"70% - 79%"
-    crop_80 = r"80% - 89%"
-    crop_90 = r"90% - 99%"
-    crop_100 = r"100%"
+    main_crop_0 = r"< 10%"
+    main_crop_10 = r"10% - 19%"
+    main_crop_20 = r"20% - 29%"
+    main_crop_30 = r"30% - 39%"
+    main_crop_40 = r"40% - 49%"
+    main_crop_50 = r"50% - 59%"
+    main_crop_60 = r"60% - 69%"
+    main_crop_70 = r"70% - 79%"
+    main_crop_80 = r"80% - 89%"
+    main_crop_90 = r"90% - 99%"
+    main_crop_100 = r"100%"
     # Zwischenfrucht
     catch_25 = r"< 25%"
     catch_50 = r"25% bis 75%"
@@ -138,11 +155,11 @@ class FertType(enum.Enum):
     """Fertilizer subtype classifications: `slurry`, `digestate` or `n_p_k`, `lime` etc."""
 
     # organic
-    digestate = "Gärrest"
-    slurry = "Gülle"
-    manure = "Festmist"
-    dry_manure = "Trockenkot"
-    compost = "Kompost"
+    org_digestate = "Gärrest"
+    org_slurry = "Gülle"
+    org_manure = "Festmist"
+    org_dry_manure = "Trockenkot"
+    org_compost = "Kompost"
     # mineral
     k = "K"
     n = "N"
@@ -161,8 +178,8 @@ class FertType(enum.Enum):
 class MeasureType(enum.Enum):
     """Measures for fertilization: `fall`, `first_n_fert`, `lime_fert` etc."""
 
-    fall = "Herbst"
-    spring = "Frühjahr"
+    org_fall = "Herbst"
+    org_spring = "Frühjahr"
     first_first_n_fert = "1.1 N-Gabe"
     first_second_n_fert = "1.2 N-Gabe"
     first_n_fert = "1. N-Gabe"
@@ -213,3 +230,15 @@ def find_nmin_type(nmin: int) -> NminType:
             return NminType.nmin_90
         case _:
             raise ValueError("Invalid Nmin value.")
+
+
+def find_crop_class(cultivation_type: CultivationType) -> CultivationType:
+    match cultivation_type:
+        case CultivationType.main_crop | CultivationType.second_main_crop:
+            return CropClass.main_crop
+        case CultivationType.catch_crop:
+            return CropClass.catch_crop
+        case CultivationType.second_crop:
+            return CropClass.second_crop
+        case _:
+            raise ValueError(f"Invalid cultivation type passed: {cultivation_type}")

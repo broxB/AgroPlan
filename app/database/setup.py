@@ -21,6 +21,7 @@ from app.database.model import (
 from app.database.types import (
     CropClass,
     CropType,
+    CultivationType,
     DemandType,
     FertClass,
     FertType,
@@ -31,6 +32,7 @@ from app.database.types import (
     ResidueType,
     SoilType,
     UnitType,
+    find_nmin_type,
 )
 
 
@@ -99,7 +101,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
             case ("Wiese 3 Schnitte" | "Weide int. (4-5 Nutz.)" | "Mähweide intensiv 20%"):
                 return CropType.permanent_grassland
             case ("Nichtleguminosen" | "Senf (GP)"):
-                return CropType.non_legume
+                return CropType.catch_non_legume
             case "Blühfläche":
                 return CropType.rotating_fallow_with_legume
             case ("AL-Stilllegung" | "GL-Stilllegung"):
@@ -107,26 +109,38 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
             case _:
                 raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
-    def get_crop_class(class_: str) -> CropClass:
-        return CropClass(class_)
+    def get_crop_class(crop_class: str) -> CropClass:
+        if crop_class == "Zweitfrucht":
+            return CropClass.main_crop
+        return CropClass(crop_class)
 
-    def get_remains_type(remains: str) -> ResidueType:
+    def get_cultivation_type(cultivation: str) -> CultivationType:
+        if cultivation == "Zweitfrucht":
+            return CultivationType.second_main_crop
+        return CultivationType(cultivation)
+
+    def get_residue_type(remains: str) -> ResidueType:
         try:
             return ResidueType(remains)
         except ValueError:
-            return ResidueType(None)
+            return ResidueType.main_no_residues
 
     def get_legume_type(legume: str) -> LegumeType:
         try:
             return LegumeType(legume)
         except ValueError:
-            return LegumeType(None)
+            return LegumeType.none
+
+    def get_nmin(nmin_value: int) -> int:
+        if nmin_value is not None:
+            return nmin_value
+        return 0
 
     def get_fert_type(fert_name: str) -> FertType:
         if fert_name.startswith("Gärrest"):
-            return FertType.digestate
+            return FertType.org_digestate
         elif fert_name.startswith("Festmist"):
-            return FertType.manure
+            return FertType.org_manure
         elif fert_name in ["40-Kali", "Roll-Kali"]:
             return FertType.k
         elif fert_name in [
@@ -159,19 +173,6 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
 
     def get_humus_type(humus: str) -> HumusType:
         return HumusType(humus)
-
-    def get_nmin(field_dict: dict, crop_class: CropClass) -> list[int]:
-        nmin = []
-        if crop_class == CropClass.main_crop:
-            nmin_30 = field_dict.get("Nmin30", 0)
-            nmin.append(nmin_30 if nmin_30 else 0)
-            nmin_60 = field_dict.get("Nmin60", 0)
-            nmin.append(nmin_60 if nmin_30 else 0)
-            nmin_90 = field_dict.get("Nmin90", 0)
-            nmin.append(nmin_90 if nmin_30 else 0)
-        else:
-            nmin = [0, 0, 0]
-        return nmin
 
     def field_cultivation(field_data: dict) -> list:
         cult_data = [v for k, v in field_data.items() if k.startswith("Frucht_")]
@@ -216,9 +217,22 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
     user = User(
         username="Dev-Tester",
         email="dev@agroplan.de",
+        year=2021,
     )
     user.set_password("test")
     update_session(session, user)
+
+    # alembic_version = "4dee7b9bf13f"
+    # session.execute(
+    #     """
+    #     CREATE TABLE "alembic_version" (
+    #         "version_num"	VARCHAR(32) NOT NULL,
+    #         CONSTRAINT "alembic_version_pkc" PRIMARY KEY("version_num")
+    #     );
+    #     """
+    #     f"INSERT INTO 'alembic_version' ('version_num') VALUES ({alembic_version})"
+    # )
+    # session.commit()
 
     for year in fields_dict:
         for field_dict in fields_dict[year]:
@@ -262,16 +276,18 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     crop = Crop(
                         user_id=user.id,
                         name=cult.name,
+                        field_type=field.field_type,
                         crop_class=get_crop_class(crop_dict.get("Klasse", None)),
                         crop_type=get_crop_type(cult.name),
                         kind=crop_dict.get("Art", None),
                         feedable=crop_dict.get("Feldfutter", None),
                         residue=crop_dict.get("Erntereste", None),
                         legume_rate=get_legume_type(crop_dict.get("Leguminosenanteil", None)),
-                        nmin_depth=crop_dict.get("Nmin_Tiefe", 0),
+                        nmin_depth=find_nmin_type(crop_dict.get("Nmin_Tiefe", 0)),
                         target_demand=crop_dict.get("Richtbedarf", None),
                         target_yield=crop_dict.get("Richtertrag", None),
-                        var_yield=crop_dict.get("Differenz_Ertrag", None),
+                        pos_yield=crop_dict.get("Differenz_Ertrag", None)[1],
+                        neg_yield=crop_dict.get("Differenz_Ertrag", None)[0],
                         target_protein=crop_dict.get("Richt_RP", None),
                         var_protein=crop_dict.get("Differenz_RP", None),
                         n=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[0],
@@ -288,11 +304,13 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     update_session(session, crop)
                 cultivation = Cultivation(
                     field_id=field,
-                    crop_class=CropClass(cult.class_),
+                    cultivation_type=get_cultivation_type(cult.class_),
                     crop_yield=cult.yield_,
-                    residues=get_remains_type(cult.remains),
+                    residues=get_residue_type(cult.remains),
                     legume_rate=get_legume_type(cult.legume),
-                    nmin=get_nmin(field_dict, CropClass(cult.class_)),
+                    nmin_30=get_nmin(field_dict.get("Nmin30", 0)),
+                    nmin_60=get_nmin(field_dict.get("Nmin60", 0)),
+                    nmin_90=get_nmin(field_dict.get("Nmin90", 0)),
                 )
                 cultivation.field = field
                 cultivation.crop = crop

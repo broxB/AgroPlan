@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 from app.database.base import Model as Base
-from app.database.setup import _seed_database
+from app.database.setup import _seed_database, setup_database
 from app.database.utils import DBConnection
 from app.utils import load_json
 
@@ -51,8 +51,7 @@ def register(app):
         fertilizers = load_json("data/dünger.json")
         crops = load_json("data/kulturen.json")
         data = [fields, fertilizers, crops]
-        db_path = Path(__file__).parent / "database/anbauplanung.db"
-        _seed_database(db_path, data)
+        setup_database("anbauplanung.db", data)
 
     @seed.command()
     def reset():

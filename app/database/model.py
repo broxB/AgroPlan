@@ -10,13 +10,10 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
-    Numeric,
-    PickleType,
     String,
     Table,
     UniqueConstraint,
 )
-from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import backref, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -24,6 +21,7 @@ from app.database.base import Model as Base
 from app.database.types import (
     CropClass,
     CropType,
+    CultivationType,
     DemandType,
     FertClass,
     FertType,
@@ -31,6 +29,7 @@ from app.database.types import (
     HumusType,
     LegumeType,
     MeasureType,
+    NminType,
     ResidueType,
     SoilType,
     UnitType,
@@ -59,7 +58,7 @@ class User(UserMixin, Base):
     username = Column("username", String(64), index=True, unique=True)
     email = Column("email", String(120), index=True, unique=True)
     password_hash = Column("password_hash", String(128))
-    year = Column("set_year", Integer)
+    year = Column("year", Integer)
     fields = relationship("BaseField", back_populates="user")
 
     def set_password(self, password):
@@ -96,15 +95,21 @@ class User(UserMixin, Base):
         )
         return [field.year for field in fields]
 
-    def get_crops(self, crop_class: CropClass = None):
-        if crop_class is None:
-            return Crop.query.filter_by(user_id=self.id).all()
-        return Crop.query.filter_by(user_id=self.id, crop_class=crop_class).all()
+    def get_crops(self, crop_class: CropClass = None, **kwargs):
+        query = Crop.query.filter_by(user_id=self.id)
+        if crop_class:
+            query = query.filter_by(crop_class=crop_class)
+        if kwargs:
+            query = query.filter_by(**kwargs)
+        return query.all()
 
-    def get_fertilizers(self, fert_class: FertClass = None):
-        if fert_class is None:
-            return Fertilizer.query.filter_by(user_id=self.id).all()
-        return Fertilizer.query.filter_by(user_id=self.id, fert_class=fert_class).all()
+    def get_fertilizers(self, fert_class: FertClass = None, **kwargs):
+        query = Fertilizer.query.filter_by(user_id=self.id)
+        if fert_class:
+            query = query.filter_by(fert_class=fert_class)
+        if kwargs:
+            query = query.filter_by(**kwargs)
+        return query.all()
 
     def get_fertilizer_usage(self):
         return FertilizerUsage.query.filter_by(user_id=self.id).all()
@@ -184,17 +189,19 @@ class Field(Base):
 
 class Cultivation(Base):
     __tablename__ = "cultivation"
-    __table_args__ = (UniqueConstraint("field_id", "crop_class"),)
+    __table_args__ = (UniqueConstraint("field_id", "cultivation_type"),)
 
     id = Column("cultivation_id", Integer, primary_key=True)
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
-    crop_class = Column("crop_class", Enum(CropClass))
+    cultivation_type = Column("cultivation_type", Enum(CultivationType))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
     crop_yield = Column("yield", Float(asdecimal=True, decimal_return_scale=2))
     crop_protein = Column("protein", Float(asdecimal=True, decimal_return_scale=2))
     residues = Column("residues", Enum(ResidueType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
-    nmin = Column("nmin", MutableList.as_mutable(PickleType), default=[])
+    nmin_30 = Column("nmin_30", Integer)
+    nmin_60 = Column("nmin_60", Integer)
+    nmin_90 = Column("nmin_90", Integer)
 
     field = relationship("Field", back_populates="cultivations")
     crop = relationship("Crop", back_populates="cultivations")
@@ -202,8 +209,8 @@ class Cultivation(Base):
     def __repr__(self):
         return (
             f"Cultivation(id='{self.id}', field='{self.field.base_field.name}', year='{self.field.year}', "
-            f"type='{self.crop_class.value}', name='{self.crop.name}', yield='{self.crop_yield:.2f}', "
-            f"residues='{self.residues.value}', legume='{self.legume_rate.value}', nmin='{self.nmin}')"
+            f"type='{self.cultivation_type.value}', name='{self.crop.name}', yield='{self.crop_yield:.2f}', "
+            f"residues='{self.residues.value}', legume='{self.legume_rate.value}', nmin='{self.nmin_30}, {self.nmin_60}, {self.nmin_90}')"
         )
 
 
@@ -214,16 +221,18 @@ class Crop(Base):
     user_id = Column("user_id", Integer, ForeignKey("user.user_id"))
     id = Column("crop_id", Integer, primary_key=True)
     name = Column("name", String)
+    field_type = Column("field_type", Enum(FieldType))
     crop_class = Column("class", Enum(CropClass))
     crop_type = Column("type", Enum(CropType))  # used for pre-crop effect
     kind = Column("kind", String)
     feedable = Column("feedable", Boolean)
     residue = Column("residue", Boolean)
     legume_rate = Column("legume_rate", Enum(LegumeType))
-    nmin_depth = Column("nmin_depth", Integer)
+    nmin_depth = Column("nmin_depth", Enum(NminType))
     target_demand = Column("target_demand", Float(asdecimal=True, decimal_return_scale=2))
     target_yield = Column("target_yield", Float(asdecimal=True, decimal_return_scale=2))
-    var_yield = Column("var_yield", MutableList.as_mutable(PickleType), default=[])
+    pos_yield = Column("pos_yield", Float(asdecimal=True, decimal_return_scale=2))
+    neg_yield = Column("neg_yield", Float(asdecimal=True, decimal_return_scale=2))
     target_protein = Column("target_protein", Float(asdecimal=True, decimal_return_scale=2))
     var_protein = Column("var_protein", Float(asdecimal=True, decimal_return_scale=2))
     n = Column("n", Float(asdecimal=True, decimal_return_scale=2))
@@ -242,7 +251,7 @@ class Crop(Base):
     def __repr__(self):
         return (
             f"Crop(id='{self.id}', name='{self.name}', type='{self.crop_type}', "
-            f"var_yield='{self.var_yield}')"
+            f"var_yield='{self.pos_yield}, {self.neg_yield}')"
         )
 
 
