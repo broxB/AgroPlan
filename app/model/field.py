@@ -8,7 +8,13 @@ from loguru import logger
 import app.database.model as db
 from app.database.model import BaseField as BaseFieldModel
 from app.database.model import Field as FieldModel
-from app.database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
+from app.database.types import (
+    CultivationType,
+    DemandType,
+    FertClass,
+    FieldType,
+    MeasureType,
+)
 from app.model.crop import Crop
 from app.model.cultivation import (
     CatchCrop,
@@ -39,15 +45,15 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
     field_data.soil_sample = create_soil_sample(field.soil_samples, year)
 
     for cultivation in field.cultivations:
-        crop_data = Crop(cultivation.crop, cultivation.crop_class)
+        crop_data = Crop(cultivation.crop)
         cultivation_data = create_cultivation(cultivation, crop_data)
         field_data.cultivations.append(cultivation_data)
 
     for fertilization in field.fertilizations:
         fertilizer_data = create_fertilizer(fertilization.fertilizer)
-        crop_data = Crop(fertilization.cultivation.crop, fertilization.cultivation.crop_class)
+        crop_data = Crop(fertilization.cultivation.crop)
         fertilization_data = Fertilization(
-            fertilization, fertilizer_data, crop_data, fertilization.cultivation.crop_class
+            fertilization, fertilizer_data, crop_data, fertilization.cultivation.cultivation_type
         )
         field_data.fertilizations.append(fertilization_data)
 
@@ -75,13 +81,17 @@ class Field:
         return [sum(num) for num in saldo]
 
     def n_total(
-        self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
+        self,
+        *,
+        measure: MeasureType = None,
+        cultivation_type: CultivationType = None,
+        netto: bool = False,
     ) -> Decimal:
         """Summarizes the nitrogen values of all fertilizations specified.
 
         Args:
             measure (MeasureType, optional): MeasureType that should be counted. Defaults to None.
-            crop_class (CropClass, optional): CropClass that should be counted. Defaults to None.
+            crop_class (CultivationType, optional): CultivationType that should be counted. Defaults to None.
             netto (bool, optional): If storage loss should be applied. Defaults to False.
 
         Returns:
@@ -89,7 +99,7 @@ class Field:
         """
         n_total = Decimal()
         for fertilization in self.fertilizations:
-            n_total += fertilization.n_total(measure, crop_class, netto)
+            n_total += fertilization.n_total(measure, cultivation_type, netto)
         return n_total
 
     def sum_fertilizations(self, fert_class: FertClass = None) -> list[Decimal]:
@@ -104,7 +114,7 @@ class Field:
     def sum_demands(self, negative_output: bool = True) -> list[Decimal]:
         demands = []
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.catch_crop:
+            if cultivation.cultivation_type == CultivationType.catch_crop:
                 continue
             demands.append(
                 cultivation.demand(
@@ -141,7 +151,8 @@ class Field:
                 reductions[i] += reduction
         if self.main_crop:
             reductions[4] += soil.reduction_s(
-                self.n_total(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
+                self.n_total(cultivation_type=CultivationType.main_crop),
+                self.main_crop.crop.s_demand,
             )
         if soil.year + 3 < self.year:
             reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
@@ -164,9 +175,12 @@ class Field:
         return reductions
 
     def pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
-        if self.field_type != FieldType.cropland or cultivation.crop_class == CropClass.catch_crop:
+        if (
+            self.field_type != FieldType.cropland
+            or cultivation.cultivation_type == CultivationType.catch_crop
+        ):
             return Decimal()
-        if cultivation.crop_class == CropClass.main_crop:
+        if cultivation.cultivation_type == CultivationType.main_crop:
             crop = self.previous_crop
         else:
             crop = self.main_crop
@@ -176,8 +190,10 @@ class Field:
             return Decimal()
 
     def n_redelivery(self) -> Decimal:
-        prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.spring)
-        fall_n_total = self.n_total(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
+        prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.org_spring)
+        fall_n_total = self.n_total(
+            measure=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
+        )
         n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
         return n_total
 
@@ -187,21 +203,24 @@ class Field:
     @property
     def main_crop(self) -> MainCrop:
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.main_crop:
+            if cultivation.cultivation_type == CultivationType.main_crop:
                 return cultivation
         return None
 
     @property
     def second_crop(self) -> SecondCrop:
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.second_crop:
+            if (
+                cultivation.cultivation_type == CultivationType.second_main_crop
+                or cultivation.cultivation_type == CultivationType.second_crop
+            ):
                 return cultivation
         return None
 
     @property
     def catch_crop(self) -> CatchCrop:
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.catch_crop:
+            if cultivation.cultivation_type == CultivationType.catch_crop:
                 return cultivation
         return None
 
@@ -215,40 +234,6 @@ class Field:
             elif self.field_prev_year.main_crop:
                 return self.field_prev_year.main_crop
         return None
-
-    def fall_violation(self) -> bool:
-        """Checks if fertilization applied in fall exceeds the regulations"""
-        n_total, nh4 = self._sum_fall_fertilizations()
-        if (
-            self.field_type == FieldType.grassland
-            or self.main_crop
-            and self.main_crop.crop.feedable
-        ):
-            if n_total > (80 if not self.red_region else 60):
-                logger.info(
-                    f"{self.name}: {n_total=:.0f} is violating the maximum value of Nges for fall fertilizations."
-                )
-                return True
-        elif n_total > 60 or nh4 > 30:
-            logger.info(
-                f"{self.name}: {n_total=:.0f} or {nh4=:.0f} are violating the maximum values of NH4 for fall fertilizations."
-            )
-            return True
-        return False
-
-    def _sum_fall_fertilizations(self) -> list[Decimal]:
-        sum_n = [(0, 0)]
-        for fertilization in self.fertilizations:
-            if (
-                fertilization.fertilizer.is_class(FertClass.organic)
-                and fertilization.measure == MeasureType.fall
-            ):
-                n_total, nh4 = [
-                    fertilization.amount * n
-                    for n in (fertilization.fertilizer.n, fertilization.fertilizer.nh4)
-                ]
-                sum_n.append((n_total, nh4))
-        return [sum(n) for n in zip(*sum_n)]
 
     def _field_prev_year(self) -> Field | None:
         if not self.first_year:

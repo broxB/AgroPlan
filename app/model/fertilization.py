@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import app.database.model as db
-from app.database.types import CropClass, FieldType, MeasureType
+from app.database.types import CultivationType, FieldType, MeasureType
 from app.model.crop import Crop
 from app.model.fertilizer import Fertilizer
 
@@ -12,17 +12,19 @@ class Fertilization:
         Fertilization: db.Fertilization,
         fertilizer: Fertilizer,
         crop: Crop,
-        crop_class: CropClass,
+        cultivation_type: CultivationType,
     ):
         self.fertilizer = fertilizer
         self.crop = crop
-        self.crop_class = crop_class
+        self.cultivation_type = cultivation_type
         self.amount: Decimal = Fertilization.amount
         self.measure: MeasureType = Fertilization.measure
 
-    def n_total(self, measure: MeasureType, crop_class: CropClass, netto: bool) -> Decimal:
+    def n_total(
+        self, measure: MeasureType, cultivation_type: CultivationType, netto: bool
+    ) -> Decimal:
         if self.fertilizer.is_organic:
-            if self.is_measure(measure) and self.crop.is_class(crop_class):
+            if self.is_measure(measure) and self.cultivation_type == cultivation_type:
                 return self.amount * self.fertilizer.n_total(netto)
         return Decimal()
 
@@ -37,7 +39,7 @@ class Fertilization:
         ]
 
     def n_verf(self, field_type: FieldType) -> Decimal:
-        if self.crop.crop_class == CropClass.catch_crop and self.fertilizer.is_organic:
+        if self.cultivation_type == CultivationType.catch_crop and self.fertilizer.is_organic:
             return Decimal()
         if self.crop.feedable:
             return self.fertilizer.n_verf(FieldType.grassland)
