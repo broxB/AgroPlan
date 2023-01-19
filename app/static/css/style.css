@@ -26,6 +26,14 @@ main {
 
 /* custom styling */
 
+.fa-check {
+  color: var(--bs-success);
+}
+
+.fa-xmark {
+  color: var(--bs-danger);
+}
+
 .btn:focus {
   outline: none;
   box-shadow: none;
