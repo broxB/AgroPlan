@@ -107,11 +107,8 @@ def set_year():
 @bp.route("/field", methods=["GET", "POST"])
 @login_required
 def field_overview():
-    fields = current_user.get_fields()
-    form = YearForm()
-    return render_template(
-        "index.html", title="Home", fields=fields, active_page="home", form=form
-    )
+    base_fields = current_user.get_fields(year=current_user.year)
+    return render_template("fields.html", title="Fields", base_fields=base_fields)
 
 
 @bp.route("/field/<base_field_id>", methods=["GET", "POST"])

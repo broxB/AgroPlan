@@ -31,6 +31,7 @@
       {% endif %}
     </ul>
     <ul class="navbar-nav ms-auto">
+      <!-- display year form if in index or field !-->
       {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle position-relative"

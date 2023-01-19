@@ -1,3 +1,22 @@
+{% macro render_pagination(pagination, endpoint) %}
+  <div class=page-items>
+    {{ pagination.first }} - {{ pagination.last }} of {{ pagination.total }}
+  </div>
+  <div class=pagination>
+    {% for page in pagination.iter_pages() %}
+      {% if page %}
+        {% if page != pagination.page %}
+          <a href="{{ url_for(endpoint, page=page) }}">{{ page }}</a>
+        {% else %}
+          <strong>{{ page }}</strong>
+        {% endif %}
+      {% else %}
+        <span class=ellipsis>…</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endmacro %}
+
 {#  This file was part of Flask-Bootstrap and was modified under the terms of
  its BSD License. Copyright (c) 2013, Marc Brinkmann. All rights reserved. #}
 
@@ -56,7 +75,7 @@
 
 
 {% macro render_nav_item(endpoint, text, _badge='', _use_li=False) %}
-    {% set active = True if request.endpoint and request.endpoint == endpoint or text.lower() in request.endpoint else False %}
+    {% set active = True if request.endpoint and request.endpoint == endpoint else False %}
     {% if _use_li %}<li class="nav-item">{% endif %}
     <a class="{% if not _use_li %}nav-item {% endif %}nav-link{% if active %} active" aria-current="page{% endif %}"
        href="{{ url_for(endpoint, **kwargs) }}">
