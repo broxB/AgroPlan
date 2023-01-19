@@ -85,7 +85,7 @@
                     <td>{{ field.area | format_number(".2f") }}</td>
                     <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
                     <td class="table-action d-print-none">
-                      <button class="btn btn-link p-0"
+                      <button class="btn btn-link btn-edit"
                               type="button"
                               data-bs-toggle="modal"
                               data-bs-target="#modal"
@@ -151,7 +151,7 @@
                       {{ fert.amount | format_number(".1f", fert.fertilizer.unit.value+"/ha") }}
                     </td>
                     <td class="table-action d-print-none">
-                      <button class="btn btn-link p-0"
+                      <button class="btn btn-link btn-edit"
                               type="button"
                               data-bs-toggle="modal"
                               data-bs-target="#modal"
@@ -220,7 +220,7 @@
                     {{ fert.amount | format_number(".1f", fert.fertilizer.unit.name+"/ha") }}
                   </td>
                   <td class="table-action d-print-none">
-                    <button class="btn btn-link p-0"
+                    <button class="btn btn-link btn-edit"
                             type="button"
                             data-bs-toggle="modal"
                             data-bs-target="#modal"
@@ -297,7 +297,7 @@
                   {{ sample.mg | format_number(".1f") }}
                 </td>
                 <td class="table-action d-print-none">
-                  <button class="btn btn-link p-0"
+                  <button class="btn btn-link btn-edit"
                           type="button"
                           data-bs-toggle="modal"
                           data-bs-target="#modal"

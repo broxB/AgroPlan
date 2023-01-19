@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+  <div class="container">
+    <button class="btn btn-success fw-500 d-print-none"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#modal"
+            data-form="field"
+            data-modal="new">
+      ✚ New
+    </button>
+    <table class="table table-sm table-hover caption-top align-middle no-border-top">
+      <caption>List of base fields</caption>
+      <thead class="no-border-top">
+      </thead>
+      <tbody>
+        {% for base_field in base_fields %}
+          <tbody class="header no-border-top" style="cursor: pointer;">
+            <tr data-id="{{ base_field.id }}">
+              <th colspan="7">
+                <span>+</span>
+                {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+
+              </th>
+            </tr>
+          </tbody>
+          <thead class="no-border-top collapse">
+            <tr>
+              <th class="table-action"></th>
+              <th scope="col">Year</th>
+              <th scope="col">Area</th>
+              <th scope="col">Type</th>
+              <th scope="col">Demand</th>
+              <th scope="col">Red region</th>
+              <th></th>
+            </tr>
+          </thead>
+          {% for field in base_field.fields %}
+            <tbody class="no-border-top collapse">
+              <tr>
+                <td></td>
+                <th scope="row" data-field-id="{{ field.id }}">{{ field.year }}</th>
+                <td>{{ field.area }}</td>
+                <td>{{ field.field_type.value }}</td>
+                <td>{{ field.demand_type.value }}</td>
+                <td>
+                  {% if field.red_region %}
+                    <i class="fa-solid fa-check fa-fw"></i>
+                  {% else %}
+                    <i class="fa-solid fa-xmark fa-fw"></i>
+                  {% endif %}
+                </td>
+                <td class="table-action d-print-none">
+                  <button class="btn btn-link p-0"
+                          type="button"
+                          data-bs-toggle="modal"
+                          data-bs-target="#modal"
+                          data-form="crop"
+                          data-modal="edit">
+                    <i class="fa-solid fa-pencil"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/fields.js') }}"></script>
+
+{% endblock app_content %}
