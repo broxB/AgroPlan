@@ -13,19 +13,30 @@ from app.database.model import (
     SoilSample,
     User,
 )
+from app.extensions import db as _db
+from config import TestConfig
 
 
 @pytest.fixture
-def test_client():
-    app = create_app()
-    with app.test_client() as client:
-        with app.app_context():
-            yield client
+def app():
+    app = create_app(config_object=TestConfig)
+    with app.app_context():
+        yield app
 
 
 @pytest.fixture
-def user() -> User:
+def db(app):
+    _db.create_all()
+    yield _db
+    _db.session.close()
+    _db.drop_all()
+
+
+@pytest.fixture
+def user(db) -> User:
     user = User(username="Test", email="test@test.test")
     user.set_password("ValidPassword")
     user.year = 2000
+    db.session.add(user)
+    db.session.commit()
     return user
