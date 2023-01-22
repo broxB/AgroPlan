@@ -21,3 +21,9 @@ class Config:
     POSTS_PER_PAGE = 25
     LANGUAGES = ["en", "de"]
     EXPLAIN_TEMPLATE_LOADING = False
+
+
+class TestConfig(Config):
+    SECRET_KEY = "test-key"
+    SQLALCHEMY_DATABASE_URI = "sqlite://"
+    TESTING = True
