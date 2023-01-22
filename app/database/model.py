@@ -17,7 +17,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import backref, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app.database.base import Model as Base
 from app.database.types import (
     CropClass,
     CropType,
@@ -35,6 +34,7 @@ from app.database.types import (
     SoilType,
     UnitType,
 )
+from app.extensions import db
 
 __all__ = [
     "field_fertilization",
@@ -50,6 +50,18 @@ __all__ = [
     "Saldo",
     "User",
 ]
+
+Base = db.Model
+Column: Column = db.Column
+Integer: Integer = db.Integer
+String: String = db.String
+relationship: relationship = db.relationship
+ForeignKey: ForeignKey = db.ForeignKey
+UniqueConstraint: UniqueConstraint = db.UniqueConstraint
+Float: Float = db.Float
+Boolean: Boolean = db.Boolean
+Enum: Enum = db.Enum
+backref: backref = db.backref
 
 
 class User(UserMixin, Base):
@@ -121,14 +133,14 @@ class User(UserMixin, Base):
 
 field_fertilization = Table(
     "field_fertilization",
-    Base.metadata,
+    db.metadata,
     Column("field_id", Integer, ForeignKey("field.field_id")),
     Column("fertilization_id", Integer, ForeignKey("fertilization.fertilization_id")),
 )
 
 field_soil_sample = Table(
     "field_soil_sample",
-    Base.metadata,
+    db.metadata,
     Column("field_id", Integer, ForeignKey("field.field_id")),
     Column("sample_id", Integer, ForeignKey("soil_sample.sample_id")),
 )
