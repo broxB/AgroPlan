@@ -4,9 +4,9 @@ from pathlib import Path
 
 import click
 
-from app.database.base import Model as Base
 from app.database.setup import _seed_database, setup_database
 from app.database.utils import DBConnection
+from app.extensions import db
 from app.utils import load_json
 
 
@@ -60,6 +60,6 @@ def register(app):
         engine = DBConnection.connect(url=db_path, echo=False)
         with contextlib.closing(engine.connect()) as con:
             trans = con.begin()
-            for table in reversed(Base.metadata.sorted_tables):
+            for table in reversed(db.metadata.sorted_tables):
                 con.execute(table.delete())
             trans.commit()
