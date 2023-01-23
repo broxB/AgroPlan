@@ -39,6 +39,7 @@ skip_glob = "*/migrations/*.py"
   ]
   [tool.coverage.report]
     skip_empty = true
+    skip_covered = true
 
 [tool.djlint]
   ignore = 'H017,H025'

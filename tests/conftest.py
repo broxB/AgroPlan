@@ -53,7 +53,7 @@ def user(db) -> User:
 
 @pytest.fixture
 def base_field(db, user) -> BaseField:
-    base_field = BaseField(user_id=user, prefix=1, suffix=0, name="Testfield")
+    base_field = BaseField(user_id=user.id, prefix=1, suffix=0, name="Testfield")
     db.session.add(base_field)
     db.session.commit()
     return base_field
@@ -62,10 +62,10 @@ def base_field(db, user) -> BaseField:
 @pytest.fixture
 def field(db, base_field) -> BaseField:
     field = Field(
-        base_id=base_field,
+        base_id=base_field.id,
         sub_suffix=1,
         area=Decimal("11.11"),
-        year=1,
+        year=1000,
         red_region=False,
         field_type=FieldType.cropland,
         demand_type=DemandType.demand,

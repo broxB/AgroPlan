@@ -1,9 +1,3 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-
-from app.database.model import User
-
-
 def test_user(user):
     assert user.username == "Test"
     assert user.email == "test@test.test"
@@ -12,7 +6,18 @@ def test_user(user):
     assert user.year == 2000
 
 
-def test_user_reset_password(user: User, client: Flask.test_client, db: SQLAlchemy):
-    token = user.get_reset_password_token()
-    verified_user = user.verify_reset_password_token(token)
-    assert verified_user == user
+def test_base_field(user, base_field):
+    assert base_field.user_id == user.id
+    assert base_field.prefix == 1
+    assert base_field.suffix == 0
+    assert base_field.name == "Testfield"
+
+
+def test_field(field, base_field):
+    assert field.base_id == base_field.id
+    assert field.sub_suffix == 1
+    assert str(field.area) == "11.11"
+    assert field.year == 1000
+    assert field.red_region == False
+    assert field.field_type.name == "cropland"
+    assert field.demand_type.name == "demand"
