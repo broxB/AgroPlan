@@ -195,7 +195,7 @@ class Field(Base):
             f"Field(id='{self.id}', name='{self.base_field.prefix:02d}-{self.base_field.suffix} {self.base_field.name}', "
             f"year='{self.year}', ha='{self.area:.2f}', type='{self.field_type.value}', "
             f"soil_samples='{[sample.year for sample in self.soil_samples]}', "
-            f"cultivations={[f'{cult.crop_class.value}: {cult.crop.name}' for cult in self.cultivations]}, "
+            f"cultivations={[f'{cult.cultivation_type.value}: {cult.crop.name}' for cult in self.cultivations]}, "
             f"fertilizations={[f'{fert.cultivation.crop.name}: {fert.measure.value} -> {fert.fertilizer.name}' for fert in self.fertilizations]})"
         )
 
