@@ -1,3 +1,6 @@
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
 from app.database.model import User
 
 
@@ -9,7 +12,7 @@ def test_user(user):
     assert user.year == 2000
 
 
-def test_user_reset_password(user: User, app, db):
+def test_user_reset_password(user: User, client: Flask.test_client, db: SQLAlchemy):
     token = user.get_reset_password_token()
     verified_user = user.verify_reset_password_token(token)
     assert verified_user == user
