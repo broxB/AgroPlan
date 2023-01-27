@@ -2,8 +2,8 @@ from collections import namedtuple
 from decimal import Decimal
 from pathlib import Path
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from flask import current_app
+from loguru import logger
 
 from app.database.model import (
     Base,
@@ -35,43 +35,32 @@ from app.database.types import (
     UnitType,
     find_nmin_type,
 )
+from app.extensions import db
 
 
-def setup_database(db_name: str, seed: dict) -> None:
+def setup_database(seed: list[dict] = None) -> None:
     """Setup or Rebuild database based on model.
 
     Args:
-        db_name (str): File name of the db, NOT the path! Will be created in database directory.
+        db_name (str, optional): File name of the db, NOT the path! Will be created in database directory.
         seed (dict, optional): Sample data to seed into database.
     """
-    db_path = Path(__file__).parent / db_name
-    Base.metadata.bind = _connection(db_path).connect()
-    operation = "Created"
-    if Path(db_path).exists():
-        operation = "Accessed"
-        Base.metadata.drop_all()
-    print(f"{operation} database '{db_name}'.")
-    if "Accessed" in operation:
-        print("Dropped old tables.")
-    Base.metadata.create_all()
-    print(f"Created new tables based on model.")
-    if seed:
-        _seed_database(db_path, seed)
+    logger.info("Creating new database.")
+    db.drop_all()
+    logger.info("Dropping old tables and data.")
+    db.create_all()
+    logger.info("Creating new tables based on model.")
+    if seed is not None:
+        seed_database(seed)
 
 
-def _connection(db_path: Path):
-    engine = create_engine(f"sqlite:///{db_path}")
-    return engine
+def seed_database(data: list[dict]) -> None:
 
+    logger.info("Seeding data into tables.")
 
-def _seed_database(db_path: str, data: list[dict]) -> None:
-    Session = sessionmaker()
-    Session.configure(bind=_connection(db_path))
-    session = Session()  # type: Session
-
-    def update_session(db_session: sessionmaker, data: Base) -> None:
-        db_session.add(data)
-        db_session.flush()
+    def update_session(data: Base) -> None:
+        db.session.add(data)
+        db.session.flush()
 
     def get_field_type(short_name: dict[str]) -> FieldType:
         match short_name:
@@ -233,33 +222,17 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
         year=2021,
     )
     user.set_password("test")
-    update_session(session, user)
-
-    # alembic_version = "4dee7b9bf13f"
-    # session.execute(
-    #     """
-    #     CREATE TABLE "alembic_version" (
-    #         "version_num"	VARCHAR(32) NOT NULL,
-    #         CONSTRAINT "alembic_version_pkc" PRIMARY KEY("version_num")
-    #     );
-    #     """
-    #     f"INSERT INTO 'alembic_version' ('version_num') VALUES ({alembic_version})"
-    # )
-    # session.commit()
+    update_session(user)
 
     for year in fields_dict:
         for field_dict in fields_dict[year]:
             cult_data = field_cultivation(field_dict)
             fert_data = field_fertilization(field_dict)
 
-            base_field = (
-                session.query(BaseField)
-                .filter(
-                    BaseField.prefix == field_dict["Prefix"],
-                    BaseField.suffix == field_dict["Suffix"],
-                )
-                .one_or_none()
-            )
+            base_field = BaseField.query.filter(
+                BaseField.prefix == field_dict["Prefix"],
+                BaseField.suffix == field_dict["Suffix"],
+            ).one_or_none()
             if base_field is None:
                 base_field = BaseField(
                     user_id=user.id,
@@ -267,7 +240,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     suffix=field_dict["Suffix"],
                     name=field_dict["Name"],
                 )
-                update_session(session, base_field)
+                update_session(base_field)
 
             field = Field(
                 area=field_dict["Ha"],
@@ -277,10 +250,10 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                 demand_type=get_demand_type(field_dict["Düngung_Nach"]),
             )
             field.base_field = base_field
-            update_session(session, field)
+            update_session(field)
 
             for cult in cult_data:
-                crop = session.query(Crop).filter(Crop.name == cult.name).one_or_none()
+                crop = Crop.query.filter(Crop.name == cult.name).one_or_none()
                 if crop is None:
                     try:
                         crop_dict = crops_dict[cult.name]
@@ -314,7 +287,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                         byp_k2o=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[2],
                         byp_mgo=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[3],
                     )
-                    update_session(session, crop)
+                    update_session(crop)
                 cultivation = Cultivation(
                     field_id=field,
                     cultivation_type=get_cultivation_type(cult.class_),
@@ -327,15 +300,14 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                 )
                 cultivation.field = field
                 cultivation.crop = crop
-                update_session(session, cultivation)
+                update_session(cultivation)
 
                 for fert in fert_data:
                     if fert.crop != cult.class_ and "Schnitt" not in fert.crop:
                         continue
                     fert_year = year if fert.class_ == FertClass.organic else 0
                     fertilizer = (
-                        session.query(Fertilizer)
-                        .filter(Fertilizer.name == fert.name)
+                        Fertilizer.query.filter(Fertilizer.name == fert.name)
                         .filter(Fertilizer.year == fert_year)
                         .one_or_none()
                     )
@@ -358,11 +330,10 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                             cao=fert_dict["CaO"],
                             nh4=fert_dict["NH4"],
                         )
-                    update_session(session, fertilizer)
+                    update_session(fertilizer)
 
                     fertilizer_usage = (
-                        session.query(FertilizerUsage)
-                        .filter(FertilizerUsage.name == fert.name)
+                        FertilizerUsage.query.filter(FertilizerUsage.name == fert.name)
                         .filter(FertilizerUsage.year == year)
                         .one_or_none()
                     )
@@ -376,7 +347,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                         fertilizer_usage.fertilizer = fertilizer
                     else:
                         fertilizer_usage.amount += Decimal(field.area) * Decimal(fert.amount)
-                    update_session(session, fertilizer_usage)
+                    update_session(fertilizer_usage)
 
                     fertilization = Fertilization(
                         cut_timing=CutTiming(fert.cut_timing),
@@ -387,9 +358,9 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                     fertilization.cultivation = cultivation
                     fertilization.fertilizer = fertilizer
                     fertilization.field.append(field)
-                    update_session(session, fertilization)
+                    update_session(fertilization)
 
-            saldo = session.query(Saldo).filter(Saldo.field_id == field.id).one_or_none()
+            saldo = Saldo.query.filter(Saldo.field_id == field.id).one_or_none()
             if saldo is None:
                 saldo = Saldo(
                     n=field_dict["N_Saldo"] if field_dict["N_Saldo"] else 0,
@@ -404,14 +375,10 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
 
             if field_dict["Probedatum"] is None:
                 continue
-            soil_sample = (
-                session.query(SoilSample)
-                .filter(
-                    SoilSample.base_id == base_field.id,
-                    SoilSample.year == field_dict["Probedatum"],
-                )
-                .one_or_none()
-            )
+            soil_sample = SoilSample.query.filter(
+                SoilSample.base_id == base_field.id,
+                SoilSample.year == field_dict["Probedatum"],
+            ).one_or_none()
             if soil_sample is None:
                 soil_sample = SoilSample(
                     year=field_dict["Probedatum"],
@@ -424,11 +391,7 @@ def _seed_database(db_path: str, data: list[dict]) -> None:
                 )
                 soil_sample.base_id = base_field.id
             soil_sample.fields.append(field)
-            update_session(session, soil_sample)
+            update_session(soil_sample)
 
-    session.commit()
-    print("Seeded sample data successfully.")
-
-
-if __name__ == "__main__":
-    setup_database("database_v3.1.db")
+    db.session.commit()
+    logger.info("Seeded sample data successfully.")
