@@ -17,7 +17,12 @@ def register(app):
         setup_database(seed=seed)
 
     @app.cli.command("pytest")
-    def pytest():
+    @click.option("--cov", is_flag=True)
+    def pytest(cov):
         """Start pytest with missing coverage report"""
-        if os.system("pytest --cov-report term-missing --cov"):
-            raise RuntimeError("invalid pytest command")
+        if cov:
+            if os.system("pytest --cov-report term-missing --cov"):
+                raise RuntimeError("invalid pytest command")
+        else:
+            if os.system("pytest"):
+                raise RuntimeError("invalid pytest command")
