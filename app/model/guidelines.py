@@ -12,31 +12,31 @@ def p2o5_reductions():
 
 
 @cache
-def k2o_redctions():
+def k2o_reductions():
     logger.info("Caching data")
     return load_json("data/Richtwerte/Abschläge/abschlag_k2o.json")
 
 
 @cache
-def mg_redctions():
+def mg_reductions():
     logger.info("Caching data")
     return load_json("data/Richtwerte/Abschläge/abschlag_mgo.json")
 
 
 @cache
-def cao_redctions():
+def cao_reductions():
     logger.info("Caching data")
     return load_json("data/Richtwerte/Abschläge/abschlag_cao_4jahre.json")
 
 
 @cache
-def sulfur_redctions():
+def sulfur_reductions():
     logger.info("Caching data")
     return load_json("data/Richtwerte/Abschläge/abschlag_s.json")
 
 
 @cache
-def soil_redctions():
+def soil_reductions():
     logger.info("Caching data")
     return load_json("data/Richtwerte/Abschläge/bodenvorrat.json")
 

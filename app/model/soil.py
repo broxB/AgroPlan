@@ -30,7 +30,7 @@ class Soil:
         self.guidelines = guidelines
 
     def reduction_n(self, field_type: FieldType) -> Decimal:
-        soil_reductions = self.guidelines.soil_redctions()
+        soil_reductions = self.guidelines.soil_reductions()
         return Decimal(soil_reductions[self.humus.value][field_type.value])
 
     def reduction_p2o5(self, field_type: FieldType) -> Decimal:
@@ -46,7 +46,7 @@ class Soil:
     def reduction_k2o(self, field_type: FieldType) -> Decimal:
         if self.k2o is None:
             return Decimal()
-        k2o_reductions = self.guidelines.k2o_redctions()
+        k2o_reductions = self.guidelines.k2o_reductions()
         value = round_to_nearest(self.k2o / Decimal("1.205"), 1)  # calc element form
         values = k2o_reductions[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
         reduction = k2o_reductions[field_type.value][self.soil_type.value][self.humus.value][
@@ -58,7 +58,7 @@ class Soil:
     def reduction_mg(self, field_type: FieldType) -> Decimal:
         if self.mg is None:
             return Decimal()
-        mgo_reductions = self.guidelines.mg_redctions()
+        mgo_reductions = self.guidelines.mg_reductions()
         value = round_to_nearest(self.mg, 1)
         values = mgo_reductions[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
         reduction = mgo_reductions[field_type.value][self.soil_type.value][self.humus.value][
@@ -68,7 +68,7 @@ class Soil:
         return Decimal(reduction[index])
 
     def reduction_s(self, s_demand: Decimal, n_total: Decimal) -> Decimal:
-        sulfur_reductions = self.guidelines.sulfur_redctions()
+        sulfur_reductions = self.guidelines.sulfur_reductions()
         sulfur_needs = sulfur_reductions["Grenzwerte"]["Bedarf"]
         needs_index = bisect_right(sulfur_needs, s_demand) - 1
         reduction = sulfur_reductions["Humusgehalt"][self.humus.value][needs_index]
@@ -84,7 +84,7 @@ class Soil:
             value = self.ph
         if preservation:
             value = self.optimal_ph(field_type)
-        cao_reductions = self.guidelines.cao_redctions()
+        cao_reductions = self.guidelines.cao_reductions()
         ph_values = cao_reductions[field_type.value]["phWert"]
         index = bisect_left(self.to_decimal(ph_values), round_to_nearest(value, 1))
         reduction = cao_reductions[field_type.value][self.soil_type.value][self.humus.value]
