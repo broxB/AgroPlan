@@ -18,7 +18,7 @@ def k2o_redctions():
 
 
 @cache
-def mgo_redctions():
+def mg_redctions():
     logger.info("Caching data")
     return load_json("data/Richtwerte/Abschläge/abschlag_mgo.json")
 
@@ -54,7 +54,7 @@ def k2o_classes():
 
 
 @cache
-def mgo_classes():
+def mg_classes():
     logger.info("Caching data")
     return load_json("data/Richtwerte/Gehaltsklassen/klassen_mgo.json")
 

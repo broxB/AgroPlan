@@ -18,7 +18,7 @@ def create_soil_sample(soil_samples: list[db.SoilSample], year) -> Soil | None:
 
 
 class Soil:
-    def __init__(self, SoilSample: db.SoilSample, guidelines: guidelines):
+    def __init__(self, SoilSample: db.SoilSample, guidelines: guidelines = guidelines):
         self.year: int = SoilSample.year
         self.soil_type: SoilType = SoilSample.soil_type
         self.humus: HumusType = SoilSample.humus
@@ -55,10 +55,10 @@ class Soil:
         index = bisect_right(values, value) - 1
         return Decimal(reduction[index])
 
-    def reduction_mgo(self, field_type: FieldType) -> Decimal:
+    def reduction_mg(self, field_type: FieldType) -> Decimal:
         if self.mg is None:
             return Decimal()
-        mgo_reductions = self.guidelines.mgo_redctions()
+        mgo_reductions = self.guidelines.mg_redctions()
         value = round_to_nearest(self.mg, 1)
         values = mgo_reductions[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
         reduction = mgo_reductions[field_type.value][self.soil_type.value][self.humus.value][
@@ -109,12 +109,12 @@ class Soil:
         index = bisect_right(values, self.k2o) - 1
         return self._classes[index]
 
-    def class_mgo(self, field_type: FieldType) -> str:
+    def class_mg(self, field_type: FieldType) -> str:
         if self.mg is None:
             return ""
-        mgo_classes = self.guidelines.mgo_classes()
+        mgo_classes = self.guidelines.mg_classes()
         values = mgo_classes[field_type.value][self.soil_type.value][self.humus.value]
-        index = bisect_right(values, self.mgo) - 1
+        index = bisect_right(values, self.mg) - 1
         return self._classes[index]
 
     def class_ph(self, field_type: FieldType) -> str:

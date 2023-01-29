@@ -144,7 +144,7 @@ class Field:
                 (
                     soil.reduction_p2o5(self.field_type),
                     soil.reduction_k2o(self.field_type),
-                    soil.reduction_mgo(self.field_type),
+                    soil.reduction_mg(self.field_type),
                 ),
                 start=1,
             ):
