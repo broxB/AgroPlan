@@ -111,7 +111,7 @@ def test_cultivation(field: Field, crop: Crop, cultivation: Cultivation):
     assert cultivation.legume_rate == LegumeType.none
     assert cultivation.nmin_30 == 10
     assert cultivation.nmin_60 == 10
-    assert cultivation.nmin_90 == 0
+    assert cultivation.nmin_90 == 10
     assert str(cultivation.id) in str(cultivation.__repr__)
 
 

@@ -140,7 +140,7 @@ def cultivation(db, crop, field) -> Cultivation:
         legume_rate=LegumeType.none,
         nmin_30=10,
         nmin_60=10,
-        nmin_90=0,
+        nmin_90=10,
     )
     cultivation.crop = crop
     cultivation.field = field
