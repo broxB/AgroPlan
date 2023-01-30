@@ -69,25 +69,31 @@ def test_field(field: Field, base_field: BaseField):
 
 def test_crop(user: User, crop: Crop):
     assert crop.user_id == user.id
-    assert crop.name == "Testcrop"
+    assert crop.name == "Ackergras 3 Schnitte"
     assert crop.field_type == FieldType.cropland
     assert crop.crop_class == CropClass.main_crop
-    assert crop.crop_type == CropType.corn
-    assert crop.kind == "Test"
-    assert crop.feedable == False
-    assert crop.residue == False
-    assert crop.legume_rate == LegumeType.none
-    assert crop.nmin_depth == NminType.nmin_90
+    assert crop.crop_type == CropType.field_grass
+    assert crop.kind == "Ackergras"
+    assert crop.feedable == True
+    assert crop.residue == True
+    assert crop.legume_rate == LegumeType.main_crop_0
+    assert crop.nmin_depth == NminType.nmin_0
     assert crop.target_demand == 100
     assert crop.target_yield == 100
     assert crop.pos_yield == 1
     assert crop.neg_yield == 2
-    assert crop.target_protein == 0
-    assert crop.var_protein == 0
+    assert crop.target_protein == Decimal("16")
+    assert crop.var_protein == Decimal("1.5")
     assert crop.n == Decimal(1)
     assert crop.p2o5 == Decimal(1)
     assert crop.k2o == Decimal(1)
     assert crop.mgo == Decimal(1)
+    assert crop.byproduct == "Heu"
+    assert crop.byp_ratio == Decimal("0.8")
+    assert crop.byp_n == Decimal("0.5")
+    assert crop.byp_p2o5 == Decimal("0.5")
+    assert crop.byp_k2o == Decimal("0.5")
+    assert crop.byp_mgo == Decimal("0.5")
     assert crop.name in str(crop.__repr__)
 
 
