@@ -19,15 +19,17 @@ def create_cultivation(
     cultivation: db.Cultivation, crop: Crop
 ) -> MainCrop | SecondCrop | CatchCrop:
     if cultivation.cultivation_type == CultivationType.catch_crop:
-        return CatchCrop(cultivation, crop, guidelines)
+        return CatchCrop(cultivation, crop)
     elif cultivation.cultivation_type == CultivationType.main_crop:
-        return MainCrop(cultivation, crop, guidelines)
+        return MainCrop(cultivation, crop)
     else:
-        return SecondCrop(cultivation, crop, guidelines)
+        return SecondCrop(cultivation, crop)
 
 
 class Cultivation:
-    def __init__(self, Cultivation: db.Cultivation, crop: Crop, guidelines: guidelines):
+    def __init__(
+        self, Cultivation: db.Cultivation, crop: Crop, guidelines: guidelines = guidelines
+    ):
         self.crop = crop
         self.cultivation_type: CultivationType = Cultivation.cultivation_type
         self.crop_type: CropType = crop.crop_type
@@ -69,7 +71,7 @@ class Cultivation:
         if self.crop_type == CropType.permanent_grassland:
             return Decimal(legume_delivery["Grünland"][self.legume_rate.value])
         elif self.crop_type == CropType.alfalfa_grass or self.crop_type == CropType.clover_grass:
-            rate = int(self.legume_rate.name.split("_")[1]) / 10
+            rate = int(self.legume_rate.name.split("_")[-1]) / 10
             return Decimal(legume_delivery[self.crop_type.value] * rate)
         elif self.crop_type == CropType.alfalfa or self.crop_type == CropType.clover:
             return Decimal(legume_delivery[self.crop_type.value])
@@ -110,4 +112,5 @@ class CatchCrop(Cultivation):
         return [Decimal("-60"), *[Decimal()] * 5]
 
     def pre_crop_effect(self) -> Decimal:
-        return Decimal(self._pre_crop_dict[self.crop_type.value][self.residues.value])
+        pre_crop_effect: dict = self.guidelines.pre_crop_effect()
+        return Decimal(pre_crop_effect[self.crop_type.value][self.residues.value])
