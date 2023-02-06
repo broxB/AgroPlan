@@ -18,11 +18,12 @@ def register(app):
 
     @app.cli.command("pytest")
     @click.option("--cov", is_flag=True)
-    def pytest(cov):
+    @click.option("--log", is_flag=True)
+    def pytest(cov, log):
         """Start pytest with missing coverage report"""
         if cov:
-            if os.system("pytest --cov-report term-missing --cov"):
-                raise RuntimeError("invalid pytest command")
+            os.system("pytest --cov-report term-missing --cov")
+        elif log:
+            os.system("pytest -o log_cli=true")
         else:
-            if os.system("pytest"):
-                raise RuntimeError("invalid pytest command")
+            os.system("pytest")
