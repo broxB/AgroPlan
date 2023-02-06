@@ -191,7 +191,7 @@ def test_saldo(field: Field, saldo: Saldo):
     assert saldo.n_total == Decimal(1)
 
 
-def test_field_fertilization(db, field: Field, fertilization: Fertilization):
+def test_field_fertilization(db, fill_db, field: Field, fertilization: Fertilization):
     query = (
         db.session.query(field_fertilization)
         .filter_by(field_id=field.id, fertilization_id=fertilization.id)
@@ -200,7 +200,7 @@ def test_field_fertilization(db, field: Field, fertilization: Fertilization):
     assert query is not None
 
 
-def test_field_soil_sample(db, field: Field, soil_sample: SoilSample):
+def test_field_soil_sample(db, fill_db, field: Field, soil_sample: SoilSample):
     query = (
         db.session.query(field_soil_sample)
         .filter_by(field_id=field.id, sample_id=soil_sample.id)
