@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 
 import pytest
@@ -35,15 +36,19 @@ from app.database.types import (
 from app.extensions import db as _db
 from config import TestConfig
 
+logger = logging.getLogger(__name__)
 
-@pytest.fixture
+
+@pytest.fixture(scope="session")
 def app():
+    logger.info("creating app")
     app = create_app(config_object=TestConfig)
     return app
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def client(app):
+    logger.info("creating app-context")
     with app.test_client() as client:
         with app.app_context():
             yield client
@@ -51,6 +56,7 @@ def client(app):
 
 @pytest.fixture
 def db(client):
+    logger.info("creating db")
     _db.create_all()
     yield _db
     _db.session.close()
@@ -58,27 +64,24 @@ def db(client):
 
 
 @pytest.fixture
-def user(db) -> User:
-    user = User(username="Test", email="test@test.test")
+def user() -> User:
+    user = User(id=1, username="Test", email="test@test.test")
     user.set_password("ValidPassword")
     user.year = 1000
-    db.session.add(user)
-    db.session.commit()
     return user
 
 
 @pytest.fixture
-def base_field(db, user) -> BaseField:
-    base_field = BaseField(user_id=user.id, prefix=1, suffix=0, name="Testfield")
+def base_field(user) -> BaseField:
+    base_field = BaseField(id=1, user_id=user.id, prefix=1, suffix=0, name="Testfield")
     base_field.user = user
-    db.session.add(base_field)
-    db.session.commit()
     return base_field
 
 
 @pytest.fixture
-def field(db, base_field) -> BaseField:
+def field(base_field) -> BaseField:
     field = Field(
+        id=1,
         base_id=base_field.id,
         sub_suffix=1,
         area=Decimal("11.11"),
@@ -88,14 +91,13 @@ def field(db, base_field) -> BaseField:
         demand_type=DemandType.demand,
     )
     field.base_field = base_field
-    db.session.add(field)
-    db.session.commit()
     return field
 
 
 @pytest.fixture
-def crop(db, user) -> Crop:
+def crop(user) -> Crop:
     crop = Crop(
+        id=1,
         user_id=user.id,
         name="Ackergras 3 Schnitte",
         field_type=FieldType.cropland,
@@ -123,14 +125,13 @@ def crop(db, user) -> Crop:
         byp_k2o=Decimal("0.5"),
         byp_mgo=Decimal("0.5"),
     )
-    db.session.add(crop)
-    db.session.commit()
     return crop
 
 
 @pytest.fixture
-def cultivation(db, crop, field) -> Cultivation:
+def cultivation(crop, field) -> Cultivation:
     cultivation = Cultivation(
+        id=1,
         field_id=field.id,
         cultivation_type=CultivationType.main_crop,
         crop_id=crop.id,
@@ -144,14 +145,13 @@ def cultivation(db, crop, field) -> Cultivation:
     )
     cultivation.crop = crop
     cultivation.field = field
-    db.session.add(cultivation)
-    db.session.commit()
     return cultivation
 
 
 @pytest.fixture
-def fertilizer(db, user) -> Fertilizer:
+def fertilizer(user) -> Fertilizer:
     fertilizer = Fertilizer(
+        id=1,
         user_id=user.id,
         name="Testfertilizer",
         year=1000,
@@ -168,14 +168,13 @@ def fertilizer(db, user) -> Fertilizer:
         cao=Decimal(1),
         nh4=Decimal(1),
     )
-    db.session.add(fertilizer)
-    db.session.commit()
     return fertilizer
 
 
 @pytest.fixture
-def fertilization(db, field, cultivation, fertilizer) -> Fertilization:
+def fertilization(field, cultivation, fertilizer) -> Fertilization:
     fertilization = Fertilization(
+        id=1,
         cultivation_id=cultivation.id,
         fertilizer_id=fertilizer.id,
         cut_timing=CutTiming.non_mowable,
@@ -185,15 +184,15 @@ def fertilization(db, field, cultivation, fertilizer) -> Fertilization:
     )
     fertilization.fertilizer = fertilizer
     fertilization.cultivation = cultivation
+    fertilization.field = []
     fertilization.field.append(field)
-    db.session.add(fertilization)
-    db.session.commit()
     return fertilization
 
 
 @pytest.fixture
-def soil_sample(db, base_field, field) -> SoilSample:
+def soil_sample(base_field, field) -> SoilSample:
     soil_sample = SoilSample(
+        id=1,
         base_id=base_field.id,
         year=1000,
         ph=Decimal(1),
@@ -203,27 +202,25 @@ def soil_sample(db, base_field, field) -> SoilSample:
         soil_type=SoilType.sand,
         humus=HumusType.less_8,
     )
+    soil_sample.fields = []
     soil_sample.fields.append(field)
-    db.session.add(soil_sample)
-    db.session.commit()
     return soil_sample
 
 
 @pytest.fixture
-def fertilizer_usage(db, user, fertilizer, fertilization, field) -> FertilizerUsage:
+def fertilizer_usage(user, fertilizer, fertilization, field) -> FertilizerUsage:
     fertilizer_usage = FertilizerUsage(
+        id=1,
         user_id=user.id,
         name=fertilizer.name,
         year=field.year,
         amount=field.area * fertilization.amount,
     )
-    db.session.add(fertilizer_usage)
-    db.session.commit()
     return fertilizer_usage
 
 
 @pytest.fixture
-def saldo(db, field) -> Saldo:
+def saldo(field) -> Saldo:
     saldo = Saldo(
         field_id=field.id,
         n=Decimal(1),
@@ -234,6 +231,32 @@ def saldo(db, field) -> Saldo:
         cao=Decimal(1),
         n_total=Decimal(1),
     )
+    return saldo
+
+
+@pytest.fixture
+def fill_db(
+    db,
+    user,
+    base_field,
+    field,
+    cultivation,
+    crop,
+    fertilization,
+    fertilizer,
+    soil_sample,
+    fertilizer_usage,
+    saldo,
+):
+    db.session.add(field)
+    db.session.add(fertilization)
+    db.session.add(user)
+    db.session.add(base_field)
+    db.session.add(cultivation)
+    db.session.add(crop)
+    db.session.add(fertilization)
+    db.session.add(fertilizer)
+    db.session.add(soil_sample)
+    db.session.add(fertilizer_usage)
     db.session.add(saldo)
     db.session.commit()
-    return saldo
