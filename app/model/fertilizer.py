@@ -9,7 +9,7 @@ from app.database.types import FertClass, FertType, FieldType
 
 def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
     if fertilizer.fert_class == FertClass.organic:
-        return Organic(fertilizer, guidelines=guidelines)
+        return Organic(fertilizer)
     elif fertilizer.fert_class == FertClass.mineral:
         return Mineral(fertilizer)
 
@@ -44,8 +44,8 @@ class Fertilizer:
 
 
 class Organic(Fertilizer):
-    def __init__(self, *args, guidelines: guidelines):
-        super().__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self._org_factor: dict = guidelines.org_factor()
 
     def factor(self, field_type: FieldType) -> Decimal:
