@@ -86,7 +86,7 @@ def test_is_class(test_cultivation: Cultivation):
 @pytest.fixture
 def main_crop(cultivation, test_crop) -> MainCrop:
     cultivation.cultivation_type = CultivationType.main_crop
-    return create_cultivation(cultivation, test_crop)
+    return MainCrop(cultivation, test_crop)
 
 
 @pytest.mark.parametrize(
@@ -113,7 +113,7 @@ def test_main_crop_reduction(main_crop: MainCrop):
 @pytest.fixture
 def second_crop(cultivation, test_crop) -> SecondCrop:
     cultivation.cultivation_type = CultivationType.second_crop
-    return create_cultivation(cultivation, test_crop)
+    return SecondCrop(cultivation, test_crop)
 
 
 def test_second_crop_reduction(second_crop: SecondCrop):
@@ -126,7 +126,7 @@ def test_second_crop_reduction(second_crop: SecondCrop):
 @pytest.fixture
 def catch_crop(cultivation, test_crop) -> CatchCrop:
     cultivation.cultivation_type = CultivationType.catch_crop
-    return create_cultivation(cultivation, test_crop)
+    return CatchCrop(cultivation, test_crop)
 
 
 def test_catch_crop_demand(catch_crop: CatchCrop):
