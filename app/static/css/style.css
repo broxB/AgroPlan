@@ -85,16 +85,16 @@ main {
 /* edit button hover  */
 .btn-edit {
   color: var(--bs-primary);
-  display: none;
+  opacity: 0;
   padding: 0 !important;
 }
 
 button:hover .btn-edit {
-  display: inline-block;
+  opacity: 100;
 }
 
 tr:hover .btn-edit {
-  display: inline-block;
+  opacity: 100;
 }
 
 /* accordion styling */

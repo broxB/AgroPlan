@@ -73,6 +73,7 @@
                 <th scope="col">Name</th>
                 <th scope="col">Size</th>
                 <th scope="col">Yield</th>
+                <th class="d-print-none"></th>
               </tr>
             </thead>
             <tbody>
@@ -129,6 +130,7 @@
                 <th scope="col">Month</th>
                 <th scope="col">Fertilizer</th>
                 <th scope="col">Amount</th>
+                <th class="d-print-none"></th>
               </tr>
             </thead>
             <tbody>
@@ -136,11 +138,15 @@
                 {% for fert in field.fertilizations if fert.fertilizer.fert_class.name == "organic" %}
                   <tr data-id="{{ fert.id }}">
                     <th scope="row">{{ loop.index }}</th>
-                    <td>{{ fert.cultivation.crop.name }}</td>
+                    <td>
+                      {{ fert.cultivation.crop.name }}
+                    </td>
                     <td>
                       {% if fert.cultivation.crop.feedable %}{{ fert.cut_timing.value }}{% endif %}
                     </td>
-                    <td>{{ fert.measure.value }}</td>
+                    <td>
+                      {{ fert.measure.value }}
+                    </td>
                     <td>
                       {{ fert.month }}
                     </td>
@@ -184,223 +190,225 @@
                     {% endfor %}
                   {% endfor %}
                 </th>
-
-              </th>
-              <th scope="col">
-                Measure
-              </th>
-              <th scope="col">
-                Fertilizer
-              </th>
-              <th scope="col">
-                Amount
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for field in base_field.fields if field.year == current_user.year %}
-              {% for fert in field.fertilizations if fert.fertilizer.fert_class.name != "organic" %}
-                <tr data-id="{{ fert.id }}">
+                <th scope="col">
+                  Measure
+                </th>
+                <th scope="col">
+                  Fertilizer
+                </th>
+                <th scope="col">
+                  Amount
+                </th>
+                <th class="d-print-none">
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field in base_field.fields if field.year == current_user.year %}
+                {% for fert in field.fertilizations if fert.fertilizer.fert_class.name != "organic" %}
+                  <tr data-id="{{ fert.id }}">
+                    <th scope="row">
+                      {{ loop.index }}
+                    </th>
+                    <td>
+                      {{ fert.cultivation.crop.name }}
+                    </td>
+                    <td>
+                      {% if fert.cultivation.crop.feedable %}{{ fert.cut_timing.value }}{% endif %}
+                    </td>
+                    <td>
+                      {{ fert.measure.value }}
+                    </td>
+                    <td>
+                      {{ fert.fertilizer.name }}
+                    </td>
+                    <td>
+                      {{ fert.amount | format_number(".1f", fert.fertilizer.unit.name+"/ha") }}
+                    </td>
+                    <td class="table-action d-print-none">
+                      <button class="btn btn-link btn-edit"
+                              type="button"
+                              data-bs-toggle="modal"
+                              data-bs-target="#modal"
+                              data-form="fertilization"
+                              data-modal="edit">
+                        <i class="fa-solid fa-pencil"></i>
+                      </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {# <div class="col-sm"><p>Random none specific text</p></div> #}
+      </div>
+    </div>
+    <!-- soil data -->
+    <div class="tab-pane fade"
+         id="soil"
+         role="tabpanel"
+         aria-labelledby="soil-tab">
+      <div class="row">
+        <div class="col-xl-9 table-responsive">
+          <table class="table table-sm table-hover caption-top align-middle">
+            <caption>List of soil samples</caption>
+            <thead class="no-border-top">
+              <tr>
+                <th scope="col">
+                  Year
+                </th>
+                <th scope="col">
+                  Type
+                </th>
+                <th scope="col">
+                  Humus
+                </th>
+                <th scope="col">
+                  pH
+                </th>
+                <th scope="col">
+                  P<sub>2</sub>O<sub>5</sub>
+                </th>
+                <th scope="col">
+                  K<sub>2</sub>O
+                </th>
+                <th scope="col">
+                  Mg
+                </th>
+                <th class="d-print-none">
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sample in base_field.soil_samples %}
+                <tr data-id="{{ sample.id }}">
                   <th scope="row">
-                    {{ loop.index }}
+                    {{ sample.year }}
                   </th>
                   <td>
-                    {{ fert.cultivation.crop.name }}
+                    {{ sample.soil_type.value }}
                   </td>
                   <td>
-                    {% if fert.cultivation.crop.feedable %}{{ fert.cut_timing.value }}{% endif %}
+                    {{ sample.humus.value }}
                   </td>
                   <td>
-                    {{ fert.measure.value }}
+                    {{ sample.ph | format_number(".1f") }}
                   </td>
                   <td>
-                    {{ fert.fertilizer.name }}
+                    {{ sample.p2o5 | format_number(".1f") }}
                   </td>
                   <td>
-                    {{ fert.amount | format_number(".1f", fert.fertilizer.unit.name+"/ha") }}
+                    {{ sample.k2o | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.mg | format_number(".1f") }}
                   </td>
                   <td class="table-action d-print-none">
                     <button class="btn btn-link btn-edit"
                             type="button"
                             data-bs-toggle="modal"
                             data-bs-target="#modal"
-                            data-form="fertilization"
+                            data-form="soil"
                             data-modal="edit">
                       <i class="fa-solid fa-pencil"></i>
                     </button>
                   </td>
                 </tr>
               {% endfor %}
-            {% endfor %}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
+        {# <div class="col-sm"><p>Random none specific text</p></div> #}
       </div>
-      {# <div class="col-sm"><p>Random none specific text</p></div> #}
     </div>
-  </div>
-  <!-- soil data -->
-  <div class="tab-pane fade"
-       id="soil"
-       role="tabpanel"
-       aria-labelledby="soil-tab">
-    <div class="row">
-      <div class="col-xl-9 table-responsive">
-        <table class="table table-sm table-hover caption-top align-middle">
-          <caption>List of soil samples</caption>
-          <thead class="no-border-top">
-            <tr>
-              <th scope="col">
-                Year
-              </th>
-              <th scope="col">
-                Type
-              </th>
-              <th scope="col">
-                Humus
-              </th>
-              <th scope="col">
-                pH
-              </th>
-              <th scope="col">
-                P<sub>2</sub>O<sub>5</sub>
-              </th>
-              <th scope="col">
-                K<sub>2</sub>O
-              </th>
-              <th scope="col">
-                Mg
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for sample in base_field.soil_samples %}
-              <tr data-id="{{ sample.id }}">
-                <th scope="row">
-                  {{ sample.year }}
-                </th>
-                <td>
-                  {{ sample.soil_type.value }}
-                </td>
-                <td>
-                  {{ sample.humus.value }}
-                </td>
-                <td>
-                  {{ sample.ph | format_number(".1f") }}
-                </td>
-                <td>
-                  {{ sample.p2o5 | format_number(".1f") }}
-                </td>
-                <td>
-                  {{ sample.k2o | format_number(".1f") }}
-                </td>
-                <td>
-                  {{ sample.mg | format_number(".1f") }}
-                </td>
-                <td class="table-action d-print-none">
-                  <button class="btn btn-link btn-edit"
-                          type="button"
-                          data-bs-toggle="modal"
-                          data-bs-target="#modal"
-                          data-form="soil"
-                          data-modal="edit">
-                    <i class="fa-solid fa-pencil"></i>
-                  </button>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {# <div class="col-sm"><p>Random none specific text</p></div> #}
-    </div>
-  </div>
-  <!-- info data -->
-  <div class="tab-pane fade"
-       id="info"
-       role="tabpanel"
-       aria-labelledby="info-tab">
-    <div class="row">
-      <div class="col-xxl-9 table-responsive">
-        {# <form>
+    <!-- info data -->
+    <div class="tab-pane fade"
+         id="info"
+         role="tabpanel"
+         aria-labelledby="info-tab">
+      <div class="row">
+        <div class="col-xxl-9 table-responsive">
+          {# <form>
           </form> #}
-        <table class="table table-sm table-hover caption-top align-middle">
-          <caption>List of soil samples</caption>
-          <thead class="no-border-top">
-            <tr>
-              <th scope="col">
-                Year
-              </th>
-              <th scope="col" class="select">
-                Type
-              </th>
-              <th scope="col" class="select">
-                Humus
-              </th>
-              <th scope="col" class="input">
-                pH
-              </th>
-              <th scope="col" class="input">
-                P2O5
-              </th>
-              <th scope="col" class="input">
-                K2O
-              </th>
-              <th scope="col" class="input">
-                Mg
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for sample in base_field.soil_samples %}
-              <tr data-sample-id="{{ sample.id }}">
-                <th scope="row">
-                  {{ sample.year }}
+          <table class="table table-sm table-hover caption-top align-middle">
+            <caption>List of soil samples</caption>
+            <thead class="no-border-top">
+              <tr>
+                <th scope="col">
+                  Year
                 </th>
-                <td>
-                  {{ sample.soil_type.value }}
-                </td>
-                <td>
-                  {{ sample.humus.value }}
-                </td>
-                <td>
-                  {{ sample.ph | format_number(".1f") }}
-                </td>
-                <td>
-                  {{ sample.p2o5 | format_number(".1f") }}
-                </td>
-                <td>
-                  {{ sample.k2o | format_number(".1f") }}
-                </td>
-                <td>
-                  {{ sample.mg | format_number(".1f") }}
-                </td>
-                <td class="action table-action d-print-none">
-                  <button class="text-primary border-0 bg-transparent"
-                          type="button"
-                          id="test-btn"
-                          onclick="edit(this);">
-                    <i class="fa-solid fa-pen-to-square fa-lg"></i>
-                  </button>
-                  <button class="text-success border-0 bg-transparent visually-hidden"
-                          type="button"
-                          onclick="save(this);">
-                    <i class="fa-solid fa-square-check fa-xl"></i>
-                  </button>
-                  <button class="text-danger border-0 bg-transparent visually-hidden"
-                          type="button"
-                          onclick="cancel(this);">
-                    <i class="fa-solid fa-square-xmark fa-xl"></i>
-                  </button>
-                </td>
+                <th scope="col" class="select">
+                  Type
+                </th>
+                <th scope="col" class="select">
+                  Humus
+                </th>
+                <th scope="col" class="input">
+                  pH
+                </th>
+                <th scope="col" class="input">
+                  P2O5
+                </th>
+                <th scope="col" class="input">
+                  K2O
+                </th>
+                <th scope="col" class="input">
+                  Mg
+                </th>
               </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for sample in base_field.soil_samples %}
+                <tr data-sample-id="{{ sample.id }}">
+                  <th scope="row">
+                    {{ sample.year }}
+                  </th>
+                  <td>
+                    {{ sample.soil_type.value }}
+                  </td>
+                  <td>
+                    {{ sample.humus.value }}
+                  </td>
+                  <td>
+                    {{ sample.ph | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.p2o5 | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.k2o | format_number(".1f") }}
+                  </td>
+                  <td>
+                    {{ sample.mg | format_number(".1f") }}
+                  </td>
+                  <td class="action table-action d-print-none">
+                    <button class="text-primary border-0 bg-transparent"
+                            type="button"
+                            id="test-btn"
+                            onclick="edit(this);">
+                      <i class="fa-solid fa-pen-to-square fa-lg"></i>
+                    </button>
+                    <button class="text-success border-0 bg-transparent visually-hidden"
+                            type="button"
+                            onclick="save(this);">
+                      <i class="fa-solid fa-square-check fa-xl"></i>
+                    </button>
+                    <button class="text-danger border-0 bg-transparent visually-hidden"
+                            type="button"
+                            onclick="cancel(this);">
+                      <i class="fa-solid fa-square-xmark fa-xl"></i>
+                    </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<script src="{{ url_for('static', filename='js/field.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/field.js') }}"></script>
 
 {% endblock app_content %}
