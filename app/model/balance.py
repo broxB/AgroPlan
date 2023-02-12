@@ -18,17 +18,35 @@ class Balance:
     cao: Decimal = 0
     nh4: Decimal = 0
 
+    @property
+    def is_empty(self):
+        return self.n + self.p2o5 + self.k2o + self.mgo + self.s + self.cao + self.nh4 == 0
+
     def __add__(self, other):
-        return Balance(
-            self.title,
-            self.n + other.n,
-            self.p2o5 + other.p2o5,
-            self.k2o + other.k2o,
-            self.mgo + other.mgo,
-            self.s + other.s,
-            self.cao + other.cao,
-            self.nh4 + other.nh4,
-        )
+        try:
+            return Balance(
+                self.title,
+                self.n + other.n,
+                self.p2o5 + other.p2o5,
+                self.k2o + other.k2o,
+                self.mgo + other.mgo,
+                self.s + other.s,
+                self.cao + other.cao,
+                self.nh4 + other.nh4,
+            )
+        except AttributeError:
+            return Balance(
+                self.title,
+                self.n + other,
+                self.p2o5 + other,
+                self.k2o + other,
+                self.mgo + other,
+                self.s + other,
+                self.cao + other,
+                self.nh4 + other,
+            )
+
+    __radd__ = __add__
 
     def __sub__(self, other):
         return Balance(
@@ -41,3 +59,27 @@ class Balance:
             self.cao - other.cao,
             self.nh4 - other.nh4,
         )
+
+    def __mul__(self, other):
+        try:
+            return Balance(
+                self.title,
+                self.n * other.n,
+                self.p2o5 * other.p2o5,
+                self.k2o * other.k2o,
+                self.mgo * other.mgo,
+                self.s * other.s,
+                self.cao * other.cao,
+                self.nh4 * other.nh4,
+            )
+        except AttributeError:
+            return Balance(
+                self.title,
+                self.n * other,
+                self.p2o5 * other,
+                self.k2o * other,
+                self.mgo * other,
+                self.s * other,
+                self.cao * other,
+                self.nh4 * other,
+            )
