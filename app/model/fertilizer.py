@@ -8,9 +8,9 @@ from app.database.types import FertClass, FertType, FieldType
 
 
 def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
-    if fertilizer.fert_class == FertClass.organic:
+    if fertilizer.fert_class is FertClass.organic:
         return Organic(fertilizer)
-    elif fertilizer.fert_class == FertClass.mineral:
+    elif fertilizer.fert_class is FertClass.mineral:
         return Mineral(fertilizer)
 
 
@@ -28,19 +28,19 @@ class Fertilizer:
         self.nh4: Decimal = Fertilizer.nh4
 
     def is_class(self, fert_class: FertClass) -> bool:
-        return self.fert_class == fert_class if fert_class else True
+        return self.fert_class is fert_class if fert_class else True
 
     @property
     def is_organic(self) -> bool:
-        return self.fert_class == FertClass.organic
+        return self.fert_class is FertClass.organic
 
     @property
     def is_mineral(self) -> bool:
-        return self.fert_class == FertClass.mineral
+        return self.fert_class is FertClass.mineral
 
     @property
     def is_lime(self) -> bool:
-        return self.fert_type == FertType.lime
+        return self.fert_type is FertType.lime
 
 
 class Organic(Fertilizer):

@@ -19,9 +19,9 @@ from app.model.crop import Crop
 def create_cultivation(
     cultivation: db.Cultivation, crop: Crop
 ) -> MainCrop | SecondCrop | CatchCrop:
-    if cultivation.cultivation_type == CultivationType.catch_crop:
+    if cultivation.cultivation_type is CultivationType.catch_crop:
         return CatchCrop(cultivation, crop)
-    elif cultivation.cultivation_type == CultivationType.main_crop:
+    elif cultivation.cultivation_type is CultivationType.main_crop:
         return MainCrop(cultivation, crop)
     else:
         return SecondCrop(cultivation, crop)
@@ -51,7 +51,7 @@ class Cultivation:
             crop_yield=self.crop_yield,
             crop_protein=self.crop_protein,
         )
-        if demand_option == DemandType.demand or self.residues == ResidueType.main_removed:
+        if demand_option is DemandType.demand or self.residues is ResidueType.main_removed:
             byp_demand = self.crop.demand_byproduct(self.crop_yield)
         else:
             byp_demand = Balance()
@@ -70,12 +70,12 @@ class Cultivation:
         if not self.crop.feedable:
             return Decimal()
         legume_delivery: dict = self.guidelines.legume_delivery()
-        if self.crop_type == CropType.permanent_grassland:
+        if self.crop_type is CropType.permanent_grassland:
             return Decimal(legume_delivery["Grünland"][self.legume_rate.value])
-        elif self.crop_type == CropType.alfalfa_grass or self.crop_type == CropType.clover_grass:
+        elif self.crop_type is CropType.alfalfa_grass or self.crop_type is CropType.clover_grass:
             rate = int(self.legume_rate.name.split("_")[-1]) / 10
             return Decimal(legume_delivery[self.crop_type.value] * rate)
-        elif self.crop_type == CropType.alfalfa or self.crop_type == CropType.clover:
+        elif self.crop_type is CropType.alfalfa or self.crop_type is CropType.clover:
             return Decimal(legume_delivery[self.crop_type.value])
         return Decimal()
 
@@ -83,7 +83,7 @@ class Cultivation:
         return Decimal()
 
     def is_class(self, cultivation_type: CultivationType) -> bool:
-        return self.cultivation_type == cultivation_type if cultivation_type else True
+        return self.cultivation_type is cultivation_type if cultivation_type else True
 
 
 class MainCrop(Cultivation):

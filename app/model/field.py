@@ -105,7 +105,7 @@ class Field:
         """
         demands = Balance("Demands")
         for cultivation in self.cultivations:
-            if cultivation.cultivation_type == CultivationType.catch_crop:
+            if cultivation.cultivation_type is CultivationType.catch_crop:
                 continue
             demands += cultivation.demand(
                 demand_option=self.demand_option,
@@ -128,7 +128,7 @@ class Field:
         if not (self.soil_sample and self.field_type in (FieldType.cropland, FieldType.grassland)):
             return reductions
         reductions.n += self.soil_sample.reduction_n(self.field_type)
-        if self.demand_option == DemandType.demand:
+        if self.demand_option is DemandType.demand:
             reductions.p2o5 += self.soil_sample.reduction_p2o5(self.field_type)
             reductions.k2o += self.soil_sample.reduction_k2o(self.field_type)
             reductions.mgo += self.soil_sample.reduction_mg(self.field_type)
@@ -160,10 +160,10 @@ class Field:
     def pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
         if (
             self.field_type != FieldType.cropland
-            or cultivation.cultivation_type == CultivationType.catch_crop
+            or cultivation.cultivation_type is CultivationType.catch_crop
         ):
             return Decimal()
-        if cultivation.cultivation_type == CultivationType.main_crop:
+        if cultivation.cultivation_type is CultivationType.main_crop:
             crop = self.previous_crop
         else:
             crop = self.main_crop
@@ -173,9 +173,9 @@ class Field:
             return Decimal()
 
     def n_redelivery(self) -> Decimal:
-        prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.org_spring)
+        prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
         fall_n_total = self.n_total(
-            measure=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
+            measure_type=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
         )
         n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
         return n_total
@@ -186,7 +186,7 @@ class Field:
     def n_total(
         self,
         *,
-        measure: MeasureType = None,
+        measure_type: MeasureType = None,
         cultivation_type: CultivationType = None,
         netto: bool = False,
     ) -> Decimal:
@@ -200,13 +200,13 @@ class Field:
         """
         n_total = Decimal()
         for fertilization in self.fertilizations:
-            n_total += fertilization.n_total(measure, cultivation_type, netto)
+            n_total += fertilization.n_total(measure_type, cultivation_type, netto)
         return n_total
 
     @property
     def main_crop(self) -> MainCrop:
         for cultivation in self.cultivations:
-            if cultivation.cultivation_type == CultivationType.main_crop:
+            if cultivation.cultivation_type is CultivationType.main_crop:
                 return cultivation
         return None
 
@@ -214,8 +214,8 @@ class Field:
     def second_crop(self) -> SecondCrop:
         for cultivation in self.cultivations:
             if (
-                cultivation.cultivation_type == CultivationType.second_main_crop
-                or cultivation.cultivation_type == CultivationType.second_crop
+                cultivation.cultivation_type is CultivationType.second_main_crop
+                or cultivation.cultivation_type is CultivationType.second_crop
             ):
                 return cultivation
         return None
@@ -223,7 +223,7 @@ class Field:
     @property
     def catch_crop(self) -> CatchCrop:
         for cultivation in self.cultivations:
-            if cultivation.cultivation_type == CultivationType.catch_crop:
+            if cultivation.cultivation_type is CultivationType.catch_crop:
                 return cultivation
         return None
 
