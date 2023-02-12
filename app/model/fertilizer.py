@@ -3,8 +3,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import app.database.model as db
-import app.model.guidelines as guidelines
 from app.database.types import FertClass, FertType, FieldType
+
+from . import guidelines
 
 
 def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:

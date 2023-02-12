@@ -4,9 +4,10 @@ from bisect import bisect_left, bisect_right
 from decimal import Decimal
 
 import app.database.model as db
-import app.model.guidelines as guidelines
 from app.database.types import FieldType, HumusType, SoilType
 from app.utils import round_to_nearest
+
+from . import guidelines
 
 
 def create_soil_sample(soil_samples: list[db.SoilSample], year) -> Soil | None:

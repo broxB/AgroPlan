@@ -3,7 +3,6 @@ from __future__ import annotations
 from decimal import Decimal
 
 import app.database.model as db
-import app.model.guidelines as guidelines
 from app.database.types import (
     CropType,
     CultivationType,
@@ -12,8 +11,10 @@ from app.database.types import (
     NminType,
     ResidueType,
 )
-from app.model.balance import Balance
-from app.model.crop import Crop
+
+from . import guidelines
+from .balance import Balance
+from .crop import Crop
 
 
 def create_cultivation(

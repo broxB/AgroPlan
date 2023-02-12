@@ -15,18 +15,19 @@ from app.database.types import (
     FieldType,
     MeasureType,
 )
-from app.model.balance import Balance
-from app.model.crop import Crop
-from app.model.cultivation import (
+
+from .balance import Balance
+from .crop import Crop
+from .cultivation import (
     CatchCrop,
     Cultivation,
     MainCrop,
     SecondCrop,
     create_cultivation,
 )
-from app.model.fertilization import Fertilization
-from app.model.fertilizer import create_fertilizer
-from app.model.soil import Soil, create_soil_sample
+from .fertilization import Fertilization
+from .fertilizer import create_fertilizer
+from .soil import Soil, create_soil_sample
 
 
 def create_field(base_field_id: int, year: int, first_year: bool = True) -> Field | None:

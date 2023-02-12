@@ -2,8 +2,9 @@ from decimal import Decimal
 
 import app.database.model as db
 from app.database.types import CultivationType, FieldType, MeasureType
-from app.model.crop import Crop
-from app.model.fertilizer import Fertilizer
+
+from .crop import Crop
+from .fertilizer import Fertilizer
 
 
 class Fertilization:

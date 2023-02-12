@@ -1,9 +1,10 @@
 from decimal import Decimal
 
 import app.database.model as db
-import app.model.guidelines as guidelines
 from app.database.types import CropClass, CropType
-from app.model.balance import Balance
+
+from . import guidelines
+from .balance import Balance
 
 
 class Crop:
