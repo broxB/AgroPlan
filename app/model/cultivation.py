@@ -117,10 +117,10 @@ class SecondCrop(Cultivation):
 
 
 class CatchCrop(Cultivation):
-    def demand(self, *args, negative_output, **kwargs) -> Balance:
+    def demand(self, *args, negative_output: bool = True, **kwargs) -> Balance:
         if negative_output:
-            return Balance(n=Decimal(-60))
-        return Balance(n=Decimal(60))
+            return Balance("Crop demand", n=Decimal(-60))
+        return Balance("Crop demand", n=Decimal(60))
 
     def pre_crop_effect(self) -> Decimal:
         pre_crop_effect: dict = self.guidelines.pre_crop_effect()
