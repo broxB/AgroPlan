@@ -78,6 +78,19 @@ class Field:
         self.fertilizations: list[Fertilization] = []
         self.field_prev_year: Field = self._field_prev_year()
 
+    def set_balance(self) -> None:
+        for cultivation in self.cultivations:
+            balances = [cultivation.demand(self.demand_option)]
+            if cultivation is not self.catch_crop:
+                balances.append(self.crop_reductions(cultivation))
+            if cultivation is self.main_crop:
+                balances.append(self.soil_reductions())
+                balances.append(self.redelivery())
+            cultivation.balances = balances
+            total = Balance("Total")
+            total += sum(balances)
+            cultivation.balances.append(total)
+
     def total_balance(self) -> Balance:
         """Summarize the balance of all crop demands, reductions and fertilizations."""
         saldo = Balance("Total")
