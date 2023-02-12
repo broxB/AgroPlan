@@ -145,14 +145,14 @@ class Field:
 
     def redelivery(self) -> Balance:
         """Summarize the nutrient values left in the soil from last period."""
-        reductions = Balance("Redelivery")
+        reductions = Balance("Redelivery (N + CaO)")
         if self.field_prev_year:
             reductions.cao += self.cao_saldo()
             reductions.n += self.n_redelivery()
         return reductions
 
     def crop_reductions(self, cultivation: Cultivation) -> Balance:
-        reductions = Balance("Crop reductions")
+        reductions = Balance("Crop reductions (Nmin + Pre-crop)")
         reductions.n += cultivation.reduction()
         reductions.n += self.pre_crop_effect(cultivation)
         return reductions
@@ -244,3 +244,6 @@ class Field:
         year = self.year - 1
         field = create_field(self.base_id, year, first_year=False)
         return field
+
+    def __repr__(self) -> str:
+        return f"<Field: {self.name} - {self.year}>"

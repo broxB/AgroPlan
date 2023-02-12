@@ -72,3 +72,6 @@ class Crop:
 
     def _nutrient_byproduct(self, crop_yield: Decimal, byp_nutrient: Decimal) -> Decimal:
         return self.byp_ratio * byp_nutrient * crop_yield
+
+    def __repr__(self) -> str:
+        return f"<Crop: {self.name}>"

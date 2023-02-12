@@ -47,3 +47,6 @@ class Fertilization:
 
     def is_measure(self, measure: MeasureType) -> bool:
         return self.measure == measure if measure else True
+
+    def __repr__(self) -> str:
+        return f"<Fertilization: {self.cultivation_type.name}>"

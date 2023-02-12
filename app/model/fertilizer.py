@@ -62,6 +62,9 @@ class Organic(Fertilizer):
     def n_verf(self, field_type: FieldType) -> Decimal:
         return max(self.n * self.factor(field_type), self.nh4)
 
+    def __repr__(self) -> str:
+        return f"<Org fertilizer: {self.name}>"
+
 
 class Mineral(Fertilizer):
     def n_total(self, *arg, **kwargs) -> Decimal:
@@ -69,3 +72,6 @@ class Mineral(Fertilizer):
 
     def n_verf(self, *arg, **kwargs) -> Decimal:
         return max(self.n, self.nh4)
+
+    def __repr__(self) -> str:
+        return f"<Min fertilizer: {self.name}>"

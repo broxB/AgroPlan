@@ -103,10 +103,16 @@ class MainCrop(Cultivation):
     def reduction(self) -> Decimal:
         return self.reduction_nmin() + self.legume_delivery()
 
+    def __repr__(self) -> str:
+        return f"<Main crop: {self.crop.name}>"
+
 
 class SecondCrop(Cultivation):
     def reduction(self) -> Decimal:
         return self.legume_delivery()
+
+    def __repr__(self) -> str:
+        return f"<Second crop: {self.crop.name}>"
 
 
 class CatchCrop(Cultivation):
@@ -118,3 +124,6 @@ class CatchCrop(Cultivation):
     def pre_crop_effect(self) -> Decimal:
         pre_crop_effect: dict = self.guidelines.pre_crop_effect()
         return Decimal(pre_crop_effect[self.crop_type.value][self.residues.value])
+
+    def __repr__(self) -> str:
+        return f"<Catch crop: {self.crop.name}>"
