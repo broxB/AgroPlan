@@ -15,6 +15,7 @@ from app.database.types import (
     FieldType,
     MeasureType,
 )
+from app.model.balance import Balance
 from app.model.crop import Crop
 from app.model.cultivation import (
     CatchCrop,
@@ -76,102 +77,84 @@ class Field:
         self.fertilizations: list[Fertilization] = []
         self.field_prev_year: Field = self._field_prev_year()
 
-    def total_saldo(self) -> list[Decimal]:
-        saldo = zip(self.sum_demands(), self.sum_reductions(), self.sum_fertilizations())
-        return [sum(num) for num in saldo]
+    def total_balance(self) -> Balance:
+        """Summarize the balance of all crop demands, reductions and fertilizations."""
+        saldo = Balance("Total")
+        saldo += self.sum_demands() + self.sum_reductions() + self.sum_fertilizations()
+        return saldo
 
-    def n_total(
-        self,
-        *,
-        measure: MeasureType = None,
-        cultivation_type: CultivationType = None,
-        netto: bool = False,
-    ) -> Decimal:
-        """Summarizes the nitrogen values of all fertilizations specified.
+    def sum_fertilizations(self, fert_class: FertClass = None) -> Balance:
+        """
+        Summarize the balance of all fertilizations or only of a specific `FertClass`.
 
         Args:
-            measure (MeasureType, optional): MeasureType that should be counted. Defaults to None.
-            crop_class (CultivationType, optional): CultivationType that should be counted. Defaults to None.
-            netto (bool, optional): If storage loss should be applied. Defaults to False.
-
-        Returns:
-            Decimal: Sum for nitrogen of all fertilizations.
+            `fert_class`: Specify a `FertClass` to summarize.
         """
-        n_total = Decimal()
-        for fertilization in self.fertilizations:
-            n_total += fertilization.n_total(measure, cultivation_type, netto)
-        return n_total
-
-    def sum_fertilizations(self, fert_class: FertClass = None) -> list[Decimal]:
-        nutrients = []
+        nutrients = Balance("Fertilizations")
         for fertilization in self.fertilizations:
             if fertilization.fertilizer.is_class(fert_class):
-                nutrients.append(fertilization.nutrients(self.field_type))
-        if not nutrients:
-            nutrients.append([Decimal()] * 6)
-        return [sum(nutrient) for nutrient in zip(*nutrients)]
+                nutrients += Balance("nutrients", *fertilization.nutrients(self.field_type))
+        return nutrients
 
-    def sum_demands(self, negative_output: bool = True) -> list[Decimal]:
-        demands = []
+    def sum_demands(self, negative_output: bool = True) -> Balance:
+        """
+        Summarize the balance of all crop demands.
+
+        Args:
+            `negative_output`: Specify if demand should be output as negative digits.
+        """
+        demands = Balance("Demands")
         for cultivation in self.cultivations:
             if cultivation.cultivation_type == CultivationType.catch_crop:
                 continue
-            demands.append(
-                cultivation.demand(
-                    demand_option=self.demand_option,
-                    negative_output=negative_output,
-                )
+            demands += cultivation.demand(
+                demand_option=self.demand_option,
+                negative_output=negative_output,
             )
-        if not demands:
-            demands.append([Decimal()] * 6)
-        return [sum(demand) for demand in zip(*demands)]
+        return demands
 
-    def sum_reductions(self) -> list[Decimal]:
-        reductions = []
-        reductions.append(self.soil_reductions(self.soil_sample))
-        reductions.append(self.redelivery())
+    def sum_reductions(self) -> Balance:
+        """Summarize the balance of all reductions from soil, previous crops and fertilizations."""
+        reductions = Balance("Reductions")
+        reductions += self.soil_reductions()
+        reductions += self.redelivery()
         for cultivation in self.cultivations:
-            reductions.append(self.crop_reductions(cultivation))
-        return [sum(reduction) for reduction in zip(*reductions)]
+            reductions += self.crop_reductions(cultivation)
+        return reductions
 
-    def soil_reductions(self, soil: Soil) -> list[Decimal]:
-        reductions = [Decimal()] * 6
-        if not (soil and self.field_type in (FieldType.cropland, FieldType.grassland)):
+    def soil_reductions(self) -> Balance:
+        """Summarize all reductions that are related to the soil composition and values."""
+        reductions = Balance("Soil reductions")
+        if not (self.soil_sample and self.field_type in (FieldType.cropland, FieldType.grassland)):
             return reductions
-        reductions[0] += soil.reduction_n(self.field_type)
+        reductions.n += self.soil_sample.reduction_n(self.field_type)
         if self.demand_option == DemandType.demand:
-            for i, reduction in enumerate(
-                (
-                    soil.reduction_p2o5(self.field_type),
-                    soil.reduction_k2o(self.field_type),
-                    soil.reduction_mg(self.field_type),
-                ),
-                start=1,
-            ):
-                reductions[i] += reduction
+            reductions.p2o5 += self.soil_sample.reduction_p2o5(self.field_type)
+            reductions.k2o += self.soil_sample.reduction_k2o(self.field_type)
+            reductions.mgo += self.soil_sample.reduction_mg(self.field_type)
         if self.main_crop:
-            reductions[4] += soil.reduction_s(
+            reductions.s += self.soil_sample.reduction_s(
                 self.n_total(cultivation_type=CultivationType.main_crop),
                 self.main_crop.crop.s_demand,
             )
-        if soil.year + 3 < self.year:
-            reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
+        if self.soil_sample.year + 3 < self.year:
+            reductions.cao += self.soil_sample.reduction_cao(self.field_type, preservation=True)
         else:
-            reductions[5] += soil.reduction_cao(self.field_type)
+            reductions.cao += self.soil_sample.reduction_cao(self.field_type)
         return reductions
 
-    def redelivery(self) -> list[Decimal]:
-        """Sum the nutrient values left in the soil from last period."""
-        reductions = [Decimal()] * 6
+    def redelivery(self) -> Balance:
+        """Summarize the nutrient values left in the soil from last period."""
+        reductions = Balance("Redelivery")
         if self.field_prev_year:
-            reductions[5] += self.cao_saldo()
-            reductions[0] += self.n_redelivery()
+            reductions.cao += self.cao_saldo()
+            reductions.n += self.n_redelivery()
         return reductions
 
-    def crop_reductions(self, cultivation: Cultivation) -> list[Decimal]:
-        reductions = [Decimal()] * 6
-        reductions[0] += cultivation.reduction()
-        reductions[0] += self.pre_crop_effect(cultivation)
+    def crop_reductions(self, cultivation: Cultivation) -> Balance:
+        reductions = Balance("Crop reductions")
+        reductions.n += cultivation.reduction()
+        reductions.n += self.pre_crop_effect(cultivation)
         return reductions
 
     def pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
@@ -199,6 +182,26 @@ class Field:
 
     def cao_saldo(self) -> Decimal:
         return self.field_prev_year.saldo.cao
+
+    def n_total(
+        self,
+        *,
+        measure: MeasureType = None,
+        cultivation_type: CultivationType = None,
+        netto: bool = False,
+    ) -> Decimal:
+        """
+        Summarizes the nitrogen values of all fertilizations specified.
+
+        Args:
+            measure (MeasureType, optional): MeasureType that should be counted. Defaults to None.
+            crop_class (CultivationType, optional): CultivationType that should be counted. Defaults to None.
+            netto (bool, optional): If storage loss should be applied. Defaults to False.
+        """
+        n_total = Decimal()
+        for fertilization in self.fertilizations:
+            n_total += fertilization.n_total(measure, cultivation_type, netto)
+        return n_total
 
     @property
     def main_crop(self) -> MainCrop:

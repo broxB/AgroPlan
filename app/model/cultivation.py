@@ -12,6 +12,7 @@ from app.database.types import (
     NminType,
     ResidueType,
 )
+from app.model.balance import Balance
 from app.model.crop import Crop
 
 
@@ -45,20 +46,21 @@ class Cultivation:
         self.residues: ResidueType = Cultivation.residues
         self.guidelines = guidelines
 
-    def demand(self, demand_option, negative_output: bool = True) -> list[Decimal]:
-        demands = []
-        demands.append(
-            self.crop.demand_crop(
-                crop_yield=self.crop_yield,
-                crop_protein=self.crop_protein,
-            )
+    def demand(self, demand_option, negative_output: bool = True) -> Balance:
+        crop_demand = self.crop.demand_crop(
+            crop_yield=self.crop_yield,
+            crop_protein=self.crop_protein,
         )
         if demand_option == DemandType.demand or self.residues == ResidueType.main_removed:
-            demands.append(self.crop.demand_byproduct(self.crop_yield))
-        demands = [sum(demand) for demand in zip(*demands)]
+            byp_demand = self.crop.demand_byproduct(self.crop_yield)
+        else:
+            byp_demand = Balance()
+        demand = Balance("Crop demand")
         if negative_output:
-            demands = [(demand * -1) for demand in demands]
-        return demands
+            demand -= crop_demand + byp_demand
+        else:
+            demand += crop_demand + byp_demand
+        return demand
 
     def pre_crop_effect(self) -> Decimal:
         pre_crop_effect: dict = self.guidelines.pre_crop_effect()
@@ -98,7 +100,7 @@ class MainCrop(Cultivation):
             case NminType.nmin_90:
                 return Decimal(self.nmin_30 + self.nmin_60) + Decimal(self.nmin_90) / 2
 
-    def reduction(self) -> list[Decimal]:
+    def reduction(self) -> Decimal:
         return self.reduction_nmin() + self.legume_delivery()
 
 
@@ -108,8 +110,10 @@ class SecondCrop(Cultivation):
 
 
 class CatchCrop(Cultivation):
-    def demand(self, *args, **kwargs) -> list[Decimal]:
-        return [Decimal("-60"), *[Decimal()] * 5]
+    def demand(self, *args, negative_output, **kwargs) -> Balance:
+        if negative_output:
+            return Balance(n=Decimal(-60))
+        return Balance(n=Decimal(60))
 
     def pre_crop_effect(self) -> Decimal:
         pre_crop_effect: dict = self.guidelines.pre_crop_effect()

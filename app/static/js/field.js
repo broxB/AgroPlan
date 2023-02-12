@@ -134,14 +134,16 @@ async function fetchSaldo() {
   const data = await fetch(room_url).then((response) => response.json());
   for (let elem in data) {
     var element = document.getElementById(elem);
-    var value = Number(data[elem]).toFixed(0);
-    element.textContent = value;
-    if (value > 0) {
-      element.classList.add("text-danger");
-    } else if (value < 0) {
-      element.classList.add("text-primary");
-    } else {
-      element.classList.add("text-success");
+    if (element) {
+      var value = Number(data[elem]).toFixed(0);
+      element.textContent = value;
+      if (value > 0) {
+        element.classList.add("text-danger");
+      } else if (value < 0) {
+        element.classList.add("text-primary");
+      } else {
+        element.classList.add("text-success");
+      }
     }
   }
 }

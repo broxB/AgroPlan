@@ -3,6 +3,7 @@ from decimal import Decimal
 import app.database.model as db
 import app.model.guidelines as guidelines
 from app.database.types import CropClass, CropType
+from app.model.balance import Balance
 
 
 class Crop:
@@ -36,26 +37,20 @@ class Crop:
         self,
         crop_yield: Decimal,
         crop_protein: Decimal,
-    ) -> list[Decimal]:
-        demands = [
-            self._n_demand(crop_yield, crop_protein),
-            self._nutrient(crop_yield, self.p2o5),
-            self._nutrient(crop_yield, self.k2o),
-            self._nutrient(crop_yield, self.mgo),
-            self.s_demand,
-            Decimal(),  # Kalk
-        ]
+    ) -> Balance:
+        demands = Balance()
+        demands.n = self._n_demand(crop_yield, crop_protein)
+        demands.p2o5 = self._nutrient(crop_yield, self.p2o5)
+        demands.k2o = self._nutrient(crop_yield, self.k2o)
+        demands.mgo = self._nutrient(crop_yield, self.mgo)
+        demands.s = self.s_demand
         return demands
 
-    def demand_byproduct(self, crop_yield: Decimal) -> list[Decimal]:
-        demands = [
-            Decimal(),  # Stickstoff
-            self._nutrient_byproduct(crop_yield, self.byp_p2o5),
-            self._nutrient_byproduct(crop_yield, self.byp_k2o),
-            self._nutrient_byproduct(crop_yield, self.byp_mgo),
-            Decimal(),  # Schwefel
-            Decimal(),  # Kalk
-        ]
+    def demand_byproduct(self, crop_yield: Decimal) -> Balance:
+        demands = Balance()
+        demands.p2o5 = self._nutrient_byproduct(crop_yield, self.byp_p2o5)
+        demands.k2o = self._nutrient_byproduct(crop_yield, self.byp_k2o)
+        demands.mgo = self._nutrient_byproduct(crop_yield, self.byp_mgo)
         return demands
 
     @property

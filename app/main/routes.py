@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from datetime import datetime
 
 from flask import (
@@ -129,8 +130,7 @@ def field(base_field_id):
 @login_required
 def field_data(base_field_id):
     field: Field = create_field(base_field_id, current_user.year)
-    elements = ["n", "p2o5", "k2o", "mgo", "s", "cao"]
-    return jsonify(dict(zip(elements, field.total_saldo())))
+    return asdict(field.total_balance())
 
 
 @bp.route("/modal", methods=["GET"])
