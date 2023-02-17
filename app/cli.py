@@ -19,7 +19,8 @@ def register(app):
     def init(path: str):
         """Make excel json export compatible with database seeding"""
         try:
-            new_dict: dict = json.load(io.open(path, "r", encoding="utf-8-sig"))
+            with io.open(path, "r", encoding="utf-8-sig") as f:
+                new_dict: dict = json.load(f)
             reversed_dict = {k: new_dict[k] for k in list(reversed(new_dict.keys()))}
             labeled_dict = renew_dict(reversed_dict)
             save_json(labeled_dict, "data/schläge_reversed.json")
