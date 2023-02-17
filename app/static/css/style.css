@@ -5,10 +5,10 @@ html {
 
 :root {
   --content-height: calc(100vh - 57px);
-  --green: #198754;
+  --green: #367d46;
+  --green-50: #4db364;
+  --green-40: #3d8f50;
   --teal: #20c997;
-  --green-40: #24c278;
-  --green-50: #20ac6b;
 }
 
 main {
@@ -68,6 +68,7 @@ main {
 }
 
 /* table styling */
+
 .table-action {
   white-space: nowrap;
   width: 1em;
@@ -76,6 +77,40 @@ main {
 
 .table > tbody {
   border-top: 0px solid currentColor !important;
+}
+
+/* cultivation table styling */
+.table-cultivation td {
+  width: 9%;
+}
+
+.table-cultivation thead th {
+  border-bottom: 1px var(--bs-gray-600) solid;
+}
+
+.table-cultivation th:first-child {
+  border-right: 1px var(--bs-gray-600) solid;
+}
+
+.table-cultivation tbody tr:last-child {
+  border-top: tr black double;
+  border-bottom: 1px black solid;
+}
+
+.table-cultivation {
+  border-right: 1px black solid;
+  border-left: 1px black solid;
+  border-top: 1px black solid;
+}
+
+/* .table-cultivation td:nth-child(n+2):nth-child(-n+7),
+.table-cultivation th:nth-child(n+2):nth-child(-n+7) {
+  text-align: end;
+} */
+
+.table-cultivation td:nth-last-child(-n + 6),
+.table-cultivation th:nth-last-child(-n + 6) {
+  text-align: end;
 }
 
 /* .table>:not(:first-child) {
@@ -116,11 +151,11 @@ tr:hover .btn-edit {
 /* field-nav styling */
 
 #field-nav .nav-link.active {
-  background-color: var(--green-40);
+  background-color: var(--green-50);
 }
 
 #field-nav .nav-link:hover:not(.active) {
-  background-color: var(--green-50);
+  background-color: var(--green-40);
 }
 
 /* toast styling */
@@ -136,7 +171,7 @@ tr:hover .btn-edit {
 /* navbar styling */
 
 .navbar {
-  background-color: var(--bs-green);
+  background-color: var(--green);
   border-bottom: 1px solid var(--bs-dark);
 }
 
@@ -227,7 +262,7 @@ tr:hover .btn-edit {
 }
 
 #sidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--bs-green);
+  background: var(--green);
 }
 
 ::-webkit-scrollbar {
@@ -241,7 +276,7 @@ tr:hover .btn-edit {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--bs-green);
+  background: var(--green);
 }
 
 /* media queries */
@@ -253,5 +288,17 @@ tr:hover .btn-edit {
   ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
+  }
+}
+
+@media (max-width: 575px) {
+  :root {
+    --green: #198754;
+    --green-40: #24c278;
+    --green-50: #20ac6b;
+  }
+
+  .table {
+    font-size: 0.8rem;
   }
 }

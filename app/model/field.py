@@ -82,10 +82,12 @@ class Field:
         for cultivation in self.cultivations:
             balances = [cultivation.demand(self.demand_option)]
             if cultivation is not self.catch_crop:
-                balances.append(self.crop_reductions(cultivation))
+                balances.append(Balance("Nmin", n=cultivation.reduction()))
+                balances.append(Balance("Pre-crop effect", n=self.pre_crop_effect(cultivation)))
             if cultivation is self.main_crop:
                 balances.append(self.soil_reductions())
-                balances.append(self.redelivery())
+                balances.append(Balance("Organic redelivery", n=self.n_redelivery()))
+                balances.append(Balance("Lime balance", cao=self.cao_saldo()))
             cultivation.balances = balances
             total = Balance("Total")
             total += sum(balances)
@@ -159,14 +161,14 @@ class Field:
 
     def redelivery(self) -> Balance:
         """Summarize the nutrient values left in the soil from last period."""
-        reductions = Balance("Redelivery (N + CaO)")
+        reductions = Balance("Redelivery")
         if self.field_prev_year:
             reductions.cao += self.cao_saldo()
             reductions.n += self.n_redelivery()
         return reductions
 
     def crop_reductions(self, cultivation: Cultivation) -> Balance:
-        reductions = Balance("Crop reductions (Nmin + Pre-crop)")
+        reductions = Balance("Crop reductions")
         reductions.n += cultivation.reduction()
         reductions.n += self.pre_crop_effect(cultivation)
         return reductions

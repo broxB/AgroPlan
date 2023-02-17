@@ -63,7 +63,7 @@
          role="tabpanel"
          aria-labelledby="cultivation-tab">
       <div class="row">
-        <div class="col-xl-9 table-responsive">
+        <div class="col-xl-7 table-responsive">
           <table class="table table-sm table-hover caption-top align-middle">
             <caption>List of crops</caption>
             <thead class="no-border-top">
@@ -101,7 +101,11 @@
             </tbody>
           </table>
         </div>
-        {# <div class="col-sm"><p>Random none specific text</p></div> #}
+      </div>
+      <div class="col-xxl-6 col-xl-7 col-lg-8 col-md-10 table-responsive">
+        {% for cultivation in field.cultivations %}
+          {% include "_crop.html" %}
+        {% endfor %}
       </div>
     </div>
     <!-- fert data -->
@@ -138,9 +142,7 @@
                 {% for fert in field.fertilizations if fert.fertilizer.fert_class.name == "organic" %}
                   <tr data-id="{{ fert.id }}">
                     <th scope="row">{{ loop.index }}</th>
-                    <td>
-                      {{ fert.cultivation.crop.name }}
-                    </td>
+                    <td>{{ fert.cultivation.crop.name }}</td>
                     <td>
                       {% if fert.cultivation.crop.feedable %}{{ fert.cut_timing.value }}{% endif %}
                     </td>

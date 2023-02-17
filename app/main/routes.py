@@ -1,24 +1,14 @@
 from dataclasses import asdict
-from datetime import datetime
 
-from flask import (
-    current_app,
-    flash,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
+from flask import flash, g, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from loguru import logger
 
-from app.database.model import BaseField, User
+from app.database.model import BaseField, Field, User
 from app.extensions import db, login
 from app.main import bp
 from app.main.forms import EditProfileForm, YearForm, create_edit_form
-from app.model import Field, create_field
+from app.model import create_field
 from app.model.forms import create_form
 
 
@@ -117,19 +107,31 @@ def field_overview():
 def field(base_field_id):
     # if request.method == "GET":
     base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
+    # field_data = (
+    #     Field.query.join(BaseField)
+    #     .filter(BaseField.id == base_field_id, Field.year == current_user.year)
+    #     .first_or_404()
+    # )
     fields = current_user.get_fields(year=current_user.year)
+    field = create_field(base_field_id, current_user.year)
+    field.set_balance()
     form = YearForm()
     # elif request.method == "POST":
     # pass
     return render_template(
-        "field.html", title=base_field.name, base_field=base_field, fields=fields, form=form
+        "field.html",
+        title=field.name,
+        base_field=base_field,
+        fields=fields,
+        form=form,
+        field=field,
     )
 
 
 @bp.route("/field/<base_field_id>/data", methods=["GET"])
 @login_required
 def field_data(base_field_id):
-    field: Field = create_field(base_field_id, current_user.year)
+    field = create_field(base_field_id, current_user.year)
     return asdict(field.total_balance())
 
 
