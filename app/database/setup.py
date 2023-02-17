@@ -88,7 +88,14 @@ def seed_database(data: list[dict]) -> None:
                 return CropType.field_grass
             case "Kleegras 1 Schnitt":
                 return CropType.clover_grass
-            case ("Wiese 3 Schnitte" | "Weide int. (4-5 Nutz.)" | "Mähweide intensiv 20%"):
+            case (
+                "Wiese 3 Schnitte"
+                | "Weide int. (4-5 Nutz.)"
+                | "Mähweide intensiv 20%"
+                | "Mähweide intensiv 60%"
+                | "Mähweide extensiv 20%"
+                | "Mähweide mittle 40%"
+            ):
                 return CropType.permanent_grassland
             case ("Nichtleguminosen" | "Senf (GP)"):
                 return CropType.catch_non_legume
@@ -100,7 +107,7 @@ def seed_database(data: list[dict]) -> None:
                 raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
     def get_crop_class(crop_class: str) -> CropClass:
-        if crop_class == "Zweitfrucht":
+        if crop_class == "Zweitfrucht" or crop_class is None:
             return CropClass.main_crop
         return CropClass(crop_class)
 
@@ -257,7 +264,8 @@ def seed_database(data: list[dict]) -> None:
                 if crop is None:
                     try:
                         crop_dict = crops_dict[cult.name]
-                    except:
+                    except KeyError:
+                        logger.warning(f"{cult.name} nicht vorhanden")
                         crop_dict = {}
                     crop = Crop(
                         user_id=user.id,
