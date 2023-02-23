@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from types import NoneType
 
 from flask_login import current_user
 from loguru import logger
@@ -162,9 +163,8 @@ class Field:
     def redelivery(self) -> Balance:
         """Summarize the nutrient values left in the soil from last period."""
         reductions = Balance("Redelivery")
-        if self.field_prev_year:
-            reductions.cao += self.cao_saldo()
-            reductions.n += self.n_redelivery()
+        reductions.cao += self.cao_saldo()
+        reductions.n += self.n_redelivery()
         return reductions
 
     def crop_reductions(self, cultivation: Cultivation) -> Balance:
@@ -189,7 +189,10 @@ class Field:
             return Decimal()
 
     def n_redelivery(self) -> Decimal:
-        prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
+        try:
+            prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
+        except AttributeError:
+            prev_spring_n_total = Decimal()
         fall_n_total = self.n_total(
             measure_type=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
         )
@@ -197,7 +200,10 @@ class Field:
         return n_total
 
     def cao_saldo(self) -> Decimal:
-        return self.field_prev_year.saldo.cao
+        try:
+            return self.field_prev_year.saldo.cao
+        except AttributeError:
+            return Decimal()
 
     def n_total(
         self,
