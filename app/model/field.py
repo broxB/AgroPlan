@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from types import NoneType
 
 from flask_login import current_user
 from loguru import logger
@@ -17,7 +16,7 @@ from app.database.types import (
     MeasureType,
 )
 
-from .balance import Balance
+from .balance import Balance, create_modifier
 from .crop import Crop
 from .cultivation import (
     CatchCrop,
@@ -60,6 +59,11 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
         )
         field_data.fertilizations.append(fertilization_data)
 
+    for modifier in field.modifiers:
+        field_data.modifiers.append(
+            create_modifier(modifier.description, modifier.modification, modifier.amount)
+        )
+
     return field_data
 
 
@@ -77,9 +81,11 @@ class Field:
         self.soil_sample: Soil = None
         self.cultivations: list[Cultivation] = []
         self.fertilizations: list[Fertilization] = []
+        self.modifiers: list[Balance] = []
         self.field_prev_year: Field = self._field_prev_year()
 
     def set_balance(self) -> None:
+        """Adds balances of demands and reductions to available cultivations."""
         for cultivation in self.cultivations:
             balances = [cultivation.demand(self.demand_option)]
             if cultivation is not self.catch_crop:
@@ -89,20 +95,27 @@ class Field:
                 balances.append(self.soil_reductions())
                 balances.append(Balance("Organic redelivery", n=self.n_redelivery()))
                 balances.append(Balance("Lime balance", cao=self.cao_saldo()))
+                for modifier in self.modifiers:
+                    balances.append(modifier)
             cultivation.balances = balances
             total = Balance("Total")
             total += sum(balances)
             cultivation.balances.append(total)
 
     def total_balance(self) -> Balance:
-        """Summarize the balance of all crop demands, reductions and fertilizations."""
+        """Summarize the balance of all crop demands, reductions, fertilizations and modifiers."""
         saldo = Balance("Total")
-        saldo += self.sum_demands() + self.sum_reductions() + self.sum_fertilizations()
+        saldo += (
+            self.sum_demands()
+            + self.sum_reductions()
+            + self.sum_fertilizations()
+            + self.sum_modifiers()
+        )
         return saldo
 
     def sum_fertilizations(self, fert_class: FertClass = None) -> Balance:
         """
-        Summarize the balance of all fertilizations or only of a specific `FertClass`.
+        Summarize the balance of all `fertilizations` or only of a specific `FertClass`.
 
         Args:
             `fert_class`: Specify a `FertClass` to summarize.
@@ -115,7 +128,7 @@ class Field:
 
     def sum_demands(self, negative_output: bool = True) -> Balance:
         """
-        Summarize the balance of all crop demands.
+        Summarize the balance of all crop `demands`.
 
         Args:
             `negative_output`: Specify if demand should be output as negative digits.
@@ -131,13 +144,20 @@ class Field:
         return demands
 
     def sum_reductions(self) -> Balance:
-        """Summarize the balance of all reductions from soil, previous crops and fertilizations."""
+        """Summarize the balance of all `reductions` from soil, previous crops and fertilizations."""
         reductions = Balance("Reductions")
         reductions += self.soil_reductions()
         reductions += self.redelivery()
         for cultivation in self.cultivations:
             reductions += self.crop_reductions(cultivation)
         return reductions
+
+    def sum_modifiers(self) -> Balance:
+        """Summarize all available `modifiers`."""
+        modifiers = Balance("Modifiers")
+        for modifier in self.modifiers:
+            modifiers += modifier
+        return modifiers
 
     def soil_reductions(self) -> Balance:
         """Summarize all reductions that are related to the soil composition and values."""

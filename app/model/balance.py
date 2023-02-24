@@ -1,5 +1,19 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from decimal import Decimal
+
+from app.database.types import NutrientType
+
+
+def create_modifier(name: str, value: str | NutrientType, amount: int) -> Balance:
+    """Create balance class from modifier values"""
+
+    balance = Balance(title=name)
+    if isinstance(value, NutrientType):
+        value = value.name
+    setattr(balance, value, amount)
+    return balance
 
 
 @dataclass
