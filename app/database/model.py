@@ -30,6 +30,7 @@ from app.database.types import (
     LegumeType,
     MeasureType,
     NminType,
+    NutrientType,
     ResidueType,
     SoilType,
     UnitType,
@@ -46,6 +47,7 @@ __all__ = [
     "Fertilization",
     "Fertilizer",
     "FertilizerUsage",
+    "Modifier",
     "SoilSample",
     "Saldo",
     "User",
@@ -189,6 +191,7 @@ class Field(Base):
     )
     soil_samples = relationship("SoilSample", secondary=field_soil_sample, back_populates="fields")
     saldo = relationship("Saldo", back_populates="field", uselist=False)
+    modifiers = relationship("Modifier", back_populates="field")
 
     def __repr__(self):
         return (
@@ -379,3 +382,15 @@ class Saldo(Base):
     n_total = Column("nges", Float(asdecimal=True, decimal_return_scale=2))
 
     field = relationship("Field", back_populates="saldo")
+
+
+class Modifier(Base):
+    __tablename__ = "modifier"
+
+    id = Column("modifier_id", Integer, primary_key=True)
+    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
+    description = Column("description", String)
+    modification = Column("modification", Enum(NutrientType))
+    amount = Column("amount", Integer)
+
+    field = relationship("Field", back_populates="modifiers")

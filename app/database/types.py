@@ -16,6 +16,7 @@ __all__ = [
     "NminType",
     "UnitType",
     "DemandType",
+    "NutrientType",
 ]
 
 
@@ -260,6 +261,18 @@ class NminType(enum.Enum):
     nmin_30 = "30cm"
     nmin_60 = "60cm"
     nmin_90 = "90cm"
+
+
+class NutrientType(enum.Enum):
+    """Six important nutrients for fruits and the soil"""
+
+    n = "N"
+    p2o5 = "P2O5"
+    k2o = "K2O"
+    mgo = "MgO"
+    sulphur = "S"
+    cao = "CaO"
+    nh4 = "NH4-N"
 
 
 def find_nmin_type(nmin: int) -> NminType:
