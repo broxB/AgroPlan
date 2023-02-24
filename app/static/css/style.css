@@ -93,7 +93,7 @@ main {
 }
 
 .table-cultivation tbody tr:last-child {
-  border-top: tr black double;
+  border-top: 3px black double;
   border-bottom: 1px black solid;
 }
 
@@ -103,19 +103,10 @@ main {
   border-top: 1px black solid;
 }
 
-/* .table-cultivation td:nth-child(n+2):nth-child(-n+7),
-.table-cultivation th:nth-child(n+2):nth-child(-n+7) {
-  text-align: end;
-} */
-
 .table-cultivation td:nth-last-child(-n + 6),
 .table-cultivation th:nth-last-child(-n + 6) {
   text-align: end;
 }
-
-/* .table>:not(:first-child) {
-  border-top: 1px solid var(--bs-gray-400);
-} */
 
 /* edit button hover  */
 .btn-edit {
