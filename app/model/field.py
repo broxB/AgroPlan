@@ -31,6 +31,17 @@ from .soil import Soil, create_soil_sample
 
 
 def create_field(base_field_id: int, year: int, first_year: bool = True) -> Field | None:
+    """Class Factory to create `field` from sqlalchemy database queries.
+
+    Args:
+        base_field_id (int): Id of the basefield to query from the database.
+        year (int): Year of field to query from the database.
+        first_year (bool, optional): Specify as `false` to stop recursively create previous years. Defaults to True.
+
+    Returns:
+        Field | None: Field class that contains all `cultivations` and `fertilizations` of the year and basefield.
+    """
+
     field = (
         FieldModel.query.join(BaseFieldModel)
         .filter(
@@ -68,6 +79,10 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
 
 
 class Field:
+    """
+    Field class contains all `cultivations` and `fertilizations` that happen on a basefield for a specific year.
+    """
+
     def __init__(self, Field: db.Field, first_year: bool = False):
         self.base_id: int = Field.base_id
         self.name: str = Field.base_field.name
@@ -90,11 +105,11 @@ class Field:
             balances = [cultivation.demand(self.demand_option)]
             if cultivation is not self.catch_crop:
                 balances.append(Balance("Nmin", n=cultivation.reduction()))
-                balances.append(Balance("Pre-crop effect", n=self.pre_crop_effect(cultivation)))
+                balances.append(Balance("Pre-crop effect", n=self._pre_crop_effect(cultivation)))
             if cultivation is self.main_crop:
                 balances.append(self.soil_reductions())
-                balances.append(Balance("Organic redelivery", n=self.n_redelivery()))
-                balances.append(Balance("Lime balance", cao=self.cao_saldo()))
+                balances.append(Balance("Organic redelivery", n=self._n_redelivery()))
+                balances.append(Balance("Lime balance", cao=self._cao_saldo()))
                 for modifier in self.modifiers:
                     balances.append(modifier)
             cultivation.balances = balances
@@ -131,7 +146,7 @@ class Field:
         Summarize the balance of all crop `demands`.
 
         Args:
-            `negative_output`: Specify if demand should be output as negative digits.
+            `negative_output`: Specify if demand should be output as negative values.
         """
         demands = Balance("Demands")
         for cultivation in self.cultivations:
@@ -183,47 +198,16 @@ class Field:
     def redelivery(self) -> Balance:
         """Summarize the nutrient values left in the soil from last period."""
         reductions = Balance("Redelivery")
-        reductions.cao += self.cao_saldo()
-        reductions.n += self.n_redelivery()
+        reductions.cao += self._cao_saldo()
+        reductions.n += self._n_redelivery()
         return reductions
 
     def crop_reductions(self, cultivation: Cultivation) -> Balance:
+        """Reductions in nutrient demand left from previous crops and made by the current crop."""
         reductions = Balance("Crop reductions")
         reductions.n += cultivation.reduction()
-        reductions.n += self.pre_crop_effect(cultivation)
+        reductions.n += self._pre_crop_effect(cultivation)
         return reductions
-
-    def pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
-        if (
-            self.field_type != FieldType.cropland
-            or cultivation.cultivation_type is CultivationType.catch_crop
-        ):
-            return Decimal()
-        if cultivation.cultivation_type is CultivationType.main_crop:
-            crop = self.previous_crop
-        else:
-            crop = self.main_crop
-        try:
-            return crop.pre_crop_effect()
-        except AttributeError:
-            return Decimal()
-
-    def n_redelivery(self) -> Decimal:
-        try:
-            prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
-        except AttributeError:
-            prev_spring_n_total = Decimal()
-        fall_n_total = self.n_total(
-            measure_type=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
-        )
-        n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
-        return n_total
-
-    def cao_saldo(self) -> Decimal:
-        try:
-            return self.field_prev_year.saldo.cao
-        except AttributeError:
-            return Decimal()
 
     def n_total(
         self,
@@ -244,6 +228,38 @@ class Field:
         for fertilization in self.fertilizations:
             n_total += fertilization.n_total(measure_type, cultivation_type, netto)
         return n_total
+
+    def _pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
+        if (
+            self.field_type != FieldType.cropland
+            or cultivation.cultivation_type is CultivationType.catch_crop
+        ):
+            return Decimal()
+        if cultivation.cultivation_type is CultivationType.main_crop:
+            crop = self.previous_crop
+        else:
+            crop = self.main_crop
+        try:
+            return crop.pre_crop_effect()
+        except AttributeError:
+            return Decimal()
+
+    def _n_redelivery(self) -> Decimal:
+        try:
+            prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
+        except AttributeError:
+            prev_spring_n_total = Decimal()
+        fall_n_total = self.n_total(
+            measure_type=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
+        )
+        n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
+        return n_total
+
+    def _cao_saldo(self) -> Decimal:
+        try:
+            return self.field_prev_year.saldo.cao
+        except AttributeError:
+            return Decimal()
 
     @property
     def main_crop(self) -> MainCrop:
