@@ -270,7 +270,7 @@ class NutrientType(enum.Enum):
     p2o5 = "P2O5"
     k2o = "K2O"
     mgo = "MgO"
-    sulphur = "S"
+    s = "S"
     cao = "CaO"
     nh4 = "NH4-N"
 
