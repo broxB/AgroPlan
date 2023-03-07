@@ -3,7 +3,14 @@
 {% block app_content %}
   <div class="align-left">
     {% for field in fields %}
-      {% include "_field.html" %}
+      <details>
+        <summary>
+          <b>{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.prefix, suffix=field.suffix, name=field.name) }}</b>
+        </summary>
+        {% set base_field = field %}
+        {% include "_field.html" %}
+      </details>
+      <br>
     {% endfor %}
   </div>
 {% endblock app_content %}
