@@ -430,3 +430,23 @@ action="" is what we want, from http://www.ietf.org/rfc/rfc2396.txt:
         {%- endfor %}
     </form>
 {%- endmacro %}
+
+{% macro render_accordion(title, target, style="", data_id="", collapsed=false)%}
+  <div class="accordion {{ style }}">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button {% if collapsed -%} collapsed{%- endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#{{ target }}"
+                {% if data_id -%} data-id="{{ data_id }}" {%- endif %}>
+          <strong>{{ title }}</strong>
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse {% if not collapsed -%} show{%- endif %}"
+           id="{{ target }}">
+        <div class="accordion-body pt-0">{{ caller() }}</div>
+      </div>
+    </div>
+  </div>
+{%- endmacro %}
