@@ -98,33 +98,45 @@ class Soil:
         if self.p2o5 is None:
             return ""
         p2o5_classes = self.guidelines.p2o5_classes()
-        values = p2o5_classes[field_type.value]
-        index = bisect_right(values, self.p2o5) - 1
-        return self._classes[index]
+        try:
+            values = p2o5_classes[field_type.value]
+            index = bisect_right(values, self.p2o5) - 1
+            return self._classes[index]
+        except KeyError:
+            return ""
 
     def class_k2o(self, field_type: FieldType) -> str:
         if self.k2o is None:
             return ""
         k2o_classes = self.guidelines.k2o_classes()
-        values = k2o_classes[field_type.value][self.soil_type.value][self.humus.value]
-        index = bisect_right(values, self.k2o) - 1
-        return self._classes[index]
+        try:
+            values = k2o_classes[field_type.value][self.soil_type.value][self.humus.value]
+            index = bisect_right(values, self.k2o) - 1
+            return self._classes[index]
+        except KeyError:
+            return ""
 
     def class_mg(self, field_type: FieldType) -> str:
         if self.mg is None:
             return ""
         mgo_classes = self.guidelines.mg_classes()
-        values = mgo_classes[field_type.value][self.soil_type.value][self.humus.value]
-        index = bisect_right(values, self.mg) - 1
-        return self._classes[index]
+        try:
+            values = mgo_classes[field_type.value][self.soil_type.value][self.humus.value]
+            index = bisect_right(values, self.mg) - 1
+            return self._classes[index]
+        except KeyError:
+            return ""
 
     def class_ph(self, field_type: FieldType) -> str:
         if self.ph is None:
             return ""
         ph_classes = self.guidelines.ph_classes()
-        values = ph_classes[field_type.value][self.soil_type.value][self.humus.value]
-        index = bisect_right(values, self.ph) - 1
-        return self._classes[index]
+        try:
+            values = ph_classes[field_type.value][self.soil_type.value][self.humus.value]
+            index = bisect_right(values, self.ph) - 1
+            return self._classes[index]
+        except KeyError:
+            return ""
 
     def optimal_ph(self, field_type: FieldType) -> Decimal:
         ph_classes = self.guidelines.ph_classes()
