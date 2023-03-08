@@ -8,15 +8,15 @@ from app.model.soil import Soil, create_soil_sample
 
 
 def test_create_soil_sample(field: Field, soil_sample: SoilSample):
-    soil = create_soil_sample(field.soil_samples, field.year)
+    soil = create_soil_sample(field.soil_samples, field.field_type, field.year)
     assert isinstance(soil, Soil)
-    soil = create_soil_sample(list(), field.year)
+    soil = create_soil_sample(list(), field.field_type, field.year)
     assert soil is None
 
 
 @pytest.fixture
-def soil(soil_sample: SoilSample) -> Soil:
-    return Soil(soil_sample)
+def soil(soil_sample: SoilSample, field: Field) -> Soil:
+    return Soil(soil_sample, field.field_type)
 
 
 @pytest.mark.parametrize(
@@ -24,7 +24,8 @@ def soil(soil_sample: SoilSample) -> Soil:
     [(FieldType.cropland, 20), (FieldType.grassland, 10)],
 )
 def test_reduction_n(soil: Soil, field_type, expected):
-    assert soil.reduction_n(field_type) == expected
+    soil.field_type = field_type
+    assert soil.reduction_n() == expected
 
 
 @pytest.mark.parametrize(
@@ -32,12 +33,13 @@ def test_reduction_n(soil: Soil, field_type, expected):
     [(FieldType.cropland, -69), (FieldType.grassland, -46)],
 )
 def test_reduction_p2o5(soil: Soil, field_type, expected):
-    assert soil.reduction_p2o5(field_type) == expected
+    soil.field_type = field_type
+    assert soil.reduction_p2o5() == expected
 
 
 def test_reduction_p2o5_without_parametrize(soil: Soil):
     soil.p2o5 = None
-    assert soil.reduction_p2o5(FieldType.cropland) == Decimal()
+    assert soil.reduction_p2o5() == Decimal()
 
 
 @pytest.mark.parametrize(
@@ -45,12 +47,13 @@ def test_reduction_p2o5_without_parametrize(soil: Soil):
     [(FieldType.cropland, -72), (FieldType.grassland, -48)],
 )
 def test_reduction_k2o(soil: Soil, field_type, expected):
-    assert soil.reduction_k2o(field_type) == expected
+    soil.field_type = field_type
+    assert soil.reduction_k2o() == expected
 
 
 def test_reduction_k2o_without_parametrize(soil: Soil):
     soil.k2o = None
-    assert soil.reduction_k2o(FieldType.cropland) == Decimal()
+    assert soil.reduction_k2o() == Decimal()
 
 
 @pytest.mark.parametrize(
@@ -58,12 +61,13 @@ def test_reduction_k2o_without_parametrize(soil: Soil):
     [(FieldType.cropland, -50), (FieldType.grassland, -50)],
 )
 def test_reduction_mg(soil: Soil, field_type, expected):
-    assert soil.reduction_mg(field_type) == expected
+    soil.field_type = field_type
+    assert soil.reduction_mg() == expected
 
 
 def test_reduction_mg_without_parametrize(soil: Soil):
     soil.mg = None
-    assert soil.reduction_mg(FieldType.cropland) == Decimal()
+    assert soil.reduction_mg() == Decimal()
 
 
 @pytest.mark.parametrize(
@@ -71,15 +75,16 @@ def test_reduction_mg_without_parametrize(soil: Soil):
     [(FieldType.cropland, -1250), (FieldType.grassland, -750)],
 )
 def test_reduction_cao(soil: Soil, field_type, expected):
-    assert soil.reduction_cao(field_type) == expected
+    soil.field_type = field_type
+    assert soil.reduction_cao() == expected
 
 
 def test_reduction_cao_without_parametrize(soil: Soil):
-    assert soil.reduction_cao(FieldType.cropland, preservation=True) == -125
+    assert soil.reduction_cao(preservation=True) == -125
     soil.ph = None
-    assert soil.reduction_cao(FieldType.cropland) == Decimal()
+    assert soil.reduction_cao() == Decimal()
     soil.ph = Decimal(10)
-    assert soil.reduction_cao(FieldType.cropland) == Decimal()
+    assert soil.reduction_cao() == Decimal()
 
 
 def test_reduction_s(soil: Soil):
@@ -91,12 +96,13 @@ def test_reduction_s(soil: Soil):
     [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
 )
 def test_class_p2o5(soil: Soil, field_type, expected):
-    assert soil.class_p2o5(field_type) == expected
+    soil.field_type = field_type
+    assert soil.class_p2o5() == expected
 
 
 def test_class_p2o5_without_parametrize(soil: Soil):
     soil.p2o5 = None
-    assert soil.class_p2o5(FieldType.cropland) == ""
+    assert soil.class_p2o5() == ""
 
 
 @pytest.mark.parametrize(
@@ -104,12 +110,13 @@ def test_class_p2o5_without_parametrize(soil: Soil):
     [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
 )
 def test_class_k2o(soil: Soil, field_type, expected):
-    assert soil.class_k2o(field_type) == expected
+    soil.field_type = field_type
+    assert soil.class_k2o() == expected
 
 
 def test_class_k2o_without_parametrize(soil: Soil):
     soil.k2o = None
-    assert soil.class_k2o(FieldType.cropland) == ""
+    assert soil.class_k2o() == ""
 
 
 @pytest.mark.parametrize(
@@ -117,12 +124,13 @@ def test_class_k2o_without_parametrize(soil: Soil):
     [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
 )
 def test_class_mg(soil: Soil, field_type, expected):
-    assert soil.class_mg(field_type) == expected
+    soil.field_type = field_type
+    assert soil.class_mg() == expected
 
 
 def test_class_mg_without_parametrize(soil: Soil):
     soil.mg = None
-    assert soil.class_mg(FieldType.cropland) == ""
+    assert soil.class_mg() == ""
 
 
 @pytest.mark.parametrize(
@@ -130,12 +138,13 @@ def test_class_mg_without_parametrize(soil: Soil):
     [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
 )
 def test_class_ph(soil: Soil, field_type, expected):
-    assert soil.class_ph(field_type) == expected
+    soil.field_type = field_type
+    assert soil.class_ph() == expected
 
 
 def test_class_ph_without_parametrize(soil: Soil):
     soil.ph = None
-    assert soil.class_ph(FieldType.cropland) == ""
+    assert soil.class_ph() == ""
 
 
 @pytest.mark.parametrize(
@@ -143,7 +152,8 @@ def test_class_ph_without_parametrize(soil: Soil):
     [(FieldType.cropland, Decimal("5")), (FieldType.grassland, Decimal("4.7"))],
 )
 def test_optimal_ph(soil: Soil, field_type, expected):
-    assert soil.optimal_ph(field_type) == expected
+    soil.field_type = field_type
+    assert soil.optimal_ph() == expected
 
 
 @pytest.mark.parametrize(

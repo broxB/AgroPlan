@@ -10,17 +10,22 @@ from app.utils import round_to_nearest
 from . import guidelines
 
 
-def create_soil_sample(soil_samples: list[db.SoilSample], year) -> Soil | None:
+def create_soil_sample(
+    soil_samples: list[db.SoilSample], field_type: FieldType, year: int
+) -> Soil | None:
     soil_samples = list(filter(lambda x: x.year <= year, soil_samples))
     soil_sample = max(soil_samples, key=lambda x: x.year) if soil_samples else None
     if soil_sample:
-        return Soil(soil_sample, guidelines)
+        return Soil(soil_sample, field_type, guidelines)
     return None
 
 
 class Soil:
-    def __init__(self, SoilSample: db.SoilSample, guidelines: guidelines = guidelines):
+    def __init__(
+        self, SoilSample: db.SoilSample, field_type: FieldType, guidelines: guidelines = guidelines
+    ):
         self.year: int = SoilSample.year
+        self.field_type: FieldType = field_type
         self.soil_type: SoilType = SoilSample.soil_type
         self.humus: HumusType = SoilSample.humus
         self.ph: Decimal = SoilSample.ph
@@ -30,39 +35,43 @@ class Soil:
         self._classes: list[str] = ["A", "B", "C", "D", "E"]
         self.guidelines = guidelines
 
-    def reduction_n(self, field_type: FieldType) -> Decimal:
+    def reduction_n(self) -> Decimal:
         soil_reductions = self.guidelines.soil_reductions()
-        return Decimal(soil_reductions[self.humus.value][field_type.value])
+        return Decimal(soil_reductions[self.humus.value][self.field_type.value])
 
-    def reduction_p2o5(self, field_type: FieldType) -> Decimal:
+    def reduction_p2o5(self) -> Decimal:
         if self.p2o5 is None:
             return Decimal()
         p2o5_reductions = self.guidelines.p2o5_reductions()
         value = round_to_nearest(self.p2o5 / Decimal("2.291"), 1)  # calc element form
-        values = p2o5_reductions[field_type.value]["Werte"]
-        reduction = p2o5_reductions[field_type.value]["Abschläge"]
+        values = p2o5_reductions[self.field_type.value]["Werte"]
+        reduction = p2o5_reductions[self.field_type.value]["Abschläge"]
         index = bisect_right(values, value) - 1
         return Decimal(reduction[index])
 
-    def reduction_k2o(self, field_type: FieldType) -> Decimal:
+    def reduction_k2o(self) -> Decimal:
         if self.k2o is None:
             return Decimal()
         k2o_reductions = self.guidelines.k2o_reductions()
         value = round_to_nearest(self.k2o / Decimal("1.205"), 1)  # calc element form
-        values = k2o_reductions[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
-        reduction = k2o_reductions[field_type.value][self.soil_type.value][self.humus.value][
+        values = k2o_reductions[self.field_type.value][self.soil_type.value][self.humus.value][
+            "Werte"
+        ]
+        reduction = k2o_reductions[self.field_type.value][self.soil_type.value][self.humus.value][
             "Abschläge"
         ]
         index = bisect_right(values, value) - 1
         return Decimal(reduction[index])
 
-    def reduction_mg(self, field_type: FieldType) -> Decimal:
+    def reduction_mg(self) -> Decimal:
         if self.mg is None:
             return Decimal()
         mgo_reductions = self.guidelines.mg_reductions()
         value = round_to_nearest(self.mg, 1)
-        values = mgo_reductions[field_type.value][self.soil_type.value][self.humus.value]["Werte"]
-        reduction = mgo_reductions[field_type.value][self.soil_type.value][self.humus.value][
+        values = mgo_reductions[self.field_type.value][self.soil_type.value][self.humus.value][
+            "Werte"
+        ]
+        reduction = mgo_reductions[self.field_type.value][self.soil_type.value][self.humus.value][
             "Abschläge"
         ]
         index = bisect_right(values, value) - 1
@@ -78,70 +87,73 @@ class Soil:
         reduction_n_total = sulfur_reductions["Nges"][n_total_index][needs_index]
         return Decimal(reduction + reduction_n_total)
 
-    def reduction_cao(self, field_type: FieldType, preservation: bool = False) -> Decimal:
+    def reduction_cao(self, preservation: bool = False) -> Decimal:
         if self.ph is None:
             return Decimal()
         else:
             value = self.ph
         if preservation:
-            value = self.optimal_ph(field_type)
+            value = self.optimal_ph()
         cao_reductions = self.guidelines.cao_reductions()
-        ph_values = cao_reductions[field_type.value]["phWert"]
+        ph_values = cao_reductions[self.field_type.value]["phWert"]
         index = bisect_left(self.to_decimal(ph_values), round_to_nearest(value, 1))
-        reduction = cao_reductions[field_type.value][self.soil_type.value][self.humus.value]
+        reduction = cao_reductions[self.field_type.value][self.soil_type.value][self.humus.value]
         try:
             return Decimal(-reduction[index] * 100 / 4)
         except IndexError:
             return Decimal(-reduction[-1] * 100 / 4)
 
-    def class_p2o5(self, field_type: FieldType) -> str:
+    def class_p2o5(self) -> str:
         if self.p2o5 is None:
             return ""
+        value = round_to_nearest(self.p2o5 / Decimal("2.291"), 1)  # calc element form
         p2o5_classes = self.guidelines.p2o5_classes()
         try:
-            values = p2o5_classes[field_type.value]
-            index = bisect_right(values, self.p2o5) - 1
+            values = p2o5_classes[self.field_type.value]
+            index = bisect_right(values, value) - 1
             return self._classes[index]
         except KeyError:
             return ""
 
-    def class_k2o(self, field_type: FieldType) -> str:
+    def class_k2o(self) -> str:
         if self.k2o is None:
             return ""
+        value = round_to_nearest(self.k2o / Decimal("1.205"), 1)  # calc element form
         k2o_classes = self.guidelines.k2o_classes()
         try:
-            values = k2o_classes[field_type.value][self.soil_type.value][self.humus.value]
-            index = bisect_right(values, self.k2o) - 1
+            values = k2o_classes[self.field_type.value][self.soil_type.value][self.humus.value]
+            index = bisect_right(values, value) - 1
             return self._classes[index]
         except KeyError:
             return ""
 
-    def class_mg(self, field_type: FieldType) -> str:
+    def class_mg(self) -> str:
         if self.mg is None:
             return ""
+        value = round_to_nearest(self.mg, 1)
         mgo_classes = self.guidelines.mg_classes()
         try:
-            values = mgo_classes[field_type.value][self.soil_type.value][self.humus.value]
-            index = bisect_right(values, self.mg) - 1
+            values = mgo_classes[self.field_type.value][self.soil_type.value][self.humus.value]
+            index = bisect_right(values, value) - 1
             return self._classes[index]
         except KeyError:
             return ""
 
-    def class_ph(self, field_type: FieldType) -> str:
+    def class_ph(self) -> str:
         if self.ph is None:
             return ""
         ph_classes = self.guidelines.ph_classes()
         try:
-            values = ph_classes[field_type.value][self.soil_type.value][self.humus.value]
+            values = ph_classes[self.field_type.value][self.soil_type.value][self.humus.value]
             index = bisect_right(values, self.ph) - 1
             return self._classes[index]
         except KeyError:
             return ""
 
-    def optimal_ph(self, field_type: FieldType) -> Decimal:
+    def optimal_ph(self) -> Decimal:
         ph_classes = self.guidelines.ph_classes()
         return Decimal(
-            str(ph_classes[field_type.value][self.soil_type.value][self.humus.value][2])
+            str(ph_classes[self.field_type.value][self.soil_type.value][self.humus.value][2])
         )
 
     @staticmethod

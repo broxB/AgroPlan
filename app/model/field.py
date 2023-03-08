@@ -54,13 +54,13 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
 
     if field is None:
         return None
-    field_data = Field(field, first_year=first_year)
-    field_data.soil_sample = create_soil_sample(field.soil_samples, year)
+    new_field = Field(field, first_year=first_year)
+    new_field.soil_sample = create_soil_sample(field.soil_samples, field.field_type, year)
 
     for cultivation in field.cultivations:
         crop_data = Crop(cultivation.crop)
         cultivation_data = create_cultivation(cultivation, crop_data)
-        field_data.cultivations.append(cultivation_data)
+        new_field.cultivations.append(cultivation_data)
 
     for fertilization in field.fertilizations:
         fertilizer_data = create_fertilizer(fertilization.fertilizer)
@@ -68,14 +68,14 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
         fertilization_data = Fertilization(
             fertilization, fertilizer_data, crop_data, fertilization.cultivation.cultivation_type
         )
-        field_data.fertilizations.append(fertilization_data)
+        new_field.fertilizations.append(fertilization_data)
 
     for modifier in field.modifiers:
-        field_data.modifiers.append(
+        new_field.modifiers.append(
             create_modifier(modifier.description, modifier.modification, modifier.amount)
         )
 
-    return field_data
+    return new_field
 
 
 class Field:
@@ -196,20 +196,20 @@ class Field:
         reductions = Balance("Soil reductions")
         if not (self.soil_sample and self.field_type in (FieldType.cropland, FieldType.grassland)):
             return reductions
-        reductions.n += self.soil_sample.reduction_n(self.field_type)
+        reductions.n += self.soil_sample.reduction_n()
         if self.demand_option is DemandType.demand:
-            reductions.p2o5 += self.soil_sample.reduction_p2o5(self.field_type)
-            reductions.k2o += self.soil_sample.reduction_k2o(self.field_type)
-            reductions.mgo += self.soil_sample.reduction_mg(self.field_type)
+            reductions.p2o5 += self.soil_sample.reduction_p2o5()
+            reductions.k2o += self.soil_sample.reduction_k2o()
+            reductions.mgo += self.soil_sample.reduction_mg()
         if self.main_crop:
             reductions.s += self.soil_sample.reduction_s(
                 self.n_total(cultivation_type=CultivationType.main_crop),
                 self.main_crop.crop.s_demand,
             )
         if self.soil_sample.year + 3 < self.year:
-            reductions.cao += self.soil_sample.reduction_cao(self.field_type, preservation=True)
+            reductions.cao += self.soil_sample.reduction_cao(preservation=True)
         else:
-            reductions.cao += self.soil_sample.reduction_cao(self.field_type)
+            reductions.cao += self.soil_sample.reduction_cao()
         return reductions
 
     def redelivery(self) -> Balance:
