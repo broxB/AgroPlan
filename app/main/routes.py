@@ -52,10 +52,10 @@ def index():
     )
 
 
-@bp.route("/preset", methods=["GET", "POST"])
+@bp.route("/test", methods=["GET", "POST"])
 @login_required
-def preset():
-    return render_template("preset.html")
+def test():
+    return render_template("_test.html")
 
 
 @bp.route("/user/<username>")
