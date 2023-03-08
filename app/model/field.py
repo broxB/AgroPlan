@@ -100,22 +100,39 @@ class Field:
         self.field_prev_year: Field = self._field_prev_year()
 
     def set_balance(self) -> None:
-        """Adds balances of demands and reductions to available cultivations."""
+        """Adds balances of demands and reductions to available cultivations and nutrients to fertilizations."""
+
         for cultivation in self.cultivations:
-            balances = [cultivation.demand(self.demand_option)]
+            cultivation.balances = {}
+            cult_balances = [cultivation.demand(self.demand_option)]
             if cultivation is not self.catch_crop:
-                balances.append(Balance("Nmin", n=cultivation.reduction()))
-                balances.append(Balance("Pre-crop effect", n=self._pre_crop_effect(cultivation)))
+                cult_balances.append(Balance("Nmin", n=cultivation.reduction()))
+                cult_balances.append(
+                    Balance("Pre-crop effect", n=self._pre_crop_effect(cultivation))
+                )
             if cultivation is self.main_crop:
-                balances.append(self.soil_reductions())
-                balances.append(Balance("Organic redelivery", n=self._n_redelivery()))
-                balances.append(Balance("Lime balance", cao=self._cao_saldo()))
+                cult_balances.append(self.soil_reductions())
+                cult_balances.append(Balance("Organic redelivery", n=self._n_redelivery()))
+                cult_balances.append(Balance("Lime balance", cao=self._cao_saldo()))
                 for modifier in self.modifiers:
-                    balances.append(modifier)
-            cultivation.balances = balances
+                    cult_balances.append(modifier)
             total = Balance("Total")
-            total += sum(balances)
-            cultivation.balances.append(total)
+            total += sum(cult_balances)
+            cult_balances.append(total)
+            cultivation.balances["cultivation"] = cult_balances
+
+            org_balances, min_balances = [], []
+            for fertilization in self.fertilizations:
+                if fertilization.cultivation_type is cultivation.cultivation_type:
+                    if fertilization.fertilizer.fert_class is FertClass.organic:
+                        org_balances.append(fertilization.nutrients(self.field_type))
+                    elif fertilization.fertilizer.fert_class is FertClass.mineral:
+                        min_balances.append(fertilization.nutrients(self.field_type))
+            for key, balances in zip(["organic", "mineral"], [org_balances, min_balances]):
+                total = Balance("Total")
+                total += sum(balances)
+                balances.append(total)
+                cultivation.balances[key] = balances
 
     def total_balance(self) -> Balance:
         """Summarize the balance of all crop demands, reductions, fertilizations and modifiers."""
@@ -138,7 +155,7 @@ class Field:
         nutrients = Balance("Fertilizations")
         for fertilization in self.fertilizations:
             if fertilization.fertilizer.is_class(fert_class):
-                nutrients += Balance("nutrients", *fertilization.nutrients(self.field_type))
+                nutrients += fertilization.nutrients(self.field_type)
         return nutrients
 
     def sum_demands(self, negative_output: bool = True) -> Balance:

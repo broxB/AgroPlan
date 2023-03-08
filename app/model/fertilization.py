@@ -3,6 +3,7 @@ from decimal import Decimal
 import app.database.model as db
 from app.database.types import CultivationType, FieldType, MeasureType
 
+from .balance import Balance
 from .crop import Crop
 from .fertilizer import Fertilizer
 
@@ -29,15 +30,17 @@ class Fertilization:
                 return self.amount * self.fertilizer.n_total(netto)
         return Decimal()
 
-    def nutrients(self, field_type: FieldType) -> list[Decimal]:
-        return [
-            self.amount * self.n_verf(field_type),
-            self.amount * self.fertilizer.p2o5,
-            self.amount * self.fertilizer.k2o,
-            self.amount * self.fertilizer.mgo,
-            self.amount * self.fertilizer.s,
-            self.amount * self.fertilizer.cao,
-        ]
+    def nutrients(self, field_type: FieldType) -> Balance:
+        return Balance(
+            title=self.fertilizer.name,
+            n=self.amount * self.n_verf(field_type),
+            p2o5=self.amount * self.fertilizer.p2o5,
+            k2o=self.amount * self.fertilizer.k2o,
+            mgo=self.amount * self.fertilizer.mgo,
+            s=self.amount * self.fertilizer.s,
+            cao=self.amount * self.fertilizer.cao,
+            nh4=self.amount * self.fertilizer.nh4,
+        )
 
     def n_verf(self, field_type: FieldType) -> Decimal:
         if self.cultivation_type is CultivationType.catch_crop and self.fertilizer.is_organic:
