@@ -159,7 +159,9 @@ class BaseField(Base):
     name = Column("name", String)
 
     fields = relationship("Field", back_populates="base_field", order_by="desc(Field.year)")
-    soil_samples = relationship("SoilSample")
+    soil_samples = relationship(
+        "SoilSample", back_populates="base_field", order_by="desc(SoilSample.year)"
+    )
     user = relationship("User", back_populates="fields")
 
     def __repr__(self):
@@ -189,7 +191,12 @@ class Field(Base):
         secondary=field_fertilization,
         back_populates="field",
     )
-    soil_samples = relationship("SoilSample", secondary=field_soil_sample, back_populates="fields")
+    soil_samples = relationship(
+        "SoilSample",
+        secondary=field_soil_sample,
+        back_populates="fields",
+        order_by="desc(SoilSample.year)",
+    )
     saldo = relationship("Saldo", back_populates="field", uselist=False)
     modifiers = relationship("Modifier", back_populates="field")
 
@@ -221,6 +228,7 @@ class Cultivation(Base):
 
     field = relationship("Field", back_populates="cultivations")
     crop = relationship("Crop", back_populates="cultivations")
+    fertilizations = relationship("Fertilization", back_populates="cultivation")
 
     def __repr__(self):
         return (
@@ -287,8 +295,8 @@ class Fertilization(Base):
         secondary=field_fertilization,
         back_populates="fertilizations",
     )
-    cultivation = relationship("Cultivation", backref=backref("fertilization"))
-    fertilizer = relationship("Fertilizer", backref=backref("fertilization"))
+    cultivation = relationship("Cultivation", back_populates="fertilizations")
+    fertilizer = relationship("Fertilizer")
 
     def __repr__(self):
         return (
@@ -319,7 +327,7 @@ class Fertilizer(Base):
     cao = Column("cao", Float(asdecimal=True, decimal_return_scale=2))
     nh4 = Column("nh4", Float(asdecimal=True, decimal_return_scale=2))
 
-    usage = relationship("FertilizerUsage", backref="fertilizer")
+    usage = relationship("FertilizerUsage", back_populates="fertilizer")
 
     def __repr__(self):
         return (
@@ -338,6 +346,8 @@ class FertilizerUsage(Base):
     name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
     year = Column("year", Integer)
     amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
+
+    fertilizer = relationship("Fertilizer", back_populates="usage")
 
     def __repr__(self):
         return (
@@ -359,13 +369,14 @@ class SoilSample(Base):
     soil_type = Column("soil_type", Enum(SoilType))
     humus = Column("humus", Enum(HumusType))
 
+    base_field = relationship("BaseField")
     fields = relationship("Field", secondary=field_soil_sample, back_populates="soil_samples")
 
     def __repr__(self):
         return (
             f"SoilSample(id='{self.id}', year='{self.year}', "
             f"soil_type='{self.soil_type.value}', humus='{self.humus.value}', "
-            f"fields={f'{[field.base_field.name for field in self.fields][0]}', [f'{field.year}' for field in self.fields]})"
+            f"fields={f'{self.base_field.name if self.base_field else None}', [f'{field.year}' for field in self.fields if self.fields]})"
         )
 
 
