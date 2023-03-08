@@ -1,0 +1,47 @@
+<div class="col table-responsive">
+  <table class="table table-sm table-hover table-bordered">
+    <thead>
+      <tr>
+        <th scope="col">Year</th>
+        <th scope="col">Type</th>
+        <th scope="col">Humus</th>
+        <th scope="col" colspan="2">pH</th>
+        <th scope="col" colspan="2">
+          P<sub>2</sub>O<sub>5</sub>
+        </th>
+        <th scope="col" colspan="2">
+          K<sub>2</sub>O
+        </th>
+        <th scope="col" colspan="3">Mg</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sample in db.field.soil_samples %}
+        {% set soil = Soil(sample, db.field.field_type) %}
+        <tr data-id="{{ sample.id }}">
+          <th scope="row">{{ sample.year }}</th>
+          <td>{{ sample.soil_type.value }}</td>
+          <td>{{ sample.humus.value }}</td>
+          <td>{{ sample.ph | format_number(".1f") }}</td>
+          <td>{{ soil.class_ph() }}</td>
+          <td>{{ sample.p2o5 | format_number(".1f") }}</td>
+          <td>{{ soil.class_p2o5() }}</td>
+          <td>{{ sample.k2o | format_number(".1f") }}</td>
+          <td>{{ soil.class_k2o() }}</td>
+          <td>{{ sample.mg | format_number(".1f") }}</td>
+          <td>{{ soil.class_mg() }}</td>
+          <td class="table-action d-print-none">
+            <button class="btn btn-link btn-edit"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal"
+                    data-form="soil"
+                    data-modal="edit">
+              <i class="fa-solid fa-pencil"></i>
+            </button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

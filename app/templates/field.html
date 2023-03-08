@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% from "utils.html" import render_accordion with context %}
+{% from "_field_fertilization.html" import render_fertilization with context %}
+{% from "_field_fertilization.html" import render_fertilization_nutrients with context %}
+
+{% block app_content %}
+  <!--field header-->
+  {% set db = namespace(field = none) %}
+  {% for field in base_field.fields if field.year == current_user.year %}
+    {% set db.field = field %}
+    <div class="row"
+         id="field"
+         data-base-id="{{ base_field.id }}"
+         data-field-id="{{ field.id }}">
+      <h1>
+        {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+      </h1>
+      <h6>{{ field.field_type.value }} — {{ field.area | format_number(".2f", "ha") }}</h6>
+    </div>
+  {% endfor %}
+
+  <!-- field nav -->
+  <nav class="nav nav-pills bg-green rounded flex-column flex-sm-row my-2 d-print-none"
+       id="field-nav">
+    <button class="nav-link fw-500 text-white flex-sm-fill text-sm-center"
+            id="cultivation-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#cultivation"
+            type="button"
+            role="tab"
+            aria-controls="cultivation"
+            aria-selected="true">
+      Cultivation
+    </button>
+    <button class="nav-link fw-500 text-white flex-sm-fill text-sm-center"
+            id="soil-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#soil"
+            type="button"
+            role="tab"
+            aria-controls="soil"
+            aria-selected="false">
+      Soil
+    </button>
+    <button class="nav-link fw-500 text-white flex-sm-fill text-sm-center"
+            id="info-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#info"
+            type="button"
+            role="tab"
+            aria-controls="info"
+            aria-selected="false">
+      Info
+    </button>
+  </nav>
+
+  <!--cultivation data-->
+  <div class="tab-pane fade"
+       id="cultivation"
+       role="tabpanel"
+       aria-labelledby="cultivation-tab">
+    {% for cultivation in db.field.cultivations %}
+      {% call render_accordion(title=cultivation.cultivation_type.value, target=cultivation.cultivation_type.name, data_id=cultivation.id, style="accordion-cultivation") %}
+        <div class="row cultivation">
+          <h6 class="fw-bolder">
+            <u>Cultivation</u>
+          </h6>
+          <div class="col-xxl-6 ms-1">{% include "_field_crop.html" %}</div>
+          <div class="col ms-1">{% include "_field_demand.html" %}</div>
+        </div>
+        <div class="row organic">
+          <h6 class="fw-bolder">
+            <u>Organic</u>
+          </h6>
+          <div class="col-xxl-6 ms-1">{{ render_fertilization(cultivation, "organic") }}</div>
+          {% for cult in field.cultivations if cult.cultivation_type == cultivation.cultivation_type %}
+            <div class="col ms-1">{{ render_fertilization_nutrients(cult, "organic") }}</div>
+          {% endfor %}
+        </div>
+        <div class="row mineral">
+          <h6 class="fw-bolder">
+            <u>Mineral</u>
+          </h6>
+          <div class="col-xxl-6 ms-1">{{ render_fertilization(cultivation, "mineral") }}</div>
+          {% for cult in field.cultivations if cult.cultivation_type == cultivation.cultivation_type %}
+            <div class="col ms-1">{{ render_fertilization_nutrients(cult, "mineral") }}</div>
+          {% endfor %}
+        </div>
+      {% endcall %}
+    {% endfor %}
+  </div>
+  <!--soil data-->
+  <div class="tab-pane fade"
+       id="soil"
+       role="tabpanel"
+       aria-labelledby="soil-tab">
+    {% call render_accordion(title="Soil Sample", target="soil-sample", style="accordion-soil", collapsed=false) %}
+      {% include "_field_soil.html" %}
+    {% endcall %}
+  </div>
+  <!--modifier data-->
+  <div class="tab-pane fade"
+       id="info"
+       role="tabpanel"
+       aria-labelledby="info-tab">
+    {% call render_accordion(title="Modifiers", target="modifiers", collapsed=false) %}
+      {% include "_field_modifiers.html" %}
+    {% endcall %}
+  </div>
+
+  <script src="{{ url_for('static', filename='js/field.js') }}"></script>
+
+{% endblock app_content %}

@@ -8,6 +8,7 @@ from flask import Flask
 from app import auth, cli, errors, main
 from app.database.model import BaseField, User
 from app.extensions import bootstrap, csrf_protection, db, login, migrate
+from app.model import Soil
 from app.utils import format_number, handle_error
 from config import Config
 
@@ -71,6 +72,7 @@ def register_commands(app: Flask):
 
 def register_custom_filters(app: Flask):
     app.jinja_env.filters["format_number"] = format_number
+    app.jinja_env.globals.update(Soil=Soil)
 
 
 def configure_logger(app: Flask):

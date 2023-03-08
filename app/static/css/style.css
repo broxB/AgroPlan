@@ -5,9 +5,18 @@ html {
 
 :root {
   --content-height: calc(100vh - 57px);
-  --green: #367d46;
+  --green: #367d46; /*35%*/
+  --green-30: #2f6a3d;
   --green-50: #4db364;
   --green-40: #3d8f50;
+  --green-80: #b8e0c1;
+  --green-85: #cae7d3;
+  --green-90: #dbf0e0;
+  --green-95: #edf7f0;
+  --brown-30: #7a501f;
+  --brown-85: #efdcc3;
+  --brown-95: #faf3eb;
+  --blue-95: #e7f1ff;
   --teal: #20c997;
 }
 
@@ -24,7 +33,9 @@ main {
   justify-content: space-between;
 }
 
-/* custom styling */
+/*  */
+/* || general utilities */
+/*  */
 
 .fa-check {
   color: var(--bs-success);
@@ -67,19 +78,50 @@ main {
   background-color: var(--green) !important;
 }
 
-/* table styling */
+/*  */
+/* || table styles */
+/*  */
 
 .table-action {
   white-space: nowrap;
-  width: 1em;
+  width: 1em !important;
   padding: 0 !important;
 }
 
-.table > tbody {
-  border-top: 0px solid currentColor !important;
+/* remove table border from edit button */
+.table-bordered > tbody > tr > td.table-action {
+  border-left: 0;
 }
 
-/* cultivation table styling */
+/* remove table border from edit button */
+.table-bordered > tbody > tr > td:nth-last-child(2) {
+  border-right: 0;
+}
+
+.table-demand td {
+  width: 8%;
+}
+
+.table-demand td:nth-last-child(-n + 7),
+.table-demand th:nth-last-child(-n + 7) {
+  text-align: end;
+}
+
+.table-demand tbody tr:last-child {
+  border-top: 2px solid black;
+  border-bottom: 0px solid transparent;
+  font-weight: bolder;
+}
+
+.table-demand tbody tr:not(:last-child) th {
+  font-weight: normal;
+}
+
+/* .table-fertilization td,
+.table-fertilization th {
+  width: 25%;
+} */
+
 .table-cultivation td {
   width: 9%;
 }
@@ -108,11 +150,18 @@ main {
   text-align: end;
 }
 
-/* edit button hover  */
+/*  */
+/* || button styles */
+/*  */
+
 .btn-edit {
   color: var(--bs-primary);
   opacity: 0;
   padding: 0 !important;
+}
+
+td .btn-edit {
+  border-color: transparent !important;
 }
 
 button:hover .btn-edit {
@@ -123,11 +172,54 @@ tr:hover .btn-edit {
   opacity: 100;
 }
 
-/* accordion styling */
-.accordion-button:not(.collapsed) {
+/*  */
+/* || accordion styles */
+/*  */
+
+.accordion-field .accordion-button:not(.collapsed) {
   color: inherit;
   background-color: inherit;
   box-shadow: none;
+}
+
+.accordion-cultivation .accordion-button:not(.collapsed) {
+  color: var(--green-30);
+  background-color: var(--green-85);
+}
+
+.accordion-cultivation .accordion-body {
+  /* background-color: var(--green-95); */
+  padding: 0;
+}
+
+.cultivation {
+  background-color: var(--green-95);
+  padding: 1rem 0.5rem 0;
+  margin: 0;
+  border-bottom: 1px solid var(--bs-gray-300);
+}
+
+.organic {
+  background-color: var(--brown-95);
+  padding: 1rem 0.5rem 0;
+  margin: 0;
+  border-bottom: 1px solid var(--bs-gray-300);
+}
+
+.mineral {
+  background-color: var(--blue-95);
+  padding: 1rem 0.5rem 0;
+  margin: 0;
+  /* border: 1px solid currentColor; */
+}
+
+.accordion-soil .accordion-button:not(.collapsed) {
+  color: var(--brown-30);
+  background-color: var(--brown-85);
+}
+
+.accordion-soil .accordion-body {
+  background-color: var(--brown-95);
 }
 
 .accordion-button:not(.collapsed)::after {
@@ -139,7 +231,17 @@ tr:hover .btn-edit {
   box-shadow: none;
 }
 
-/* field-nav styling */
+.accordion + .accordion {
+  margin-top: 0.5rem;
+}
+
+.tab-pane:not(.show) .accordion {
+  display: none;
+}
+
+/*  */
+/* || nav styles */
+/*  */
 
 #field-nav .nav-link.active {
   background-color: var(--green-50);
@@ -148,18 +250,6 @@ tr:hover .btn-edit {
 #field-nav .nav-link:hover:not(.active) {
   background-color: var(--green-40);
 }
-
-/* toast styling */
-
-.toast {
-  z-index: 11;
-}
-
-.toast .progress {
-  height: 2px;
-}
-
-/* navbar styling */
 
 .navbar {
   background-color: var(--green);
@@ -193,16 +283,9 @@ tr:hover .btn-edit {
   border-bottom-width: 0.15rem;
 }
 
-#resetToast {
-  border: 0 solid transparent;
-}
-
-#resetToast:hover,
-#resetToast:focus {
-  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.25);
-}
-
-/* sidebar styling */
+/*  */
+/* || sidebar styles */
+/*  */
 
 #sidebar {
   background-color: transparent;
@@ -237,7 +320,28 @@ tr:hover .btn-edit {
   margin: -1px 0 0;
 }
 
-/* scrollbar styling */
+/*  */
+/* || toast styles */
+/*  */
+
+.toast {
+  z-index: 11;
+}
+
+.toast .progress {
+  height: 2px;
+}
+
+#resetToast {
+  border: 0 solid transparent;
+}
+
+#resetToast:hover,
+#resetToast:focus {
+  border-bottom: 0.1rem solid rgba(255, 255, 255, 0.25);
+}
+
+/* || scrollbar styles */
 
 #sidebar::-webkit-scrollbar {
   width: 5px;
@@ -270,7 +374,9 @@ tr:hover .btn-edit {
   background: var(--green);
 }
 
-/* media queries */
+/*  */
+/* || media queries */
+/*  */
 
 @media (max-width: 992px) {
   #main {
