@@ -52,12 +52,6 @@ def index():
     )
 
 
-@bp.route("/test", methods=["GET", "POST"])
-@login_required
-def test():
-    return render_template("_test.html")
-
-
 @bp.route("/user/<username>")
 @login_required
 def user(username):
@@ -188,6 +182,8 @@ def get_fertilizers(fert_class):
 
 
 @bp.route("/test", methods=["GET", "POST"])
+@login_required
 def test():
-    logger.info(f"Received request args: {request.args.to_dict().items()}")
-    return {"task": "finished"}, 201
+    return render_template("_test.html")
+    # logger.info(f"Received request args: {request.args.to_dict().items()}")
+    # return {"task": "finished"}, 201
