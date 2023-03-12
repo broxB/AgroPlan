@@ -30,7 +30,9 @@ from .fertilizer import create_fertilizer
 from .soil import Soil, create_soil_sample
 
 
-def create_field(base_field_id: int, year: int, first_year: bool = True) -> Field | None:
+def create_field(
+    user_id: int, base_field_id: int, year: int, first_year: bool = True
+) -> Field | None:
     """Class Factory to create `field` from sqlalchemy database queries.
 
     Args:
@@ -46,7 +48,7 @@ def create_field(base_field_id: int, year: int, first_year: bool = True) -> Fiel
         FieldModel.query.join(BaseFieldModel)
         .filter(
             BaseFieldModel.id == base_field_id,
-            BaseFieldModel.user_id == current_user.id,
+            BaseFieldModel.user_id == user_id,
             FieldModel.year == year,
         )
         .one_or_none()
@@ -84,6 +86,7 @@ class Field:
     """
 
     def __init__(self, Field: db.Field, first_year: bool = False):
+        self.user_id: int = Field.base_field.user_id
         self.base_id: int = Field.base_id
         self.name: str = Field.base_field.name
         self.area: Decimal = Field.area
@@ -326,7 +329,7 @@ class Field:
         if not self.first_year:
             return
         year = self.year - 1
-        field = create_field(self.base_id, year, first_year=False)
+        field = create_field(self.user_id, self.base_id, year, first_year=False)
         return field
 
     def __repr__(self) -> str:

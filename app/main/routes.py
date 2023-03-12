@@ -107,7 +107,7 @@ def field(base_field_id):
     #     .first_or_404()
     # )
     fields = current_user.get_fields(year=current_user.year)
-    field = create_field(base_field_id, current_user.year)
+    field = create_field(current_user.id, base_field_id, current_user.year)
     field.set_balance()
     form = YearForm()
     # elif request.method == "POST":
@@ -125,7 +125,7 @@ def field(base_field_id):
 @bp.route("/field/<base_field_id>/data", methods=["GET"])
 @login_required
 def field_data(base_field_id):
-    field = create_field(base_field_id, current_user.year)
+    field = create_field(current_user.id, base_field_id, current_user.year)
     return asdict(field.total_balance())
 
 
