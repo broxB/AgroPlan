@@ -112,13 +112,13 @@ class Field:
                 )
             if cultivation is self.main_crop:
                 cult_balances.append(self.soil_reductions())
-                cult_balances.append(Balance("Organic redelivery", n=self._n_redelivery()))
+                cult_balances.append(self.fertilization_redelivery())
                 cult_balances.append(Balance("Lime balance", cao=self._cao_saldo()))
                 for modifier in self.modifiers:
                     cult_balances.append(modifier)
-            total = Balance("Total")
-            total += sum(cult_balances)
-            cult_balances.append(total)
+            cult_total = Balance("Total")
+            cult_total += sum(cult_balances)
+            cult_balances.append(cult_total)
             cultivation.balances["cultivation"] = cult_balances
 
             org_balances, min_balances = [], []
@@ -131,7 +131,10 @@ class Field:
             for key, balances in zip(["organic", "mineral"], [org_balances, min_balances]):
                 total = Balance("Total")
                 total += sum(balances)
-                balances.append(total)
+                remaining = Balance(f"Remaining demand")
+                cult_total += total
+                remaining += cult_total
+                balances.append(remaining)
                 cultivation.balances[key] = balances
 
     def total_balance(self) -> Balance:
@@ -155,7 +158,8 @@ class Field:
         nutrients = Balance("Fertilizations")
         for fertilization in self.fertilizations:
             if fertilization.fertilizer.is_class(fert_class):
-                nutrients += fertilization.nutrients(self.field_type)
+                if fertilization.cultivation_type is not CultivationType.catch_crop:
+                    nutrients += fertilization.nutrients(self.field_type)
         return nutrients
 
     def sum_demands(self, negative_output: bool = True) -> Balance:
@@ -167,12 +171,11 @@ class Field:
         """
         demands = Balance("Demands")
         for cultivation in self.cultivations:
-            if cultivation.cultivation_type is CultivationType.catch_crop:
-                continue
-            demands += cultivation.demand(
-                demand_option=self.demand_option,
-                negative_output=negative_output,
-            )
+            if cultivation.cultivation_type is not CultivationType.catch_crop:
+                demands += cultivation.demand(
+                    demand_option=self.demand_option,
+                    negative_output=negative_output,
+                )
         return demands
 
     def sum_reductions(self) -> Balance:
@@ -203,20 +206,13 @@ class Field:
             reductions.mgo += self.soil_sample.reduction_mg()
         if self.main_crop:
             reductions.s += self.soil_sample.reduction_s(
-                self.n_total(cultivation_type=CultivationType.main_crop),
-                self.main_crop.crop.s_demand,
+                n_total=self.n_total(cultivation_type=CultivationType.main_crop),
+                s_demand=self.main_crop.crop.s_demand,
             )
         if self.soil_sample.year + 3 < self.year:
             reductions.cao += self.soil_sample.reduction_cao(preservation=True)
         else:
             reductions.cao += self.soil_sample.reduction_cao()
-        return reductions
-
-    def redelivery(self) -> Balance:
-        """Summarize the nutrient values left in the soil from last period."""
-        reductions = Balance("Redelivery")
-        reductions.cao += self._cao_saldo()
-        reductions.n += self._n_redelivery()
         return reductions
 
     def crop_reductions(self, cultivation: Cultivation) -> Balance:
@@ -225,6 +221,30 @@ class Field:
         reductions.n += cultivation.reduction()
         reductions.n += self._pre_crop_effect(cultivation)
         return reductions
+
+    def redelivery(self) -> Balance:
+        """Summarize the nutrient values left in the soil from last period."""
+        reductions = Balance("Redelivery")
+        reductions.cao += self._cao_saldo()
+        reductions += self.fertilization_redelivery()
+        return reductions
+
+    def fertilization_redelivery(self) -> Balance:
+        redelivery = Balance("Organic redelivery")
+        try:
+            prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
+        except AttributeError:
+            prev_spring_n_total = Decimal()
+        fall_n_total = self.n_total(
+            measure_type=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
+        )
+
+        for fertilization in self.fertilizations:
+            if fertilization.cultivation_type is CultivationType.catch_crop:
+                redelivery += fertilization.nutrients(self.field_type)
+        redelivery.n = (fall_n_total + prev_spring_n_total) * Decimal("0.1")
+        redelivery.nh4 = 0
+        return redelivery
 
     def n_total(
         self,
@@ -260,17 +280,6 @@ class Field:
             return crop.pre_crop_effect()
         except AttributeError:
             return Decimal()
-
-    def _n_redelivery(self) -> Decimal:
-        try:
-            prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
-        except AttributeError:
-            prev_spring_n_total = Decimal()
-        fall_n_total = self.n_total(
-            measure_type=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
-        )
-        n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
-        return n_total
 
     def _cao_saldo(self) -> Decimal:
         try:

@@ -43,8 +43,6 @@ class Fertilization:
         )
 
     def n_verf(self, field_type: FieldType) -> Decimal:
-        if self.cultivation_type is CultivationType.catch_crop and self.fertilizer.is_organic:
-            return Decimal()
         if self.crop.feedable:
             return self.fertilizer.n_verf(FieldType.grassland)
         return self.fertilizer.n_verf(field_type)
