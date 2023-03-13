@@ -1,5 +1,6 @@
 import json
 import re
+from decimal import InvalidOperation
 from numbers import Number
 
 from loguru import logger
@@ -22,6 +23,8 @@ def format_number(input: Number, format: str = ".2f", ending: str = "") -> str:
     try:
         num = round_to_nearest(input, decimal)
         return f"{num:{format}} {ending}"
+    except InvalidOperation:
+        return "E"
     except Exception as e:
         logger.warning(f"Error in rounding: {e}")
         return "N/A"

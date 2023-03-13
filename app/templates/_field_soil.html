@@ -23,13 +23,13 @@
           <td>{{ sample.soil_type.value }}</td>
           <td>{{ sample.humus.value }}</td>
           <td>{{ sample.ph | format_number(".1f") }}</td>
-          <td>{{ soil.class_ph() }}</td>
+          <td>{{ soil.class_ph().value }}</td>
           <td>{{ sample.p2o5 | format_number(".1f") }}</td>
-          <td>{{ soil.class_p2o5() }}</td>
+          <td>{{ soil.class_p2o5().value }}</td>
           <td>{{ sample.k2o | format_number(".1f") }}</td>
-          <td>{{ soil.class_k2o() }}</td>
+          <td>{{ soil.class_k2o().value }}</td>
           <td>{{ sample.mg | format_number(".1f") }}</td>
-          <td>{{ soil.class_mg() }}</td>
+          <td>{{ soil.class_mg().value }}</td>
           <td class="table-action d-print-none">
             <button class="btn btn-link btn-edit"
                     type="button"

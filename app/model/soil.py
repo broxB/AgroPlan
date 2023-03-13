@@ -4,7 +4,7 @@ from bisect import bisect_left, bisect_right
 from decimal import Decimal
 
 import app.database.model as db
-from app.database.types import FieldType, HumusType, SoilType
+from app.database.types import FieldType, HumusType, SoilClass, SoilType
 from app.utils import round_to_nearest
 
 from . import guidelines
@@ -32,7 +32,7 @@ class Soil:
         self.p2o5: Decimal = SoilSample.p2o5
         self.k2o: Decimal = SoilSample.k2o
         self.mg: Decimal = SoilSample.mg
-        self._classes: list[str] = ["A", "B", "C", "D", "E"]
+        self._classes: list[SoilClass] = list(SoilClass)
         self.guidelines = guidelines
 
     def reduction_n(self) -> Decimal:

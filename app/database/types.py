@@ -275,6 +275,16 @@ class NutrientType(enum.Enum):
     nh4 = "NH4-N"
 
 
+class SoilClass(str, enum.Enum):
+    """Five levels of nutrient saturated soil"""
+
+    A = "A"
+    B = "B"
+    C = "C"
+    D = "D"
+    E = "E"
+
+
 def find_nmin_type(nmin: int) -> NminType:
     match nmin:
         case 0:

@@ -14,6 +14,7 @@ from app.database.types import (
     FertClass,
     FieldType,
     MeasureType,
+    SoilClass,
 )
 
 from .balance import Balance, create_modifier
@@ -121,6 +122,13 @@ class Field:
                     cult_balances.append(modifier)
             cult_total = Balance("Total")
             cult_total += sum(cult_balances)
+            if self.demand_option is DemandType.demand:
+                if self.soil_sample.class_p2o5() is SoilClass.E:
+                    cult_total.p2o5 = 0
+                if self.soil_sample.class_k2o() is SoilClass.E:
+                    cult_total.k2o = 0
+                if self.soil_sample.class_mg() is SoilClass.E:
+                    cult_total.mgo = 0
             cult_balances.append(cult_total)
             cultivation.balances["cultivation"] = cult_balances
 
@@ -143,12 +151,15 @@ class Field:
     def total_balance(self) -> Balance:
         """Summarize the balance of all crop demands, reductions, fertilizations and modifiers."""
         saldo = Balance("Total")
-        saldo += (
-            self.sum_demands()
-            + self.sum_reductions()
-            + self.sum_fertilizations()
-            + self.sum_modifiers()
-        )
+        saldo += self.sum_demands() + self.sum_reductions()
+        if self.demand_option is DemandType.demand:
+            if self.soil_sample.class_p2o5() is SoilClass.E:
+                saldo.p2o5 = 0
+            if self.soil_sample.class_k2o() is SoilClass.E:
+                saldo.k2o = 0
+            if self.soil_sample.class_mg() is SoilClass.E:
+                saldo.mgo = 0
+        saldo += self.sum_fertilizations() + self.sum_modifiers()
         return saldo
 
     def sum_fertilizations(self, fert_class: FertClass = None) -> Balance:
