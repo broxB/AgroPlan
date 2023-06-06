@@ -2,6 +2,7 @@
 {% from "utils.html" import render_accordion with context %}
 {% from "_field_fertilization.html" import render_fertilization with context %}
 {% from "_field_fertilization.html" import render_fertilization_nutrients with context %}
+{# {% from "_field_fertilization.html" import render_total with context %} #}
 
 {% block app_content %}
   <!--field header-->
@@ -59,35 +60,39 @@
        id="cultivation"
        role="tabpanel"
        aria-labelledby="cultivation-tab">
+    {% set count = namespace(c = 0) %}
     {% for cultivation in db.field.cultivations %}
-      {% call render_accordion(title=cultivation.cultivation_type.value, target=cultivation.cultivation_type.name, data_id=cultivation.id, style="accordion-cultivation") %}
-        <div class="row cultivation">
-          <h6 class="fw-bolder">
-            <u>Cultivation</u>
-          </h6>
-          <div class="col-xxl-6 ms-1">{% include "_field_crop.html" %}</div>
-          <div class="col ms-1">{% include "_field_demand.html" %}</div>
-        </div>
-        <div class="row organic">
-          <h6 class="fw-bolder">
-            <u>Organic</u>
-          </h6>
-          <div class="col-xxl-6 ms-1">{{ render_fertilization(cultivation, "organic") }}</div>
-          {% for cult in field.cultivations if cult.cultivation_type == cultivation.cultivation_type %}
+      {% set count.c = count.c + 1 %}
+      {% call render_accordion(title=cultivation.cultivation_type.value, sub_title=cultivation.crop.name, target=cultivation.cultivation_type.name, data_id=cultivation.id, style="accordion-cultivation") %}
+        {% for cult in field.cultivations if cult.cultivation_type == cultivation.cultivation_type %}
+          <div class="row cultivation">
+            <h6 class="fw-bolder text-decoration-underline">Cultivation</h6>
+            <div class="col-xxl-6 ms-1">{% include "_field_crop.html" %}</div>
+            <div class="col ms-1">{% include "_field_demand.html" %}</div>
+          </div>
+          <div class="row organic">
+            <h6 class="fw-bolder text-decoration-underline">Organic</h6>
+            <div class="col-xxl-6 ms-1">{{ render_fertilization(cultivation, "organic") }}</div>
             <div class="col ms-1">{{ render_fertilization_nutrients(cult, "organic") }}</div>
-          {% endfor %}
-        </div>
-        <div class="row mineral">
-          <h6 class="fw-bolder">
-            <u>Mineral</u>
-          </h6>
-          <div class="col-xxl-6 ms-1">{{ render_fertilization(cultivation, "mineral") }}</div>
-          {% for cult in field.cultivations if cult.cultivation_type == cultivation.cultivation_type %}
+          </div>
+          <div class="row mineral">
+            <h6 class="fw-bolder text-decoration-underline">Mineral</h6>
+            <div class="col-xxl-6 ms-1">{{ render_fertilization(cultivation, "mineral") }}</div>
             <div class="col ms-1">{{ render_fertilization_nutrients(cult, "mineral") }}</div>
-          {% endfor %}
-        </div>
+          </div>
+        {% endfor %}
       {% endcall %}
     {% endfor %}
+    {% if count.c < 3 %}
+      <button class="btn btn-success fw-bolder d-print-none"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#modal"
+              data-form="cultivation"
+              data-modal="new">
+        Add cultivation
+      </button>
+    {% endif %}
   </div>
   <!--soil data-->
   <div class="tab-pane fade"
