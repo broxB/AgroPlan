@@ -107,7 +107,7 @@ main {
   text-align: end;
 }
 
-.table-demand tbody tr:last-child {
+.table-demand > tbody > tr:last-child {
   border-top: 2px solid black;
   border-bottom: 0px solid transparent;
   font-weight: bolder;
@@ -176,6 +176,14 @@ tr:hover .btn-edit {
 /* || accordion styles */
 /*  */
 
+.accordion {
+  margin-bottom: 0.5rem;
+}
+
+/* .accordion + .accordion {
+  margin-top: 0.5rem;
+} */
+
 .accordion-field .accordion-button:not(.collapsed) {
   color: inherit;
   background-color: inherit;
@@ -190,6 +198,7 @@ tr:hover .btn-edit {
 .accordion-cultivation .accordion-body {
   /* background-color: var(--green-95); */
   padding: 0;
+  /* margin-bottom: ; */
 }
 
 .cultivation {
@@ -231,14 +240,6 @@ tr:hover .btn-edit {
   box-shadow: none;
 }
 
-.accordion + .accordion {
-  margin-top: 0.5rem;
-}
-
-.tab-pane:not(.show) .accordion {
-  display: none;
-}
-
 /*  */
 /* || nav styles */
 /*  */
@@ -249,6 +250,10 @@ tr:hover .btn-edit {
 
 #field-nav .nav-link:hover:not(.active) {
   background-color: var(--green-40);
+}
+
+.tab-pane:not(.show) {
+  display: none;
 }
 
 .navbar {

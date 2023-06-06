@@ -431,7 +431,7 @@ action="" is what we want, from http://www.ietf.org/rfc/rfc2396.txt:
     </form>
 {%- endmacro %}
 
-{% macro render_accordion(title, target, style="", data_id="", collapsed=false)%}
+{% macro render_accordion(title, target, sub_title="", style="", data_id="", collapsed=false)%}
   <div class="accordion {{ style }}">
     <div class="accordion-item">
       <h2 class="accordion-header">
@@ -440,7 +440,12 @@ action="" is what we want, from http://www.ietf.org/rfc/rfc2396.txt:
                 data-bs-toggle="collapse"
                 data-bs-target="#{{ target }}"
                 {% if data_id -%} data-id="{{ data_id }}" {%- endif %}>
-          <strong>{{ title }}</strong>
+          <div class="fw-bolder">{{ title }}
+          {%- if sub_title %}
+            <i class="fa-solid fa-seedling"></i>
+            {{ sub_title }}
+          {% endif -%}
+          </div>
         </button>
       </h2>
       <div class="accordion-collapse collapse {% if not collapsed -%} show{%- endif %}"
