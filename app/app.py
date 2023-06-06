@@ -111,7 +111,3 @@ def configure_logger(app: Flask):
         app.logger.info("AgroPlan startup")
 
     return app
-
-
-if __name__ == "__main__":
-    app = create_app()
