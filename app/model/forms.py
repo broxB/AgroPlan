@@ -55,7 +55,10 @@ class FormHelper:
     def default_selects(self):
         for field in self._fields.values():
             if field.type == "SelectField":
-                field.choices.insert(0, ("default", "Select one"))
+                try:
+                    field.choices.insert(0, ("default", "Select one"))
+                except AttributeError:
+                    field.choices = [("default", "Select one")]
 
     # credit: https://stackoverflow.com/a/71562719/16256581
     def set_disabled(self, input_field):
@@ -97,7 +100,7 @@ def create_form(form_type: str, params: list) -> Form:
         "soil": SoilForm,
     }
     try:
-        form = form_types[form_type](*params)
+        form = form_types[form_type](params)
     except KeyError:
         form = None
     return form
