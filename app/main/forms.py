@@ -151,8 +151,8 @@ class EditCultivationForm(CultivationForm):
     def populate(self, id: int):
         super().populate(id)
         self.cultivation_type.data = self.model_data.cultivation_type.name
-        self.residues.data = self.model_data.residues.name
-        self.legume_rate.data = self.model_data.legume_rate.name
+        self.residue_type.data = self.model_data.residues.name
+        self.legume_type.data = self.model_data.legume_rate.name
         self.crop.choices = [
             (crop.id, crop.name)
             for crop in current_user.get_crops(
@@ -179,11 +179,11 @@ class EditCultivationForm(CultivationForm):
         if not feedable:
             del self.crop_protein
         if not (feedable or cultivation is CultivationType.catch_crop):
-            del self.legume_rate
+            del self.legume_type
         if cultivation is CultivationType.catch_crop:
             del self.crop_yield
         if residues is ResidueType.main_no_residues:
-            del self.residues
+            del self.residue_type
 
 
 class EditFertilizationForm(FertilizationForm):
@@ -207,8 +207,8 @@ class EditFertilizationForm(FertilizationForm):
             if self.model_data.fertilizer.fert_class == FertClass.organic
             else MineralMeasureType
         )
-        self.measure.choices = [(enum.name, enum.value) for enum in measure_type]
-        self.measure.data = self.model_data.measure.name
+        self.measure_type.choices = [(enum.name, enum.value) for enum in measure_type]
+        self.measure_type.data = self.model_data.measure.name
         if self.model_data.fertilizer.fert_class == FertClass.organic:
             fertilizers = current_user.get_fertilizers(
                 fert_class=self.fert_class.data, year=self.model_data.field[0].year
@@ -219,7 +219,7 @@ class EditFertilizationForm(FertilizationForm):
             )
         self.fertilizer.choices = [(fert.id, fert.name) for fert in fertilizers]
         self.fertilizer.data = str(self.model_data.fertilizer.id)
-        self.original_measure = self.measure.data
+        self.original_measure = self.measure_type.data
         self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}:"
         # remove non-relevant inputs
         fert_class = self.model_data.fertilizer.fert_class
@@ -244,7 +244,7 @@ class EditFertilizerForm(FertilizerForm):
         super().populate(id)
         self.fert_class.data = self.model_data.fert_class.name
         self.fert_type.data = self.model_data.fert_type.name
-        self.unit.data = self.model_data.unit.name
+        self.unit_type.data = self.model_data.unit.name
         self.original_year = self.model_data.year
         self.original_name = self.model_data.name
         # remove non-relevant inputs
@@ -285,4 +285,4 @@ class EditSoilForm(SoilForm):
     def populate(self, id: int):
         super().populate(id)
         self.soil_type.data = self.model_data.soil_type.name
-        self.humus.data = self.model_data.humus.name
+        self.humus_type.data = self.model_data.humus.name

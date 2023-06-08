@@ -184,12 +184,12 @@ class CultivationForm(FlaskForm, FormHelper):
     crop = SelectField("Select crop to grow:", validators=[DataRequired()])
     crop_yield = IntegerField("Estimated yield in dt/ha:", validators=[DataRequired()])
     crop_protein = FloatField("Estimated protein in % DM/ha:", validators=[DataRequired()])
-    residues = SelectField(
+    residue_type = SelectField(
         "Estimated residues:",
         choices=[(enum.name, enum.value) for enum in ResidueType],
         validators=[DataRequired()],
     )
-    legume_rate = SelectField(
+    legume_type = SelectField(
         "Share of legumes:",
         choices=[(enum.name, enum.value) for enum in LegumeType],
         validators=[DataRequired()],
@@ -223,7 +223,7 @@ class FertilizationForm(FlaskForm, FormHelper):
     cut_timing = SelectField(
         "Select a cut timing:", choices=[(enum.name, enum.value) for enum in CutTiming]
     )
-    measure = SelectField(
+    measure_type = SelectField(
         "Select a measure:",
         choices=[(enum.name, enum.value) for enum in MeasureType],
         validators=[DataRequired()],
@@ -303,7 +303,7 @@ class FertilizerForm(FlaskForm, FormHelper):
         validators=[DataRequired()],
     )
     active = BooleanField("Show fertilizer in list?")
-    unit = SelectField(
+    unit_type = SelectField(
         "Select measurement unit:",
         choices=[(enum.name, enum.value) for enum in UnitType],
         validators=[DataRequired()],
@@ -416,7 +416,7 @@ class SoilForm(FlaskForm, FormHelper):
         choices=[(enum.name, enum.value) for enum in SoilType],
         validators=[DataRequired()],
     )
-    humus = SelectField(
+    humus_type = SelectField(
         "Select humus ratio:",
         choices=[(enum.name, enum.value) for enum in HumusType],
         validators=[DataRequired()],
