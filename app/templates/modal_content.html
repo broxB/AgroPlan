@@ -1,7 +1,10 @@
 {% from "utils.html" import render_form %}
 
+{% set form_type = modal_type[1] %}
+{% set modal_type = modal_type[0] %}
 <div class="modal-header px-4">
-  <h5 class="modal-title" id="modalLabel">Edit {{ modal_type }}</h5>
+  <h5 class="modal-title" id="modalLabel">{{ modal_type | title }} {{ form_type }}
+  </h5>
   <button type="button"
           class="btn-close"
           data-bs-dismiss="modal"

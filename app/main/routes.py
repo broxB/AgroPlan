@@ -142,7 +142,7 @@ def edit_modal():
     elif modal_type == "new":
         form = create_form(form_type, param)
         form.default_selects()
-    modal = render_template("modal_content.html", form=form, modal_type=form_type)
+    modal = render_template("modal_content.html", form=form, modal_type=(modal_type, form_type))
     return jsonify(modal)
 
 
