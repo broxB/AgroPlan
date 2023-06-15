@@ -4,7 +4,7 @@
       <tr>
         <th scope="col">Crop</th>
         <th scope="col">Amount</th>
-        {% if cultivation.crop.feedable -%}
+        {% if db.cultivation.crop.feedable -%}
           <th scope="col">Protein</th>
         {%- endif %}
         <th scope="col" colspan="2">Residue</th>
@@ -12,19 +12,21 @@
     </thead>
     <tbody>
       <tr data-id="{{ cultivation.id }}">
-        <th scope="row">{{ cultivation.crop.name }}</th>
-        <td>{{ cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
-        {% if cultivation.crop.feedable -%}
-          <td>{{ cultivation.crop_protein | format_number(".1f", "% TM/dt ") }}</th>
+        <th scope="row">{{ db.cultivation.crop.name }}</th>
+        <td>{{ db.cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
+        {% if db.cultivation.crop.feedable -%}
+          <td>{{ db.cultivation.crop_protein | format_number(".1f", "% TM/dt ") }}</th>
         {%- endif %}
-        <td>{{ cultivation.residues.value }}</td>
+        <td>{{ db.cultivation.residues.value }}</td>
         <td class="table-action d-print-none">
           <button class="btn btn-link btn-edit"
                   type="button"
                   data-bs-toggle="modal"
                   data-bs-target="#modal"
                   data-form="cultivation"
-                  data-modal="edit">
+                  data-modal="edit"
+                  data-id="{{ db.cultivation.id }}"
+                  data-field-id="{{ db.field.id }}">
             <i class="fa-solid fa-pencil"></i>
           </button>
         </td>
