@@ -1,87 +1,47 @@
-// request: modal content
-var modal = document.getElementById("modal");
-modal.addEventListener("show.bs.modal", async function (event) {
-  var button = event.relatedTarget;
-  // get params for form
-  var modalType = button.dataset.modal;
-  var formType = button.dataset.form;
-  var modalContent = modal.querySelector(".modal-content");
-  var id;
-  if (button.closest("tr")) {
-    var id = button.closest("tr").dataset.id;
-  } else {
-    id = null;
+import { fetchData, sendForm } from "./request.js";
+
+export class Modal {
+  static #instance;
+
+  constructor() {
+    let modal = document.querySelector("#modal");
+    this.content = modal.querySelector(".modal-content");
+    modal.addEventListener("hidden.bs.modal", () => {
+      this.content.innerHTML = "";
+    });
   }
-  var field = document.getElementById("field");
-  var params = [];
-  if (formType == "cultivation") {
-    params.push(field.dataset.fieldId);
-  } else if (formType == "fertilization") {
-    params.push(field.dataset.fieldId);
-  } else if (formType == "soil") {
-    params.push(field.dataset.baseId);
+
+  async fetchContent(event) {
+    const e = event.relatedTarget;
+    const modalType = e.dataset.modal;
+    const formType = e.dataset.form;
+    const id = e.dataset.id;
+    const fieldId = document.getElementById("field").dataset.fieldId;
+    const params = { modal: modalType, form: formType, id: id, fieldId: fieldId };
+    const modalURL = "/modal?" + new URLSearchParams(params).toString();
+    console.log(modalURL);
+    const content = await fetchData(modalURL);
+    this.addContent(content);
   }
-  const modalURL =
-    "/modal?" +
-    new URLSearchParams({ modal: modalType, form: formType, params: params, id: id }).toString();
-  console.log(modalURL);
-  const modalData = await fetch(modalURL).then((response) => response.json());
-  modalContent.innerHTML = modalData;
-  if (modalType == "edit") {
-    // add change event for crop and fert classes
-    var cultivation_type = modalContent.querySelector("#cultivation_type");
-    var crop_class = modalContent.querySelector("#crop_class");
-    var fert_class = modalContent.querySelector("#fert_class");
-    var selectElem;
-    var selectURL;
-    var nextSelect;
-    if (cultivation_type != null) {
-      selectElem = cultivation_type;
-      selectURL = "/crop/";
-      nextSelect = modalContent.querySelector("#crop");
-    } else if (crop_class != null) {
-      selectElem = crop_class;
-      selectURL = "/crop/";
-      nextSelect = modalContent.querySelector("#crop");
-    } else if (fert_class != null) {
-      selectElem = fert_class;
-      selectURL = "/fertilizer/";
-      nextSelect = modalContent.querySelector("#fertilizer");
-    }
-    if (selectElem != null) {
-      selectElem.addEventListener("change", () => {
-        deleteInputs(modalContent, [selectElem, nextSelect]);
-        changeSelect(selectURL, selectElem, nextSelect);
+
+  addEventListeners() {
+    let selectElements = this.content.querySelectorAll("select");
+    selectElements.forEach((select) => {
+      select.addEventListener("change", async () => {
+        const content = await sendForm(this.form, "POST", "/modal/specifics");
+        this.addContent(content);
       });
-    }
+    });
   }
-});
 
-// when modal is closed, content is deleted
-modal.addEventListener("hidden.bs.modal", function () {
-  var modalContent = modal.querySelector(".modal-content");
-  modalContent.innerHTML = "";
-});
-
-// delete all inputs, except specified
-function deleteInputs(content, omitted) {
-  content.querySelectorAll("input.form-control").forEach((element) => {
-    if (!omitted.includes(element)) {
-      element.parentNode.remove();
-    }
-  });
+  addContent(content) {
+    this.content.innerHTML = content;
+    this.form = modal.querySelector("#modalForm");
+    this.addEventListeners();
+  }
 }
 
-// fetches and changes select content, when select value changes
-async function changeSelect(selectUrl, selectElem, nextSelect) {
-  let value = selectElem.value;
-  const data = await fetch(selectUrl + value).then((response) => response.json());
-  let optionHTML = "";
-  for (let elem of data) {
-    optionHTML += `<option value=${elem.id}>${elem.name}</option>`;
-  }
-  nextSelect.innerHTML = optionHTML;
-  console.log(optionHTML);
-  console.log(value);
-  console.log(data);
-}
+window.addEventListener("show.bs.modal", (event) => {
+  let modal = new Modal();
+  modal.fetchContent(event);
+});
