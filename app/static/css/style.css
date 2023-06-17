@@ -5,19 +5,22 @@ html {
 
 :root {
   --content-height: calc(100vh - 57px);
-  --green: #367d46; /*35%*/
-  --green-30: #2f6a3d;
-  --green-50: #4db364;
-  --green-40: #3d8f50;
-  --green-80: #b8e0c1;
-  --green-85: #cae7d3;
-  --green-90: #dbf0e0;
-  --green-95: #edf7f0;
-  --brown-30: #7a501f;
-  --brown-85: #efdcc3;
-  --brown-95: #faf3eb;
-  --blue-95: #e7f1ff;
-  --teal: #20c997;
+  --green: hsl(134, 40%, 35%);
+  --green-30: hsl(134, 40%, 30%);
+  --green-40: hsl(134, 40%, 40%);
+  --green-50: hsl(134, 40%, 50%);
+  --green-60: hsl(134, 40%, 60%);
+  --green-70: hsl(134, 40%, 70%);
+  --green-80: hsl(134, 40%, 80%);
+  --green-85: hsl(134, 40%, 85%);
+  --green-90: hsl(134, 40%, 90%);
+  --green-95: hsl(134, 40%, 95%);
+  --brown-30: hsl(32, 59%, 30%);
+  --brown-50: hsl(32, 59%, 50%);
+  --brown-85: hsl(32, 59%, 85%);
+  --brown-95: hsl(32, 59%, 95%);
+  --blue-95: hsl(215, 100%, 95%);
+  --teal: hsl(162, 73%, 45%);
 }
 
 main {
@@ -76,6 +79,10 @@ main {
 
 .bg-green {
   background-color: var(--green) !important;
+}
+
+.bg-green-50 {
+  background-color: var(--green-50) !important;
 }
 
 /*  */
@@ -286,6 +293,7 @@ tr:hover .btn-edit {
 .nav-masthead .active {
   border-bottom-color: #fff;
   border-bottom-width: 0.15rem;
+  background-color: var(--green);
 }
 
 /*  */
