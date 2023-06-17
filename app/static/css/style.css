@@ -162,9 +162,13 @@ main {
 /*  */
 
 .btn-edit {
-  color: var(--bs-primary);
+  color: var(--green-40);
   opacity: 0;
   padding: 0 !important;
+}
+
+.btn-edit:hover {
+  color: var(--green);
 }
 
 td .btn-edit {
