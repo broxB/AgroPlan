@@ -26,6 +26,7 @@ from app.model.forms import (
     FertilizerForm,
     FieldForm,
     Form,
+    ModifierForm,
     SoilForm,
 )
 
@@ -41,6 +42,7 @@ __all__ = [
     "EditFertilizationForm",
     "EditFertilizerForm",
     "EditSoilForm",
+    "EditModifierForm",
 ]
 
 
@@ -54,6 +56,7 @@ def create_edit_form(form_type: str, param: list) -> Form:
         "crop": EditCropForm,
         "fertilizer": EditFertilizerForm,
         "soil": EditSoilForm,
+        "modifier": EditModifierForm,
     }
     try:
         form = form_types[form_type](param)
@@ -275,8 +278,8 @@ class EditCropForm(CropForm):
 
 
 class EditSoilForm(SoilForm):
-    def __init__(self, base_id, *args, **kwargs):
-        super().__init__(base_id, *args, **kwargs)
+    def __init__(self, base_field_id, *args, **kwargs):
+        super().__init__(base_field_id, *args, **kwargs)
 
     def validate_year(self, year):
         if year != self.year.data:
@@ -286,3 +289,17 @@ class EditSoilForm(SoilForm):
         super().populate(id)
         self.soil_type.data = self.model_data.soil_type.name
         self.humus_type.data = self.model_data.humus.name
+
+
+class EditModifierForm(ModifierForm):
+    def __init__(self, field_id, *args, **kwargs):
+        super().__init__(field_id, *args, **kwargs)
+
+    def validate(self):
+        super().validate()
+
+    def populate(self, id: int):
+        super().populate(id)
+        self.description.data = self.model_data.description
+        self.modification.data = self.model_data.modification.value
+        self.amount.data = self.model_data.amount

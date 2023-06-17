@@ -14,6 +14,7 @@ from app.database.model import (
     Fertilization,
     Fertilizer,
     Field,
+    Modifier,
     SoilSample,
 )
 from app.database.types import (
@@ -29,6 +30,7 @@ from app.database.types import (
     LegumeType,
     MeasureType,
     NminType,
+    NutrientType,
     ResidueType,
     SoilType,
     UnitType,
@@ -43,8 +45,11 @@ __all__ = [
     "FertilizationForm",
     "FertilizerForm",
     "SoilForm",
+    "ModifierForm",
 ]
-ModelType = TypeVar("ModelType", BaseField, Field, Cultivation, Crop, Fertilization, Fertilizer)
+ModelType = TypeVar(
+    "ModelType", BaseField, Field, Cultivation, Crop, Fertilization, Fertilizer, Modifier
+)
 
 
 class FormHelper:
@@ -98,6 +103,7 @@ def create_form(form_type: str, params: list) -> Form:
         "crop": CropForm,
         "fertilizer": FertilizerForm,
         "soil": SoilForm,
+        "modifier": ModifierForm,
     }
     try:
         form = form_types[form_type](params)
@@ -426,10 +432,10 @@ class SoilForm(FlaskForm, FormHelper):
     k2o = FloatField("K2O:", validators=[DataRequired()])
     mg = FloatField("Mg:", validators=[DataRequired()])
 
-    def __init__(self, base_id: int, *args, **kwargs):
+    def __init__(self, base_field_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.model_type = SoilSample
-        self.base_id = int(base_id)
+        self.base_id = int(base_field_id)
 
     def validate_year(self, year):
         soil_sample = SoilSample.query.filter(
@@ -437,3 +443,22 @@ class SoilForm(FlaskForm, FormHelper):
         ).first()
         if soil_sample is not None:
             raise ValidationError(f"Soil sample for {year} already exists.")
+
+
+class ModifierForm(FlaskForm, FormHelper):
+    description = StringField("Description:", validators=[DataRequired()])
+    modification = SelectField(
+        "Select a modifier:",
+        choices=[(enum.name, enum.value) for enum in NutrientType],
+        validators=[DataRequired()],
+    )
+    amount = FloatField("Amount in kg/ha:", validators=[DataRequired()])
+
+    def __init__(self, field_id: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model_type = Modifier
+        self.field_id = int(field_id)
+
+    def validate(self):
+        if self.data.amount > 1000:
+            raise ValidationError(f"Amount of {self.amount.data} kg/ha is too big.")
