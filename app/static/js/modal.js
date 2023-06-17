@@ -29,10 +29,12 @@ class Modal {
   addEventListeners() {
     let selectElements = this.content.querySelectorAll("select");
     selectElements.forEach((select) => {
-      select.addEventListener("change", async () => {
-        const content = await sendForm(this.form, "POST", "/modal/specifics");
-        this.addContent(content);
-      });
+      if (select.classList.contains("reload")) {
+        select.addEventListener("change", async () => {
+          const content = await sendForm(this.form, "POST", "/modal/specifics");
+          this.addContent(content);
+        });
+      }
     });
   }
 

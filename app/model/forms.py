@@ -140,7 +140,7 @@ class BaseFieldForm(FlaskForm, FormHelper):
 
 
 class FieldForm(FlaskForm, FormHelper):
-    sub_suffix = IntegerField("Sub-Suffix:")
+    sub_suffix = IntegerField("Sub-Partition:")
     year = IntegerField("Year:", validators=[DataRequired()])
     area = FloatField("Area in ha:", validators=[DataRequired()])
     red_region = BooleanField("In red region?", validators=[DataRequired()])
@@ -186,6 +186,7 @@ class CultivationForm(FlaskForm, FormHelper):
         "Select type of cultivation:",
         choices=[(enum.name, enum.value) for enum in CultivationType],
         validators=[DataRequired()],
+        render_kw={"class": "reload"},
     )
     crop = SelectField("Select crop to grow:", validators=[DataRequired()])
     crop_yield = IntegerField("Estimated yield in dt/ha:", validators=[DataRequired()])
@@ -216,7 +217,7 @@ class CultivationForm(FlaskForm, FormHelper):
             .first()
         )
         if cultivation is not None:
-            raise ValidationError("Class already exists.")
+            raise ValidationError("This type of cultivation already exists.")
 
 
 class FertilizationForm(FlaskForm, FormHelper):
@@ -225,6 +226,7 @@ class FertilizationForm(FlaskForm, FormHelper):
         "Select a fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertClass],
         validators=[DataRequired()],
+        render_kw={"class": "reload"},
     )
     cut_timing = SelectField(
         "Select a cut timing:", choices=[(enum.name, enum.value) for enum in CutTiming]
@@ -233,9 +235,10 @@ class FertilizationForm(FlaskForm, FormHelper):
         "Select a measure:",
         choices=[(enum.name, enum.value) for enum in MeasureType],
         validators=[DataRequired()],
+        render_kw={"class": "reload"},
     )
-    month = IntegerField("Month:")
     fertilizer = SelectField("Select a fertilizer:", validators=[DataRequired()])
+    month = IntegerField("Month:")
     amount = FloatField("Amount", validators=[DataRequired()])
 
     def __init__(self, field_id, *args, **kwargs):
@@ -302,6 +305,7 @@ class FertilizerForm(FlaskForm, FormHelper):
         "Select fertilizer class:",
         choices=[(enum.name, enum.value) for enum in FertClass],
         validators=[DataRequired()],
+        render_kw={"class": "reload"},
     )
     fert_type = SelectField(
         "Select fertilizer type:",
@@ -361,11 +365,13 @@ class CropForm(FlaskForm, FormHelper):
         "Select on which type of field the crop grows:",
         choices=[(enum.name, enum.value) for enum in FieldType],
         validators=[DataRequired()],
+        render_kw={"class": "reload"},
     )
     crop_class = SelectField(
         "Select a crop class:",
         choices=[(enum.name, enum.value) for enum in CropClass],
         validators=[DataRequired()],
+        render_kw={"class": "reload"},
     )
     crop_type = SelectField(
         "Select a crop type:",
