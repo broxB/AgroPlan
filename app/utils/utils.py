@@ -16,7 +16,7 @@ def handle_error(caller, on_exception="None"):
 
 def format_number(input: Number, format: str = ".2f", ending: str = "") -> str:
     try:
-        decimal = int(re.findall(f"\.(\d)\w", format)[0])
+        decimal = int(re.findall(f"\.(\d+)\w", format)[0])
     except IndexError:
         logger.warning("Invalid format used!")
         decimal = 2
@@ -27,7 +27,7 @@ def format_number(input: Number, format: str = ".2f", ending: str = "") -> str:
         return "E"
     except Exception as e:
         logger.warning(f"Error in rounding: {e}")
-        return "N/A"
+        return f"N/A {ending}"
 
 
 def round_to_nearest(number: Number, num_decimals: int) -> Number:
