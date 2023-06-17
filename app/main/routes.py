@@ -132,8 +132,8 @@ def field_data(base_field_id):
 @bp.route("/modal", methods=["GET"])
 @login_required
 def edit_modal():
-    modal_type = request.args.get("modal")
-    form_type = request.args.get("form")
+    modal_type = request.args.get("modalType")
+    form_type = request.args.get("formType")
     id = request.args.get("id")
     field_id = request.args.get("fieldId")
     if modal_type == "edit":

@@ -1,13 +1,13 @@
-window.addEventListener("load", () => {
-  var toastTrigger = document.getElementById("resetToast");
-  var toastList = document.getElementsByClassName("toast");
+export function manageToast(){
+  const toastTrigger = document.getElementById("resetToast");
+  const toastList = document.getElementsByClassName("toast");
   toastTrigger.addEventListener("click", () => {
     showToast(toastList);
     return true;
   });
-});
+}
 
-function showToast(toastList) {
+export function showToast(toastList) {
   for (let toast of toastList) {
     toast.classList.remove("hide");
     toast.classList.add("show");

@@ -1,24 +1,27 @@
-// toggle sidebar
-document.querySelectorAll("#sidebarNav > .list-group > a").forEach((link) => {
-  link.addEventListener("click", () => {
-    localStorage.removeItem("activeTab");
+import { removeStoredTab } from "./field.js";
+
+export function manageSidebar() {
+  // remove stored nav tab selection
+  document.querySelectorAll("#sidebarNav > .list-group > a").forEach((link) => {
+    link.addEventListener("click", removeStoredTab());
   });
-});
 
-document.getElementById("sidebarToggle").addEventListener("click", () => {
-  toggleSidebar(this);
-  activateSidebarItem();
-});
-// load scroll position of sidebar
-window.addEventListener("load", () => {
-  activateSidebarItem();
-});
-// save scroll position of sidebar
-window.addEventListener("beforeunload", () => {
-  localStorage.setItem("scrollPositon", document.getElementById("sidebar").scrollTop);
-});
+  // toggle sidebar and load scroll pos
+  document.getElementById("sidebarToggle").addEventListener("click", (event) => {
+    toggleSidebar(event);
+    activateSidebarItem();
+  });
+  // get sidebar scroll pos on page load
+  window.addEventListener("load", () => {
+    activateSidebarItem();
+  });
+  // save scroll pos on going to new page
+  window.addEventListener("beforeunload", () => {
+    localStorage.setItem("scrollPositon", document.getElementById("sidebar").scrollTop);
+  });
+}
 
-// scroll to selected field and add active tag
+// load scroll pos and add active tag to field entry
 function activateSidebarItem() {
   try {
     const fieldId = document.getElementById("field").dataset.baseId;
@@ -30,8 +33,9 @@ function activateSidebarItem() {
   }
 }
 // toggle sidebar in mobile mode
-function toggleSidebar(toggler) {
+function toggleSidebar(event) {
+  let toggle = event.currentTarget;
   var sidebar = document.getElementById("sidebarNav");
   sidebar.classList.toggle("show");
-  toggler.ariaExpanded = toggler.ariaExpanded == "true" ? "false" : "true";
+  toggle.ariaExpanded = toggle.ariaExpanded == "true" ? "false" : "true";
 }

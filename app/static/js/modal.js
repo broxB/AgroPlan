@@ -1,6 +1,6 @@
 import { fetchData, sendForm } from "./request.js";
 
-export class Modal {
+class Modal {
   static #instance;
 
   constructor() {
@@ -11,13 +11,15 @@ export class Modal {
     });
   }
 
-  async fetchContent(event) {
+  async initialContent(event) {
     const e = event.relatedTarget;
-    const modalType = e.dataset.modal;
-    const formType = e.dataset.form;
-    const id = e.dataset.id;
     const fieldId = document.getElementById("field").dataset.fieldId;
-    const params = { modal: modalType, form: formType, id: id, fieldId: fieldId };
+    const params = {
+      modalType: e.dataset.modal,
+      formType: e.dataset.form,
+      id: e.dataset.id,
+      fieldId: fieldId,
+    };
     const modalURL = "/modal?" + new URLSearchParams(params).toString();
     console.log(modalURL);
     const content = await fetchData(modalURL);
@@ -41,7 +43,7 @@ export class Modal {
   }
 }
 
-window.addEventListener("show.bs.modal", (event) => {
+export function createModal(event) {
   let modal = new Modal();
-  modal.fetchContent(event);
-});
+  modal.initialContent(event);
+}
