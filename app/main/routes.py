@@ -137,10 +137,10 @@ def edit_modal():
     id = request.args.get("id")
     field_id = request.args.get("fieldId")
     if modal_type == "edit":
-        form = create_edit_form(form_type, id)
-        form.populate(field_id)
+        form = create_edit_form(form_type, field_id)
+        form.populate(id)
     elif modal_type == "new":
-        form = create_form(form_type, id)
+        form = create_form(form_type, field_id)
         form.default_selects()
     modal = render_template("modal_content.html", form=form, modal_type=(modal_type, form_type))
     return jsonify(modal)
