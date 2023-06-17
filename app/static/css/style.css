@@ -21,6 +21,10 @@ html {
   --brown-95: hsl(32, 59%, 95%);
   --blue-95: hsl(215, 100%, 95%);
   --teal: hsl(162, 73%, 45%);
+  /* standard bs green shades */
+  --green-bs: hsl(152, 69%, 31%);
+  --green-bs-40: hsl(152, 69%, 45%);
+  --green-bs-50: hsl(152, 69%, 40%);
 }
 
 main {
@@ -406,12 +410,6 @@ tr:hover .btn-edit {
 }
 
 @media (max-width: 575px) {
-  :root {
-    --green: #198754;
-    --green-40: #24c278;
-    --green-50: #20ac6b;
-  }
-
   .table {
     font-size: 0.8rem;
   }
