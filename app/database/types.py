@@ -139,7 +139,7 @@ class LegumeType(enum.Enum):
     """Ratio of legumes in fruits: `grass_less_10`, `crop_10`, `catch_25` etc."""
 
     # Grünland
-    grass_less_5 = "< 5%"
+    grass_less_5 = r"< 5%"
     grass_less_10 = r"5% bis 10%"
     grass_less_20 = r"> 10% bis 20%"
     grass_greater_20 = r"> 20%"
@@ -159,7 +159,7 @@ class LegumeType(enum.Enum):
     catch_25 = r"< 25%"
     catch_50 = r"25% bis 75%"
     catch_75 = r"> 75%"
-    none = "0%"
+    none = r"0%"
 
 
 GrasslandLegumeType: enum.Enum = enum.Enum(

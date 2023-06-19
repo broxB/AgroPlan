@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from loguru import logger
+
 import app.database.model as db
 from app.database.types import (
     CropType,
@@ -74,7 +76,11 @@ class Cultivation:
         if self.crop_type is CropType.permanent_grassland:
             return Decimal(legume_delivery["Grünland"][self.legume_rate.value])
         elif self.crop_type is CropType.alfalfa_grass or self.crop_type is CropType.clover_grass:
-            rate = int(self.legume_rate.name.split("_")[-1]) / 10
+            try:
+                rate = int(self.legume_rate.name.split("_")[-1]) / 10
+            except ValueError or TypeError:
+                logger.warning(f"{self} has {self.legume_rate} which is not valid.")
+                rate = 0
             return Decimal(legume_delivery[self.crop_type.value] * rate)
         elif self.crop_type is CropType.alfalfa or self.crop_type is CropType.clover:
             return Decimal(legume_delivery[self.crop_type.value])
