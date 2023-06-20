@@ -15,7 +15,7 @@
         <th scope="row">{{ db.cultivation.crop.name }}</th>
         <td>{{ db.cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
         {% if db.cultivation.crop.feedable -%}
-          <td>{{ db.cultivation.crop_protein | format_number(".1f", "% TM/dt ") }}</th>
+          <td>{{ db.cultivation.crop_protein | format_number(".1f", "%TM/dt ") }}</th>
         {%- endif %}
         <td>{{ db.cultivation.residues.value }}</td>
         <td class="table-action d-print-none">
