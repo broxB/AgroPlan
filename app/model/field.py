@@ -107,7 +107,7 @@ class Field:
         """Summarize the balances of all crop needs, soil reductions, fertilizations and modifiers."""
         saldo = Balance("Remaining needs")
         saldo += self.sum_demands() + self.sum_reductions()
-        saldo = self._adjust_to_demand_option(saldo)
+        self._adjust_to_demand_option(saldo)
         saldo += self.sum_fertilizations() + self.sum_modifiers()
         return saldo
 
@@ -124,11 +124,11 @@ class Field:
             ):
                 cult_total_need += sum(fert_balances)
                 after_fert_need = Balance("Remaining needs")
-                after_fert_need += cult_total_need
+                after_fert_need.add(cult_total_need)
                 fert_balances.append(after_fert_need)
                 cultivation.balances[fert_name] = fert_balances
 
-    def cultivation_balances(self, cultivation: Cultivation) -> list(Balance):
+    def cultivation_balances(self, cultivation: Cultivation) -> tuple[list[Balance], Balance]:
         """Creates balances for the nutritional needs of the crop."""
         cult_balances = []
         cult_balances.append(cultivation.demand(self.demand_option))
@@ -147,7 +147,9 @@ class Field:
         cult_balances.append(cult_need)
         return cult_balances, cult_need
 
-    def fertilization_balances(self, cultivation: Cultivation) -> tuple(list(Balance)):
+    def fertilization_balances(
+        self, cultivation: Cultivation
+    ) -> tuple[list[Balance], list[Balance]]:
         """Creates balances for the nutrient quantities of the fertilizations."""
         org_balances, min_balances = [], []
         for fertilization in self.fertilizations:
@@ -285,7 +287,6 @@ class Field:
                 balance.k2o = 0
             if self.soil_sample.class_mg() is SoilClass.E:
                 balance.mgo = 0
-        return balance
 
     def _pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
         if (
