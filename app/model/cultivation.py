@@ -58,7 +58,7 @@ class Cultivation:
             byp_demand = self.crop.demand_byproduct(self.crop_yield)
         else:
             byp_demand = Balance()
-        demand = Balance("Crop demand")
+        demand = Balance("Crop needs")
         if negative_output:
             demand -= crop_demand + byp_demand
         else:

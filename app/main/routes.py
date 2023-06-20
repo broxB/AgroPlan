@@ -108,7 +108,7 @@ def field(base_field_id):
     # )
     fields = current_user.get_fields(year=current_user.year)
     field = create_field(current_user.id, base_field_id, current_user.year)
-    field.set_balance()
+    field.create_balances()
     form = YearForm()
     # elif request.method == "POST":
     # pass
