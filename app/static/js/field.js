@@ -1,9 +1,6 @@
-// remove stored selected tab on page change
-export function removeStoredTab() {
-  localStorage.removeItem("activeTab");
-}
+import { fetchData } from "./request.js";
 
-// restore selected tab on reload
+// restore field nav tab on reload
 export function restoreTab() {
   var id = localStorage.getItem("activeTab");
   if (id) {
@@ -15,7 +12,7 @@ export function restoreTab() {
   tab.show();
 }
 
-// save selected tab on click
+// save field nav tab on click
 export function storeTab() {
   document.querySelectorAll("#field-nav > button").forEach((btn) => {
     btn.addEventListener("shown.bs.tab", () => {
@@ -30,9 +27,8 @@ export function storeTab() {
  */
 export async function fieldSaldo() {
   const fieldId = document.getElementById("field").dataset.baseId;
-  // const room_url = "{{ url_for('main.field_data', id=base_field.id) }}";
   const room_url = "/field/" + fieldId + "/data";
-  const data = await fetch(room_url).then((response) => response.json());
+  const data = await fetchData(room_url);
   for (let elem in data) {
     var element = document.getElementById(elem);
     if (element) {

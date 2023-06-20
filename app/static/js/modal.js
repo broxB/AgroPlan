@@ -3,12 +3,13 @@ import { fetchData, sendForm } from "./request.js";
 class Modal {
   static #instance;
 
-  constructor() {
-    let modal = document.querySelector("#modal");
+  constructor(event) {
+    const modal = document.querySelector("#modal");
     this.content = modal.querySelector(".modal-content");
     modal.addEventListener("hidden.bs.modal", () => {
       this.content.innerHTML = "";
     });
+    this.initialContent(event);
   }
 
   async initialContent(event) {
@@ -27,7 +28,7 @@ class Modal {
   }
 
   addEventListeners() {
-    let selectElements = this.content.querySelectorAll("select");
+    const selectElements = this.content.querySelectorAll("select");
     selectElements.forEach((select) => {
       if (select.classList.contains("reload")) {
         select.addEventListener("change", async () => {
@@ -46,6 +47,5 @@ class Modal {
 }
 
 export function createModal(event) {
-  let modal = new Modal();
-  modal.initialContent(event);
+  new Modal(event);
 }
