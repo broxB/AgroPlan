@@ -1,17 +1,29 @@
+const sidebar = document.querySelector("#sidebarNav");
+const offcanvas = new bootstrap.Offcanvas(sidebar);
+
 export function manageSidebar() {
-  // toggle sidebar and load scroll pos
-  document.getElementById("sidebarToggle").addEventListener("click", (event) => {
-    // toggleSidebar(event);
-    activateSidebarItem();
+  window.addEventListener("show.bs.offcanvas", () => {
+    // scroll to item pos on canvas open
+    scrollToItem();
+    // close offcanvas on window breakpoint and scroll to item pos
+    window.addEventListener("resize", hideOnResize);
   });
-  // get sidebar scroll pos on page load
   window.addEventListener("load", () => {
-    activateSidebarItem();
+    scrollToItem();
   });
 }
 
-// scroll element pos and add active tag
-function activateSidebarItem() {
+function hideOnResize() {
+  const WINDOW_BREAKPOINT_LG = 992;
+  const WINDOW_BREAKPOINT_MD = 768;
+  if (window.innerWidth >= WINDOW_BREAKPOINT_MD) {
+    offcanvas.hide();
+    scrollToItem();
+    window.removeEventListener("resize", hideOnResize);
+  }
+}
+
+function scrollToItem() {
   try {
     const fieldId = document.getElementById("field").dataset.baseId;
     var element = document.getElementById(fieldId);
@@ -21,7 +33,7 @@ function activateSidebarItem() {
     document.getElementById("sidebar").scrollTop = 0;
   }
 }
-// toggle sidebar in mobile mode
+
 function toggleSidebar(event) {
   let toggle = event.currentTarget;
   var sidebar = document.getElementById("sidebarNav");

@@ -1,18 +1,19 @@
 {% from "utils.html" import render_nav_item %}
 
-<nav class="navbar nav-masthead sticky-top navbar-expand-lg navbar-dark p-2">
-  <div class="d-flex flex-row">
-    {% if fields or (request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field") %}
-      <button class="navbar-toggler"
-              type="button"
-              id="sidebarToggle"
-              aria-expanded="false"
-              aria-label="Toggle sidebar">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-    {% endif %}
-    <a class="navbar-brand ps-2" href="{{ url_for('main.home') }}">AgroPlan</a>
-  </div>
+<nav class="navbar nav-masthead sticky-top navbar-expand-md navbar-dark p-2">
+  {% if fields or (request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field") %}
+    <button class="navbar-toggler navbar-expand-md"
+            type="button"
+            id="sidebarToggle"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#sidebarNav"
+            aria-controls="sidebarNav"
+            aria-expanded="false"
+            aria-label="Toggle sidebar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  {% endif %}
+  <a class="navbar-brand ps-3" href="{{ url_for('main.home') }}">AgroPlan</a>
   <button class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
