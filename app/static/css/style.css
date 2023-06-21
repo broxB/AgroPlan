@@ -89,6 +89,10 @@ main {
   background-color: var(--green-50) !important;
 }
 
+.color-green {
+  color: var(--green) !important;
+}
+
 /*  */
 /* || table styles */
 /*  */

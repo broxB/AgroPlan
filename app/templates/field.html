@@ -14,10 +14,41 @@
        id="field"
        data-base-id="{{ base_field.id }}"
        data-field-id="{{ db.field.id }}">
-    <h1>
-      {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
-    </h1>
-    <h6>{{ db.field.field_type.value }} — {{ db.field.area | format_number(".2f", "ha") }}</h6>
+    <div class="col">
+      <h1>
+        {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+      </h1>
+      <h6>{{ db.field.field_type.value }} — {{ db.field.area | format_number(".2f", "ha") }}</h6>
+    </div>
+    <div class="col-4 col-sm-3 d-inline-flex justify-content-end align-items-start">
+      <button class="btn btn-link"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#modal"
+              data-form="field"
+              data-modal="edit"
+              data-id="{{ db.field.id }}"
+              data-field-id="{{ base_field.id }}">
+        <i class="fa-solid fa-pen-to-square fa-lg color-green"></i>
+      </button>
+      <button class="btn btn-link"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#modal"
+              data-form="print"
+              data-modal="print"
+              data-id="{{ db.field.id }}"
+              data-field-id="{{ base_field.id }}">
+        <i class="fa-solid fa-print fa-lg color-green"></i>
+      </button>
+    </div>
+    <!-- Maybe 3 dot menu -->
+    {# <div class="collapse collapse-horizontal show" id="fieldMenu">
+      <button class="btn d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#fieldMenu" aria-controls="fieldMenu" aria-expanded="false" aria-label="Toggle field menu">
+        <i class="fa-solid fa-ellipsis-vertical fa-lg color-green"></i>
+      </button>
+      <i class="fa-solid fa-bars"></i>
+      </div> #}
   </div>
 
   <!-- field nav -->
