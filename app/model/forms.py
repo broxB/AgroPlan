@@ -143,7 +143,7 @@ class FieldForm(FlaskForm, FormHelper):
     sub_suffix = IntegerField("Sub-Partition:")
     year = IntegerField("Year:", validators=[DataRequired()])
     area = FloatField("Area in ha:", validators=[DataRequired()])
-    red_region = BooleanField("In red region?", validators=[DataRequired()])
+    red_region = BooleanField("In red region?")
     field_type = SelectField(
         "Select field type:",
         choices=[(enum.name, enum.value) for enum in FieldType],
