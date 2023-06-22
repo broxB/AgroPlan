@@ -21,6 +21,7 @@ class Config:
     POSTS_PER_PAGE = 25
     LANGUAGES = ["en", "de"]
     EXPLAIN_TEMPLATE_LOADING = False
+    BOOTSTRAP_SERVE_LOCAL = True
 
 
 class TestConfig(Config):
