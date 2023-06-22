@@ -19,7 +19,6 @@
             <td>{{ fertilization.measure.value }}</td>
             {% if fert_class == "organic" %}<td>{{ fertilization.month }}</td>{% endif %}
             <td>{{ fertilization.fertilizer.name }}</td>
-            {# <td>{{ fertilization.amount | format_number(".1f", "m3/ha") }}</td> #}
             <td>{{ fertilization.amount | format_number(".1f", fertilization.fertilizer.unit.value+"/ha") }}</td>
             <td class="table-action d-print-none">
               <button class="btn btn-link btn-edit"
@@ -28,8 +27,7 @@
                       data-bs-target="#modal"
                       data-form="fertilization"
                       data-modal="edit"
-                      data-id="{{ fertilization.id }}"
-                      data-field-id="{{ field.id }}">
+                      data-id="{{ fertilization.id }}">
                 <i class="fa-solid fa-pencil"></i>
               </button>
             </td>
