@@ -1,3 +1,3 @@
 FLASK_APP=agroplan.py
-FLASK_ENV=development
 FLASK_DEBUG=true
+FLASK_RUN_HOST=0.0.0.0
