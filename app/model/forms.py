@@ -241,7 +241,7 @@ class CultivationForm(FlaskForm, FormHelper):
 
 
 class FertilizationForm(FlaskForm, FormHelper):
-    crop = SelectField("Select a crop to fertilize:", validators=[DataRequired()])
+    cultivation = SelectField("Select a crop to fertilize:", validators=[DataRequired()])
     fert_class = SelectField(
         "Select a fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertClass],
@@ -258,7 +258,7 @@ class FertilizationForm(FlaskForm, FormHelper):
         render_kw={"class": "reload"},
     )
     fertilizer = SelectField("Select a fertilizer:", validators=[DataRequired()])
-    month = IntegerField("Month:")
+    month = MonthField("Month:")
     amount = FloatField("Amount", validators=[DataRequired()])
 
     def __init__(self, field_id, *args, **kwargs):

@@ -201,10 +201,10 @@ class EditFertilizationForm(FertilizationForm):
 
     def populate(self, id: int):
         super().populate(id)
-        self.crop.choices = [
+        self.cultivation.choices = [
             (cult.id, cult.crop.name) for cult in self.model_data.field[0].cultivations
         ]
-        self.crop.data = str(self.model_data.cultivation.id)
+        self.cultivation.data = str(self.model_data.cultivation.id)
         self.fert_class.data = self.model_data.fertilizer.fert_class.name
         self.cut_timing.data = self.model_data.cut_timing.name
         measure_type = (
