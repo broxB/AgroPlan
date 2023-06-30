@@ -4,8 +4,15 @@ from typing import TypeVar
 
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, FloatField, IntegerField, SelectField, StringField
-from wtforms.validators import DataRequired, ValidationError
+from wtforms import (
+    BooleanField,
+    FloatField,
+    IntegerField,
+    MonthField,
+    SelectField,
+    StringField,
+)
+from wtforms.validators import DataRequired, InputRequired, NumberRange, ValidationError
 
 from app.database.model import (
     BaseField,
@@ -153,32 +160,32 @@ class BaseFieldForm(FlaskForm, FormHelper):
 
 
 class FieldForm(FlaskForm, FormHelper):
-    sub_suffix = IntegerField("Sub-Partition:")
-    year = IntegerField("Year:", validators=[DataRequired()])
-    area = FloatField("Area in ha:", validators=[DataRequired()])
+    sub_suffix = IntegerField("Sub-Partition:", validators=[InputRequired(), NumberRange(min=0)])
+    year = IntegerField("Year:", validators=[InputRequired(), NumberRange(min=2000)])
+    area = FloatField("Area in ha:", validators=[InputRequired(), NumberRange(min=0)])
     red_region = BooleanField("In red region?")
     field_type = SelectField(
         "Select field type:",
         choices=[(enum.name, enum.value) for enum in FieldType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
     demand_type = SelectField(
         "Select demand type:",
         choices=[(enum.name, enum.value) for enum in DemandType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
 
-    def __init__(self, base_id, *args, **kwargs):
+    def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.base_id = base_id
+        self.field_id = field_id
         self.model_type = Field
         self.sub_suffix.data = 0
 
     def validate_sub_suffix(self, sub_suffix):
-        if sub_suffix:
+        if sub_suffix.data:
             field = Field.query.filter(
                 Field.base_id == self.base_id,
-                Field.sub_suffix == sub_suffix,
+                Field.sub_suffix == sub_suffix.data,
                 Field.year == self.year.data,
             ).first()
             if field is not None:
@@ -188,7 +195,7 @@ class FieldForm(FlaskForm, FormHelper):
         field = Field.query.filter(
             Field.base_id == self.base_id,
             Field.sub_suffix == self.sub_suffix.data,
-            Field.year == year,
+            Field.year == year.data,
         ).first()
         if field is not None:
             ValidationError(f"Field in {year} already exists.")

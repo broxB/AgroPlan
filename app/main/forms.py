@@ -124,17 +124,19 @@ class EditBaseFieldForm(BaseFieldForm):
 
 
 class EditFieldForm(FieldForm):
-    def __init__(self, sub_suffix, year, base_id, *args, **kwargs):
-        super().__init__(base_id, *args, **kwargs)
-        self.original_sub_suffix = sub_suffix
-        self.original_year = year
+    def __init__(self, field_id: int, *args, **kwargs):
+        super().__init__(field_id, *args, **kwargs)
+
+    def get_data(self, id: int):
+        self.base_id = id
+        self.model_data = self.model_type.query.get(self.field_id)
 
     def validate_sub_suffix(self, sub_suffix):
-        if sub_suffix != self.original_sub_suffix:
+        if sub_suffix.data != self.model_data.sub_suffix:
             super().validate_sub_suffix(sub_suffix)
 
     def validate_year(self, year):
-        if year != self.original_year:
+        if year.data != self.model_data.year:
             super().validate_year(year)
 
     def populate(self, id: int):
