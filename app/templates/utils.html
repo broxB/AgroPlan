@@ -1,3 +1,28 @@
+{% macro render_accordion(title, target, sub_title="", style="", data_id="", collapsed=false)%}
+  <div class="accordion {{ style }}">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button {% if collapsed -%} collapsed{%- endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#{{ target }}"
+                {% if data_id -%} data-id="{{ data_id }}" {%- endif %}>
+          <div class="fw-bolder">{{ title }}
+          {%- if sub_title %}
+            <i class="fa-solid fa-seedling"></i>
+            {{ sub_title }}
+          {% endif -%}
+          </div>
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse {% if not collapsed -%} show{%- endif %}"
+           id="{{ target }}">
+        <div class="accordion-body">{{ caller() }}</div>
+      </div>
+    </div>
+  </div>
+{%- endmacro %}
+
 {% macro render_pagination(pagination, endpoint) %}
   <div class=page-items>
     {{ pagination.first }} - {{ pagination.last }} of {{ pagination.total }}
@@ -17,8 +42,9 @@
   </div>
 {% endmacro %}
 
-{#  This file was part of Flask-Bootstrap and was modified under the terms of
- its BSD License. Copyright (c) 2013, Marc Brinkmann. All rights reserved. #}
+
+{# The following macros were part of Flask-Bootstrap and were modified under the terms of
+ its BSD License. Copyright (c) 2023, Philipp Brockmann. All rights reserved. #}
 
 {% macro render_messages(messages=None, container=False, transform={
     'critical': 'danger',
@@ -429,29 +455,4 @@ action="" is what we want, from http://www.ietf.org/rfc/rfc2396.txt:
             {%- endif %}
         {%- endfor %}
     </form>
-{%- endmacro %}
-
-{% macro render_accordion(title, target, sub_title="", style="", data_id="", collapsed=false)%}
-  <div class="accordion {{ style }}">
-    <div class="accordion-item">
-      <h2 class="accordion-header">
-        <button class="accordion-button {% if collapsed -%} collapsed{%- endif %}"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#{{ target }}"
-                {% if data_id -%} data-id="{{ data_id }}" {%- endif %}>
-          <div class="fw-bolder">{{ title }}
-          {%- if sub_title %}
-            <i class="fa-solid fa-seedling"></i>
-            {{ sub_title }}
-          {% endif -%}
-          </div>
-        </button>
-      </h2>
-      <div class="accordion-collapse collapse {% if not collapsed -%} show{%- endif %}"
-           id="{{ target }}">
-        <div class="accordion-body">{{ caller() }}</div>
-      </div>
-    </div>
-  </div>
 {%- endmacro %}
