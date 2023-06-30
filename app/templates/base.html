@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% import 'utils.html' as utils %}
+
+{% block title %}
+  {% if title %}
+    {{ title }} | AgroPlan
+  {% else %}
+    {{ 'AgroPlan' }}
+  {% endif %}
+{% endblock title %}
+
+{% block navbar %}
+  {% include "navbar.html" %}
+{% endblock navbar %}
+
+{% block sidebar %}
+  {% if fields %}
+    {% include "sidebar.html" %}
+  {% endif %}
+{% endblock sidebar %}
+
+{% block content %}
+  <!-- Alert messages -->
+  {% with message = utils.render_messages(container=True) %}
+    {% if message %}{{ message }}{% endif %}
+  {% endwith %}
+  {# application content needs to be provided in the app_content block #}
+  <!-- App content -->
+  {% block app_content %}
+  {% endblock app_content %}
+  {% include "modal.html" %}
+{% endblock content %}
+
+{% block footer %}
+  {% if current_user.is_anonymous %}
+  {% else %}
+    {% if request.endpoint and request.endpoint == "main.field" %}
+      {% include "field_footer.html" %}
+    {% else %}
+      {% include "footer.html" %}
+    {% endif %}
+  {% endif %}
+{% endblock footer %}
+
+{% block scripts %}
+  {{ super() }}
+{% endblock scripts %}

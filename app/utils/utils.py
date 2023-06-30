@@ -1,24 +1,45 @@
 import json
 import re
+from decimal import InvalidOperation
+from numbers import Number
+
+from loguru import logger
 
 
-def dataclass_from_dict(dclass, data_dict: dict):
-    """Create dataclass from dictionary.
-
-    Args:
-        dclass (dataclass): Dataclass to use for creation.
-        data_dict (dict): Dictionary to feed to dataclass.
-
-    Returns:
-        dataclass: Dataclass with dictionary data.
-    """
+def handle_error(caller, on_exception="None"):
     try:
-        fieldtypes = dclass.__annotations__
-        return dclass(**{f: dataclass_from_dict(fieldtypes[f], data_dict[f]) for f in data_dict})
-    except AttributeError:
-        if isinstance(data_dict, (tuple, list)):
-            return [dataclass_from_dict(dclass.__args__[0], f) for f in data_dict]
-        return data_dict
+        return caller()
+    except Exception as e:
+        logger.error(f"Jinja2 Template erroring with: {e}")
+        return on_exception
+
+
+def format_number(input: Number, format: str = ".2f", ending: str = "") -> str:
+    if ending:
+        ending = f" {ending}"
+    try:
+        decimal = int(re.findall(f"\.(\d+)\w", format)[0])
+    except IndexError:
+        logger.warning("Invalid format used!")
+        decimal = 2
+    try:
+        num = round_to_nearest(input, decimal)
+        return f"{num:{format}}{ending}"
+    except InvalidOperation:
+        return "E"
+    except Exception as e:
+        logger.warning(f"Error in rounding: {e}")
+        return f"N/A{ending}"
+
+
+def round_to_nearest(number: Number, num_decimals: int) -> Number:
+    """python uses banking round; while this rounds 0.5 up"""
+    if (number * 10 ** (num_decimals + 1)) % 10 == 5:
+        return round(
+            (number * 10 ** (num_decimals + 1) + 1) / 10 ** (num_decimals + 1), num_decimals
+        )
+    else:
+        return round(number, num_decimals)
 
 
 def load_json(filename: str) -> dict:
@@ -210,58 +231,3 @@ def renew_dict(schlag_data: dict) -> dict:
             new_schläge.append(dict(zip(COL_NAMES, schlag)))
         schlag_dict[key] = new_schläge
     return schlag_dict
-
-
-def get_fields_list(year: str) -> list[str]:
-    """Creates a list of all fields in a specified ``year``.
-
-    Args:
-        year (str): ``year`` of cultivation.
-
-    Returns:
-        list[str]: List of fields in metaform (e.g. ["01-1 Am Hof 1 (3.33 ha)", ...])
-    """
-    fields = load_json("data/schläge.json")[year]
-    return [
-        f"{field['Prefix']:02d}-{field['Suffix']} {field['Name']} ({field['Ha']:,}ha)"
-        for field in fields
-    ]
-
-
-def get_field_cultivation(field_name: str) -> dict[list[str]]:
-    """Collects cultivation info for a specified ``field``.
-
-    Args:
-        field (str): Field name in metaform (e.g. "01-1 Am Hof 1 (3.33 ha)")
-
-    Returns:
-        dict[list[str]]: Nested dict with crops of the years (e.g. {"2022": ["Haupfrucht", "Zweitfrucht"], "2021": ...})
-    """
-    all_data = load_json("data/schläge.json")
-    pattern = f"(\d+)-(\d+)\s(.+)\s\("
-    matches = re.findall(pattern, field_name)[0]
-    prefix, suffix, name = int(matches[0]), int(matches[1]), matches[2]
-
-    field_crops = {}
-    for year in all_data:
-        all_fields = all_data[year]
-        for field in all_fields:
-            if (
-                field.get("Prefix") == int(prefix)
-                and field.get("Suffix") == int(suffix)
-                and field.get("Name") == name
-            ):
-                field_data = [v for k, v in field.items() if k.startswith("Frucht_") and v]
-                crops = []
-                for i, x in enumerate(field_data):
-                    if x in ["Hauptfrucht", "Zweitfrucht", "Zwischenfrucht"]:
-                        crops.append(str(field_data[i + 1]))
-                field_crops[year] = crops
-    return field_crops
-
-
-if __name__ == "__main__":
-
-    print(get_field_cultivation("21-0 Bresegard 2 (3.13 ha)"))
-    # new_dict = renew_dict(load_data("schläge.json"))
-    # save_data(new_dict, "data/new_schläge2.json")

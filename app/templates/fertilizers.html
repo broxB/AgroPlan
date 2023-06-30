@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% from 'utils.html' import render_icon %}
+
+{% block app_content %}
+  <div class="container">
+    <table class="table table-sm table-hover caption-top align-middle">
+      <caption>List of organic fertilizers</caption>
+      <thead class="no-border-top">
+        <tr class="text-center">
+          <th scope="col">ID</th>
+          <th scope="col">Name</th>
+          <th scope="col">Year</th>
+          {# <th scope="col">Class</th> #}
+          <th scope="col">Type</th>
+          {# <th scope="col">Active</th> #}
+          <th scope="col">Unit</th>
+          {# <th scope="col">Price</th> #}
+          <th scope="col">N</th>
+          <th scope="col">
+            P<sub>2</sub>O<sub>5</sub>
+          </th>
+          <th scope="col">
+            K<sub>2</sub>O
+          </th>
+          <th scope="col">MgO</th>
+          <th scope="col">S</th>
+          <th scope="col">CaO</th>
+          <th scope="col">
+            NH<sub>4</sub>
+          </th>
+          <th scope="col">Usage</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fert in fertilizers if fert.fert_class.name == "organic" %}
+          <tr data-id="{{ fert.id }}">
+            <th class="text-center" scope="row">{{ loop.index }}</th>
+            <td>{{ fert.name }}</td>
+            <td class="text-center">{{ fert.year }}</td>
+            {# <td>{{ fert.fert_class.value }}</td> #}
+            <td>{{ fert.fert_type.value }}</td>
+            {# <td>{{ fert.active }}</td> #}
+            <td class="text-center">{{ fert.unit.value }}</td>
+            {# <td>{{ fert.price }}</td> #}
+            <td class="text-end">{{ fert.n }}</td>
+            <td class="text-end">{{ fert.p2o5 }}</td>
+            <td class="text-end">{{ fert.k2o }}</td>
+            <td class="text-end">{{ fert.mgo }}</td>
+            <td class="text-end">{{ fert.s }}</td>
+            <td class="text-end">
+              {{ fert.cao }}
+            </td>
+            <td class="text-end">
+              {{ fert.nh4 }}
+            </td>
+            <td class="text-end">
+              {% for ferti in usage if ferti.name == fert.name and ferti.year == fert.year %}
+                {{ ferti.amount | format_number(".1f") }}
+              {% endfor %}
+            </td>
+            <td>
+              {{ fert.unit.value + "/ha" }}
+            </td>
+            <td class="d-print-none">
+              <button class="btn btn-link btn-edit"
+                      type="button"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modal"
+                      data-form="fertilizer"
+                      data-modal="edit">
+                {{ render_icon("pencil-square", extra_classes="color-green") }}
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button class="btn btn-success fw-500 d-print-none"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#modal"
+            data-form="fertilizer"
+            data-modal="new">
+      ✚ New
+    </button>
+
+    <table class="table table-sm table-hover caption-top align-middle">
+      <caption>List of mineral fertilizers</caption>
+      <thead class="no-border-top">
+        <tr class="text-center">
+          <th scope="col">
+            ID
+          </th>
+          <th scope="col">
+            Name
+          </th>
+          {# <th scope="col">Year</th> #}
+          {# <th scope="col">Class</th> #}
+          <th scope="col">
+            Type
+          </th>
+          <th scope="col">
+            Active
+          </th>
+          <th scope="col">
+            Unit
+          </th>
+          <th scope="col">
+            Price
+          </th>
+          <th scope="col">
+            N
+          </th>
+          <th scope="col">
+            P<sub>2</sub>O<sub>5</sub>
+          </th>
+          <th scope="col">
+            K<sub>2</sub>O
+          </th>
+          <th scope="col">
+            MgO
+          </th>
+          <th scope="col">
+            S
+          </th>
+          <th scope="col">
+            CaO
+          </th>
+          <th scope="col">
+            NH<sub>4</sub>
+          </th>
+          <th scope="col">
+            Usage
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fert in fertilizers if fert.fert_class.name == "mineral" %}
+          <tr data-id="{{ fert.id }}">
+            <th class="text-center" scope="row">
+              {{ loop.index }}
+            </th>
+            <td>
+              {{ fert.name }}
+            </td>
+            {# <td>{{ fert.year }}</td> #}
+            {# <td>{{ fert.fert_class.value }}</td> #}
+            <td>
+              {{ fert.fert_type.value }}
+            </td>
+            <td class="text-center">
+              {{ fert.active }}
+            </td>
+            <td class="text-center">
+              {{ fert.unit.value }}
+            </td>
+            <td class="text-end">
+              {{ fert.price }}
+            </td>
+            <td class="text-end">
+              {{ fert.n }}
+            </td>
+            <td class="text-end">
+              {{ fert.p2o5 }}
+            </td>
+            <td class="text-end">
+              {{ fert.k2o }}
+            </td>
+            <td class="text-end">
+              {{ fert.mgo }}
+            </td>
+            <td class="text-end">
+              {{ fert.s }}
+            </td>
+            <td class="text-end">
+              {{ fert.cao }}
+            </td>
+            <td class="text-end">
+              {{ fert.nh4 }}
+            </td>
+            <td class="text-end">
+              {% set ns = namespace(used = false) %}
+              {% for ferti in usage if ferti.name == fert.name and ferti.year == current_user.year %}
+                {{ ferti.amount | format_number(".1f") }}
+                {% set ns.used = true %}
+              {% endfor %}
+              {% if not ns.used %}{{ 0 }}{% endif %}
+            </td>
+            <td>
+              {{ fert.unit.value + "/ha" }}
+            </td>
+            <td class="d-print-none">
+              <button class="btn btn-link btn-edit"
+                      type="button"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modal"
+                      data-form="fertilizer"
+                      data-modal="edit">
+                {{ render_icon("pencil-square", extra_classes="color-green") }}
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <button class="btn btn-success fw-500 d-print-none"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#modal"
+            data-form="fertilizer"
+            data-modal="new">
+      ✚ New
+    </button>
+  </div>
+{% endblock app_content %}

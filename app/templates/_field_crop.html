@@ -1,0 +1,35 @@
+{% from 'utils.html' import render_icon %}
+
+<div class="table-responsive">
+  <table class="table table-sm table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Crop</th>
+        <th scope="col">Amount</th>
+        {% if db.cultivation.crop.feedable -%}<th scope="col">Protein</th>{%- endif %}
+        <th scope="col" colspan="2">Residue</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-id="{{ cultivation.id }}">
+        <th scope="row">{{ db.cultivation.crop.name }}</th>
+        <td>{{ db.cultivation.crop_yield | format_number(".0f", "dt/ha") }}</td>
+        {% if db.cultivation.crop.feedable -%}
+          <td>{{ db.cultivation.crop_protein | format_number(".1f", "%TM/dt ") }}</td>
+        {%- endif %}
+        <td>{{ db.cultivation.residues.value }}</td>
+        <td class="table-action d-print-none">
+          <button class="btn btn-link btn-edit"
+                  type="button"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modal"
+                  data-form="cultivation"
+                  data-modal="edit"
+                  data-id="{{ db.cultivation.id }}">
+            {{ render_icon("pencil-square", extra_classes="color-green") }}
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

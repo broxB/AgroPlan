@@ -1,57 +1,78 @@
-from dataclasses import dataclass
+from __future__ import annotations
+
 from decimal import Decimal
 
-import database.model as db
-from database.types import FertClass, FertType, FieldType
-from utils import load_json
+import app.database.model as db
+from app.database.types import FertClass, FertType, FieldType
+
+from . import guidelines
 
 
-@dataclass
+def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
+    if fertilizer.fert_class is FertClass.organic:
+        return Organic(fertilizer)
+    elif fertilizer.fert_class is FertClass.mineral:
+        return Mineral(fertilizer)
+
+
 class Fertilizer:
-    Fertilizer: db.Fertilizer
-
-    def __post_init__(self):
-        self.name: str = self.Fertilizer.name
-        self.fert_class: FertClass = self.Fertilizer.fert_class
-        self.fert_type: FertType = self.Fertilizer.fert_type
-        self.n: Decimal = self.Fertilizer.n
-        self.p2o5: Decimal = self.Fertilizer.p2o5
-        self.k2o: Decimal = self.Fertilizer.k2o
-        self.mgo: Decimal = self.Fertilizer.mgo
-        self.s: Decimal = self.Fertilizer.s
-        self.cao: Decimal = self.Fertilizer.cao
-        self.nh4: Decimal = self.Fertilizer.nh4
-        self._factor_dict = load_json("data/Richtwerte/Abschläge/wirkungsfaktoren.json")
-
-    def n_total(self, netto: bool = False) -> Decimal:
-        if self.fert_class == FertClass.organic:
-            if netto:
-                return self.n * self.storage_loss()
-            return self.n
-
-    def n_verf(self, field_type: FieldType) -> Decimal:
-        n_verf = self.n
-        if self.fert_class == FertClass.organic:
-            n_verf *= self.factor(field_type)
-        return max(n_verf, self.nh4)
+    def __init__(self, Fertilizer: db.Fertilizer):
+        self.name: str = Fertilizer.name
+        self.fert_class: FertClass = Fertilizer.fert_class
+        self.fert_type: FertType = Fertilizer.fert_type
+        self.n: Decimal = Fertilizer.n
+        self.p2o5: Decimal = Fertilizer.p2o5
+        self.k2o: Decimal = Fertilizer.k2o
+        self.mgo: Decimal = Fertilizer.mgo
+        self.s: Decimal = Fertilizer.s
+        self.cao: Decimal = Fertilizer.cao
+        self.nh4: Decimal = Fertilizer.nh4
 
     def is_class(self, fert_class: FertClass) -> bool:
-        return self.fert_class == fert_class if fert_class else True
-
-    def factor(self, field_type: FieldType) -> Decimal:
-        return Decimal(str(self._factor_dict[self.fert_type.value][field_type.value]))
-
-    def storage_loss(self) -> Decimal:
-        return Decimal(str(self._factor_dict[self.fert_type.value]["Lagerverluste"]))
+        return self.fert_class is fert_class if fert_class else True
 
     @property
     def is_organic(self) -> bool:
-        return self.fert_class == FertClass.organic
+        return self.fert_class is FertClass.organic
 
     @property
     def is_mineral(self) -> bool:
-        return self.fert_class == FertClass.mineral
+        return self.fert_class is FertClass.mineral
 
     @property
     def is_lime(self) -> bool:
-        return self.fert_type == FertType.lime
+        return self.fert_type is FertType.lime
+
+
+class Organic(Fertilizer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._org_factor: dict = guidelines.org_factor()
+
+    def factor(self, field_type: FieldType) -> Decimal:
+        return Decimal(str(self._org_factor[self.fert_type.value][field_type.value]))
+
+    def storage_loss(self) -> Decimal:
+        return Decimal(str(self._org_factor[self.fert_type.value]["Lagerverluste"]))
+
+    def n_total(self, netto: bool = False) -> Decimal:
+        if netto:
+            return self.n * self.storage_loss()
+        return self.n
+
+    def n_verf(self, field_type: FieldType) -> Decimal:
+        return max(self.n * self.factor(field_type), self.nh4)
+
+    def __repr__(self) -> str:
+        return f"<Org fertilizer: {self.name}>"
+
+
+class Mineral(Fertilizer):
+    def n_total(self, *arg, **kwargs) -> Decimal:
+        return self.n
+
+    def n_verf(self, *arg, **kwargs) -> Decimal:
+        return max(self.n, self.nh4)
+
+    def __repr__(self) -> str:
+        return f"<Min fertilizer: {self.name}>"

@@ -1,0 +1,35 @@
+{% from 'utils.html' import render_icon %}
+
+<div class="table-responsive">
+  <table class="table table-sm table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Description</th>
+        <th scope="col">Nutrient</th>
+        <th scope="col" colspan="2">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for field in base_field.fields if field.year == current_user.year %}
+        {% for modifier in field.modifiers %}
+          <tr data-modifier-id="{{ modifier.id }}">
+            <th scope="row">{{ modifier.description }}</th>
+            <td>{{ modifier.modification.value }}</td>
+            <td>{{ modifier.amount | format_number(".0f", "kg/ha") }}</td>
+            <td class="table-action d-print-none">
+              <button class="btn btn-link btn-edit"
+                      type="button"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modal"
+                      data-form="modifier"
+                      data-modal="edit"
+                      data-id="{{ modifier.id }}">
+                {{ render_icon("pencil-square", extra_classes="color-green") }}
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

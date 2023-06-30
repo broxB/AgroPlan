@@ -1,0 +1,42 @@
+{% from 'utils.html' import render_icon %}
+
+<div class="table-responsive">
+  <table class="table table-sm table-hover">
+    <thead>
+      <tr>
+        <th scope="col">Year</th>
+        <th scope="col">Area</th>
+        <th scope="col">Type</th>
+        <th scope="col">Demand</th>
+        <th scope="col" colspan="2">Red region</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for field in base_field.fields %}
+        <tr>
+          <th scope="row" data-field-id="{{ field.id }}">{{ field.year }}</th>
+          <td>{{ field.area }}</td>
+          <td>{{ field.field_type.value }}</td>
+          <td>{{ field.demand_type.value }}</td>
+          <td>
+            {% if field.red_region %}
+              {{ render_icon("check-circle", extra_classes="color-green") }}
+            {% else %}
+              {{ render_icon("x-circle", extra_classes="text-danger") }}
+            {% endif %}
+          </td>
+          <td class="table-action d-print-none">
+            <button class="btn btn-link btn-edit"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal"
+                    data-form="field"
+                    data-modal="edit">
+              {{ render_icon("pencil-square", extra_classes="color-green") }}
+            </button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

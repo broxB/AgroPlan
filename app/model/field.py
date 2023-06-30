@@ -1,114 +1,300 @@
-from dataclasses import dataclass
-from dataclasses import field as field_
+from __future__ import annotations
+
 from decimal import Decimal
 
-import database.model as db
-import model as md
-from database.types import CropClass, DemandType, FertClass, FieldType, MeasureType
-from database.utils import create_session
+from flask_login import current_user
 from loguru import logger
-from model.cultivation import CatchCrop, MainCrop, SecondCrop, create_cultivation
-from model.soil import Soil
+
+import app.database.model as db
+from app.database.model import BaseField as BaseFieldModel
+from app.database.model import Field as FieldModel
+from app.database.types import (
+    CultivationType,
+    DemandType,
+    FertClass,
+    FieldType,
+    MeasureType,
+    SoilClass,
+)
+
+from .balance import Balance, create_modifier
+from .crop import Crop
+from .cultivation import (
+    CatchCrop,
+    Cultivation,
+    MainCrop,
+    SecondCrop,
+    create_cultivation,
+)
+from .fertilization import Fertilization
+from .fertilizer import create_fertilizer
+from .soil import Soil, create_soil_sample
 
 
-@dataclass
+def create_field(
+    user_id: int, base_field_id: int, year: int, first_year: bool = True
+) -> Field | None:
+    """Class Factory to create `field` from sqlalchemy database queries.
+
+    Args:
+        base_field_id (int): Id of the basefield to query from the database.
+        year (int): Year of field to query from the database.
+        first_year (bool, optional): Specify as `false` to stop recursively create previous years. Defaults to True.
+
+    Returns:
+        Field | None: Field class that contains all `cultivations` and `fertilizations` of the year and basefield.
+    """
+
+    field = (
+        FieldModel.query.join(BaseFieldModel)
+        .filter(
+            BaseFieldModel.id == base_field_id,
+            BaseFieldModel.user_id == user_id,
+            FieldModel.year == year,
+        )
+        .one_or_none()
+    )
+
+    if field is None:
+        return None
+    new_field = Field(field, first_year=first_year)
+    new_field.soil_sample = create_soil_sample(field.soil_samples, field.field_type, year)
+
+    for cultivation in field.cultivations:
+        crop_data = Crop(cultivation.crop)
+        cultivation_data = create_cultivation(cultivation, crop_data)
+        new_field.cultivations.append(cultivation_data)
+
+    for fertilization in field.fertilizations:
+        fertilizer_data = create_fertilizer(fertilization.fertilizer)
+        crop_data = Crop(fertilization.cultivation.crop)
+        fertilization_data = Fertilization(
+            fertilization, fertilizer_data, crop_data, fertilization.cultivation.cultivation_type
+        )
+        new_field.fertilizations.append(fertilization_data)
+
+    for modifier in field.modifiers:
+        new_field.modifiers.append(
+            create_modifier(modifier.description, modifier.modification, modifier.amount)
+        )
+
+    return new_field
+
+
 class Field:
-    Field: db.Field
-    first_year: bool = True
-    cultivations: list[md.Cultivation] = field_(default_factory=list)
-    fertilizations: list[md.Fertilization] = field_(default_factory=list)
+    """
+    Field class contains all `cultivations` and `fertilizations` that happen on a basefield for a specific year.
+    """
 
-    def __post_init__(self):
-        self.base_id: int = self.Field.base_id
-        self.area: Decimal = self.Field.area
-        self.year: int = self.Field.year
-        self.field_type: FieldType = self.Field.field_type
-        self.red_region: bool = self.Field.red_region
-        self.demand_option: DemandType = self.Field.demand_type
-        self.saldo: db.Saldo = self.Field.saldo
-        self.field_prev_year = self._field_prev_year()
+    def __init__(self, Field: db.Field, first_year: bool = False):
+        self.user_id: int = Field.base_field.user_id
+        self.base_id: int = Field.base_id
+        self.name: str = Field.base_field.name
+        self.area: Decimal = Field.area
+        self.year: int = Field.year
+        self.field_type: FieldType = Field.field_type
+        self.red_region: bool = Field.red_region
+        self.demand_option: DemandType = Field.demand_type
+        self.saldo: db.Saldo = Field.saldo
+        self.first_year: bool = first_year
+        self.soil_sample: Soil = None
+        self.cultivations: list[Cultivation] = []
+        self.fertilizations: list[Fertilization] = []
+        self.modifiers: list[Balance] = []
+        self.field_prev_year: Field = self._field_prev_year()
 
-    def n_total(
-        self, *, measure: MeasureType = None, crop_class: CropClass = None, netto: bool = False
-    ) -> Decimal:
-        n_total = Decimal()
+    def total_balance(self) -> Balance:
+        """Summarize the balances of all crop needs, soil reductions, fertilizations and modifiers."""
+        saldo = Balance("Remaining needs")
+        saldo += self.sum_demands() + self.sum_reductions()
+        self._adjust_to_demand_option(saldo)
+        saldo += self.sum_fertilizations() + self.sum_modifiers()
+        return saldo
+
+    def create_balances(self) -> None:
+        """Adds balances of needs and reductions to available cultivations and nutrients to fertilizations."""
+        for cultivation in self.cultivations:
+            cult_balances, cult_total_need = self.cultivation_balances(cultivation)
+            org_balances, min_balances = self.fertilization_balances(cultivation)
+
+            cultivation.balances = {}
+            cultivation.balances["cultivation"] = cult_balances
+            for fert_name, fert_balances in zip(
+                ["organic", "mineral"], [org_balances, min_balances]
+            ):
+                cult_total_need += sum(fert_balances)
+                after_fert_need = Balance("Remaining needs")
+                after_fert_need.add(cult_total_need)
+                fert_balances.append(after_fert_need)
+                cultivation.balances[fert_name] = fert_balances
+
+    def cultivation_balances(self, cultivation: Cultivation) -> tuple[list[Balance], Balance]:
+        """Creates balances for the nutritional needs of the crop."""
+        cult_balances = []
+        cult_balances.append(cultivation.demand(self.demand_option))
+        if cultivation is not self.catch_crop:
+            cult_balances.append(Balance("Nmin", n=cultivation.reduction()))
+            cult_balances.append(Balance("Pre-crop effect", n=self._pre_crop_effect(cultivation)))
+        if cultivation is self.main_crop:
+            cult_balances.append(self.soil_reductions())
+            cult_balances.append(self.fertilization_redelivery())
+            cult_balances.append(Balance("Lime balance", cao=self._cao_saldo()))
+            for modifier in self.modifiers:
+                cult_balances.append(modifier)
+        cult_need = Balance("Total crop needs")
+        cult_need += sum(cult_balances)
+        self._adjust_to_demand_option(cult_need)
+        cult_balances.append(cult_need)
+        return cult_balances, cult_need
+
+    def fertilization_balances(
+        self, cultivation: Cultivation
+    ) -> tuple[list[Balance], list[Balance]]:
+        """Creates balances for the nutrient quantities of the fertilizations."""
+        org_balances, min_balances = [], []
         for fertilization in self.fertilizations:
-            n_total += fertilization.n_total(measure, crop_class, netto)
-        return n_total
+            if fertilization.cultivation_type is cultivation.cultivation_type:
+                if fertilization.fertilizer.fert_class is FertClass.organic:
+                    org_balances.append(fertilization.nutrients(self.field_type))
+                elif fertilization.fertilizer.fert_class is FertClass.mineral:
+                    min_balances.append(fertilization.nutrients(self.field_type))
+        return org_balances, min_balances
 
-    def sum_fertilizations(self, fert_class: FertClass = None) -> list[Decimal]:
-        nutrients = []
+    def sum_fertilizations(self, fert_class: FertClass = None) -> Balance:
+        """
+        Summarize the balance of all `fertilizations` or only of a specific `FertClass`.
+
+        Args:
+            `fert_class`: Specify a `FertClass` to summarize.
+        """
+        nutrients = Balance("Fertilizations")
         for fertilization in self.fertilizations:
             if fertilization.fertilizer.is_class(fert_class):
-                nutrients.append(fertilization.nutrients(self.field_type))
-        if not nutrients:
-            nutrients.append([Decimal()] * 6)
-        return [sum(nutrient) for nutrient in zip(*nutrients)]
+                if fertilization.cultivation_type is not CultivationType.catch_crop:
+                    nutrients += fertilization.nutrients(self.field_type)
+        return nutrients
 
-    def sum_demands(self, negative_output: bool = True) -> list[Decimal]:
-        demands = []
+    def sum_demands(self, negative_output: bool = True) -> Balance:
+        """
+        Summarize the balance of all crop `demands`.
+
+        Args:
+            `negative_output`: Specify if demand should be output as negative values.
+        """
+        demands = Balance("Demands")
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.catch_crop:
-                continue
-            demands.append(
-                cultivation.demand(
+            if cultivation.cultivation_type is not CultivationType.catch_crop:
+                demands += cultivation.demand(
                     demand_option=self.demand_option,
                     negative_output=negative_output,
                 )
-            )
-        if not demands:
-            demands.append([Decimal()] * 6)
-        return [sum(demand) for demand in zip(*demands)]
+        return demands
 
-    def sum_reductions(self) -> list[Decimal]:
-        reductions = []
-        reductions.append(self.soil_reductions(self.soil_sample))
-        reductions.append(self.redelivery())
+    def sum_reductions(self) -> Balance:
+        """Summarize the balance of all `reductions` from soil, previous crops and fertilizations."""
+        reductions = Balance("Reductions")
+        reductions += self.soil_reductions()
+        reductions += self.redelivery()
         for cultivation in self.cultivations:
-            reductions.append(self.crop_reductions(cultivation))
-        return [sum(reduction) for reduction in zip(*reductions)]
-
-    def soil_reductions(self, soil: Soil) -> list[Decimal]:
-        reductions = [Decimal()] * 6
-        if soil and self.field_type in [FieldType.cropland, FieldType.grassland]:
-            if self.demand_option == DemandType.demand:
-                for i, reduction in enumerate(
-                    (
-                        soil.reduction_p2o5(self.field_type),
-                        soil.reduction_k2o(self.field_type),
-                        soil.reduction_mgo(self.field_type),
-                    ),
-                    start=1,
-                ):
-                    reductions[i] += reduction
-            reductions[0] += soil.reduction_n(self.field_type)
-            if self.main_crop:
-                reductions[4] += soil.reduction_s(
-                    self.n_total(crop_class=CropClass.main_crop), self.main_crop.crop.s_demand
-                )
-            if soil.year + 3 < self.year:
-                reductions[5] += soil.reduction_cao(self.field_type, preservation=True)
-            else:
-                reductions[5] += soil.reduction_cao(self.field_type)
+            reductions += self.crop_reductions(cultivation)
         return reductions
 
-    def redelivery(self) -> list[Decimal]:
-        reductions = [Decimal()] * 6
-        if self.field_prev_year:
-            reductions[5] += self.cao_saldo()
-            reductions[0] += self.n_redelivery()
+    def sum_modifiers(self) -> Balance:
+        """Summarize all available `modifiers`."""
+        modifiers = Balance("Modifiers")
+        for modifier in self.modifiers:
+            modifiers += modifier
+        return modifiers
+
+    def soil_reductions(self) -> Balance:
+        """Summarize all reductions that are related to the soil composition and values."""
+        reductions = Balance("Soil reductions")
+        if not (self.soil_sample and self.field_type in (FieldType.cropland, FieldType.grassland)):
+            return reductions
+        reductions.n += self.soil_sample.reduction_n()
+        if self.demand_option is DemandType.demand:
+            reductions.p2o5 += self.soil_sample.reduction_p2o5()
+            reductions.k2o += self.soil_sample.reduction_k2o()
+            reductions.mgo += self.soil_sample.reduction_mg()
+        if self.main_crop:
+            reductions.s += self.soil_sample.reduction_s(
+                n_total=self.n_total(cultivation_type=CultivationType.main_crop),
+                s_demand=self.main_crop.crop.s_demand,
+            )
+        if self.soil_sample.year + 3 < self.year:
+            reductions.cao += self.soil_sample.reduction_cao(preservation=True)
+        else:
+            reductions.cao += self.soil_sample.reduction_cao()
         return reductions
 
-    def crop_reductions(self, cultivation: md.Cultivation) -> list[Decimal]:
-        reductions = [Decimal()] * 6
-        reductions[0] += cultivation.reduction()
-        reductions[0] += self.pre_crop_effect(cultivation)
+    def crop_reductions(self, cultivation: Cultivation) -> Balance:
+        """Reductions in nutrient demand left from previous crops and made by the current crop."""
+        reductions = Balance("Crop reductions")
+        reductions.n += cultivation.reduction()
+        reductions.n += self._pre_crop_effect(cultivation)
         return reductions
 
-    def pre_crop_effect(self, cultivation: md.Cultivation) -> Decimal:
-        if self.field_type != FieldType.cropland or cultivation.crop_class == CropClass.catch_crop:
+    def redelivery(self) -> Balance:
+        """Summarize the nutrient values left in the soil from last period."""
+        reductions = Balance("Redelivery")
+        reductions.cao += self._cao_saldo()
+        reductions += self.fertilization_redelivery()
+        return reductions
+
+    def fertilization_redelivery(self) -> Balance:
+        redelivery = Balance("Organic redelivery")
+        try:
+            prev_spring_n_total = self.field_prev_year.n_total(measure_type=MeasureType.org_spring)
+        except AttributeError:
+            prev_spring_n_total = Decimal()
+        fall_n_total = self.n_total(
+            measure_type=MeasureType.org_fall, cultivation_type=CultivationType.catch_crop
+        )
+
+        for fertilization in self.fertilizations:
+            if fertilization.cultivation_type is CultivationType.catch_crop:
+                redelivery += fertilization.nutrients(self.field_type)
+        redelivery.n = (fall_n_total + prev_spring_n_total) * Decimal("0.1")
+        redelivery.nh4 = 0
+        return redelivery
+
+    def n_total(
+        self,
+        *,
+        measure_type: MeasureType = None,
+        cultivation_type: CultivationType = None,
+        netto: bool = False,
+    ) -> Decimal:
+        """
+        Summarizes the nitrogen values of all fertilizations specified.
+
+        Args:
+            measure (MeasureType, optional): MeasureType that should be counted. Defaults to None.
+            crop_class (CultivationType, optional): CultivationType that should be counted. Defaults to None.
+            netto (bool, optional): If storage loss should be applied. Defaults to False.
+        """
+        n_total = Decimal()
+        for fertilization in self.fertilizations:
+            n_total += fertilization.n_total(measure_type, cultivation_type, netto)
+        return n_total
+
+    def _adjust_to_demand_option(self, balance: Balance) -> Balance:
+        """Reduce nutritional needs to zero if demand option is `demand` and soil class is E."""
+        if self.soil_sample and self.demand_option is DemandType.demand:
+            if self.soil_sample.class_p2o5() is SoilClass.E:
+                balance.p2o5 = 0
+            if self.soil_sample.class_k2o() is SoilClass.E:
+                balance.k2o = 0
+            if self.soil_sample.class_mg() is SoilClass.E:
+                balance.mgo = 0
+
+    def _pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
+        if (
+            self.field_type != FieldType.cropland
+            or cultivation.cultivation_type is CultivationType.catch_crop
+        ):
             return Decimal()
-        if cultivation.crop_class == CropClass.main_crop:
+        if cultivation.cultivation_type is CultivationType.main_crop:
             crop = self.previous_crop
         else:
             crop = self.main_crop
@@ -117,33 +303,33 @@ class Field:
         except AttributeError:
             return Decimal()
 
-    def n_redelivery(self) -> Decimal:
-        prev_spring_n_total = self.field_prev_year.n_total(measure=MeasureType.spring)
-        fall_n_total = self.n_total(measure=MeasureType.fall, crop_class=CropClass.catch_crop)
-        n_total = (prev_spring_n_total + fall_n_total) * Decimal("0.1")
-        return n_total
-
-    def cao_saldo(self) -> Decimal:
-        return self.field_prev_year.saldo.cao
+    def _cao_saldo(self) -> Decimal:
+        try:
+            return self.field_prev_year.saldo.cao
+        except AttributeError:
+            return Decimal()
 
     @property
     def main_crop(self) -> MainCrop:
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.main_crop:
+            if cultivation.cultivation_type is CultivationType.main_crop:
                 return cultivation
         return None
 
     @property
     def second_crop(self) -> SecondCrop:
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.second_crop:
+            if (
+                cultivation.cultivation_type is CultivationType.second_main_crop
+                or cultivation.cultivation_type is CultivationType.second_crop
+            ):
                 return cultivation
         return None
 
     @property
     def catch_crop(self) -> CatchCrop:
         for cultivation in self.cultivations:
-            if cultivation.crop_class == CropClass.catch_crop:
+            if cultivation.cultivation_type is CultivationType.catch_crop:
                 return cultivation
         return None
 
@@ -158,74 +344,12 @@ class Field:
                 return self.field_prev_year.main_crop
         return None
 
-    @property
-    def soil_sample(self):
-        soil_sample = (
-            max(self.Field.soil_samples, key=lambda x: x.year) if self.Field.soil_samples else None
-        )
-        if soil_sample:
-            return md.Soil(soil_sample)
-        return None
-
-    @property
-    def overfertilization(self) -> bool:
-        n_total, nh4 = self._sum_fall_fertilizations()
-        if (
-            self.field_type == FieldType.grassland
-            or self.main_crop
-            and self.main_crop.crop.feedable
-        ):
-            if n_total > (80 if not self.red_region else 60):
-                logger.info(
-                    f"{self.Field.base_field.name}: {n_total=:.0f} is violating the maximum value for fall fertilizations."
-                )
-                return True
-        elif n_total > 60 or nh4 > 30:
-            logger.info(
-                f"{self.Field.base_field.name}: {n_total=:.0f} or {nh4=:.0f} are violating the maximum values for fall fertilizations."
-            )
-            return True
-        return False
-
-    def _sum_fall_fertilizations(self):
-        sum_n = [(0, 0)]
-        for fertilization in self.fertilizations:
-            if (
-                fertilization.fertilizer.is_class(FertClass.organic)
-                and fertilization.measure == MeasureType.fall
-            ):
-                n_total, nh4 = [
-                    fertilization.amount * n
-                    for n in (fertilization.fertilizer.n, fertilization.fertilizer.nh4)
-                ]
-                sum_n.append((n_total, nh4))
-        return [sum(n) for n in zip(*sum_n)]
-
-    def _field_prev_year(self):
+    def _field_prev_year(self) -> Field | None:
         if not self.first_year:
             return
-        session = create_session()
         year = self.year - 1
-        db_field = (
-            session.query(db.Field)
-            .filter(db.Field.base_id == self.base_id, db.Field.year == year)
-            .one_or_none()
-        )
-        if db_field:
-            field = md.Field(db_field, False)
-            for db_cultivation in db_field.cultivations:
-                crop = md.Crop(db_cultivation.crop, db_cultivation.crop_class)
-                cultivation = create_cultivation(db_cultivation, crop)
-                field.cultivations.append(cultivation)
-            for db_fertilization in db_field.fertilizations:
-                fertilizer = md.Fertilizer(db_fertilization.fertilizer)
-                crop = md.Crop(
-                    db_fertilization.cultivation.crop, db_fertilization.cultivation.crop_class
-                )
-                fertilization = md.Fertilization(
-                    db_fertilization, fertilizer, crop, db_fertilization.cultivation.crop_class
-                )
-                field.fertilizations.append(fertilization)
-        else:
-            field = None
+        field = create_field(self.user_id, self.base_id, year, first_year=False)
         return field
+
+    def __repr__(self) -> str:
+        return f"<Field: {self.name} - {self.year}>"

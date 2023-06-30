@@ -12,11 +12,21 @@ exclude = '''
   | buck-out
   | build
   | dist
+  | app/model_tester.py
+  | ^migrations/
+  | \.flaskenv
 )/
 '''
 
 [tool.isort]
 profile = "black"
+skip_glob = "*/migrations/*.py"
+
+[tool.pytest.ini_options]
+log_cli = false
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.coverage]
   [tool.coverage.run]
@@ -35,3 +45,11 @@ profile = "black"
   ]
   [tool.coverage.report]
     skip_empty = true
+    skip_covered = true
+    # show_missing = true
+
+[tool.djlint]
+  ignore = 'H017,H025'
+  profile = "jinja"
+  use_gitignore = true
+  preserve_blank_lines = true

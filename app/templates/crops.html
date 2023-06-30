@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% from 'utils.html' import render_icon %}
+
+{% block app_content %}
+  <table class="table table-sm table-hover caption-top align-middle">
+    <caption>List of crops</caption>
+    <thead class="no-border-top">
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Class</th>
+        <th scope="col">Type</th>
+        <th scope="col">Kind</th>
+        <th scope="col">Feedable</th>
+        <th scope="col">Residue</th>
+        <th scope="col">Legume Rate</th>
+        <th scope="col">Nmin Depth</th>
+        <th scope="col">Target Demand</th>
+        <th scope="col">Target Yield</th>
+        <th scope="col">Variable Yield</th>
+        <th scope="col">Target Protein</th>
+        <th scope="col">Variable Protein</th>
+        <th scope="col">N</th>
+        <th scope="col">
+          P<sub>2</sub>O<sub>5</sub>
+        </th>
+        <th scope="col">
+          K<sub>2</sub>O
+        </th>
+        <th scope="col">MgO</th>
+        <th scope="col">Byproduct</th>
+        <th scope="col">Ratio</th>
+        <th scope="col">N</th>
+        <th scope="col">
+          P<sub>2</sub>O<sub>5</sub>
+        </th>
+        <th scope="col">
+          K<sub>2</sub>O
+        </th>
+        <th scope="col">MgO</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for crop in crops %}
+        <tr data-id="{{ crop.id }}">
+          <th scope="row">{{ loop.index }}</th>
+          <td>{{ crop.name }}</td>
+          <td>{{ crop.crop_class.value }}</td>
+          <td>{{ crop.crop_type.value }}</td>
+          <td>{{ crop.kind }}</td>
+          <td>
+            {% if crop.feedable %}
+              {{ render_icon("check-circle", extra_classes="color-green") }}
+            {% else %}
+              {{ render_icon("x-circle", extra_classes="text-danger") }}
+            {% endif %}
+          </td>
+          <td>
+            {% if crop.residue %}
+              {{ render_icon("check-circle", extra_classes="color-green") }}
+            {% else %}
+              {{ render_icon("x-circle", extra_classes="text-danger") }}
+            {% endif %}
+          </td>
+          <td>{{ crop.legume_rate.value }}</td>
+          <td>
+            {{ crop.nmin_depth.value }}
+          </td>
+          <td>
+            {{ crop.target_demand }}
+          </td>
+          <td>
+            {{ crop.target_yield }}
+          </td>
+          <td>
+            {{ "{}, {}".format(crop.pos_yield, crop.neg_yield) }}
+          </td>
+          <td>
+            {{ crop.target_protein }}
+          </td>
+          <td>
+            {{ crop.var_protein }}
+          </td>
+          <td>
+            {{ crop.n }}
+          </td>
+          <td>
+            {{ crop.p2o5 }}
+          </td>
+          <td>
+            {{ crop.k2o }}
+          </td>
+          <td>
+            {{ crop.mgo }}
+          </td>
+          <td>
+            {% if crop.byproduct %}{{ crop.byproduct }}{% endif %}
+          </td>
+          <td>
+            {{ crop.byp_ratio }}
+          </td>
+          <td>
+            {{ crop.byp_n }}
+          </td>
+          <td>
+            {{ crop.byp_p2o5 }}
+          </td>
+          <td>
+            {{ crop.byp_k2o }}
+          </td>
+          <td>
+            {{ crop.byp_mgo }}
+          </td>
+          <td class="table-action d-print-none">
+            <button class="btn btn-link btn-edit"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal"
+                    data-form="crop"
+                    data-modal="edit">
+              {{ render_icon("pencil-square", extra_classes="color-green") }}
+            </button>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button class="btn btn-success fw-500"
+          type="button"
+          data-bs-toggle="modal"
+          data-bs-target="#modal"
+          data-form="crop"
+          data-modal="new">
+    ✚ New
+  </button>
+{% endblock app_content %}

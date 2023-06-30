@@ -1,0 +1,80 @@
+{% from 'utils.html' import render_icon %}
+
+{% macro render_fertilization(cultivation, fert_class, field) %}
+  <div class="table-responsive">
+    <table class="table table-sm table-hover table-fertilization">
+      <thead>
+        <tr>
+          <th scope="col">Nr.</th>
+          {% if cultivation.crop.feedable %}<th scope="col">Cut</th>{% endif %}
+          <th scope="col">Measure</th>
+          {% if fert_class == "organic" %}<th scope="col">Month</th>{% endif %}
+          <th scope="col">Fertilizer</th>
+          <th scope="col" colspan="2">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fertilization in cultivation.fertilizations if fertilization.fertilizer.fert_class.name == fert_class %}
+          <tr data-id="{{ fertilization.id }}">
+            <th scope="row">{{ loop.index }}</th>
+            {% if cultivation.crop.feedable %}<td>{{ fertilization.cut_timing.value }}</td>{% endif %}
+            <td>{{ fertilization.measure.value }}</td>
+            {% if fert_class == "organic" %}<td>{{ fertilization.month }}</td>{% endif %}
+            <td>{{ fertilization.fertilizer.name }}</td>
+            <td>{{ fertilization.amount | format_number(".1f", fertilization.fertilizer.unit.value+"/ha") }}</td>
+            <td class="table-action d-print-none">
+              <button class="btn btn-link btn-edit"
+                      type="button"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modal"
+                      data-form="fertilization"
+                      data-modal="edit"
+                      data-id="{{ fertilization.id }}">
+                {{ render_icon("pencil-square", extra_classes="color-green") }}
+              </button>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endmacro %}
+
+{% macro render_fertilization_nutrients(cultivation, fert_class) %}
+  <div class="table-responsive">
+    <table class="table table-sm table-demand">
+      <thead>
+        <tr>
+          <th scope="col">Nutrient</th>
+          <th scope="col">N</th>
+          <th scope="col">
+            P<sub>2</sub>O<sub>5</sub>
+          </th>
+          <th scope="col">
+            K<sub>2</sub>O
+          </th>
+          <th scope="col">MgO</th>
+          <th scope="col">S</th>
+          <th scope="col">CaO</th>
+          <th scope="col">
+            NH<sub>4</sub>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for balance in cultivation.balances[fert_class] %}
+          <tr>
+            <th scope="row">{{ balance.title }}</th>
+            <td>{{ balance.n | format_number(".0f") }}</td>
+            <td>{{ balance.p2o5 | format_number(".0f") }}</td>
+            <td>{{ balance.k2o | format_number(".0f") }}</td>
+            <td>{{ balance.mgo | format_number(".0f") }}</td>
+            <td>{{ balance.s | format_number(".0f") }}</td>
+            <td>{{ balance.cao | format_number(".0f") }}</td>
+            <td>{{ balance.nh4 | format_number(".0f") }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endmacro %}

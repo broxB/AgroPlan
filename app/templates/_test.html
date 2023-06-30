@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+  <link rel="custom stylesheet" href="/static/css/_tester.css">
+  
+  <div id="exTab2" style="padding: 40px;">
+    <ul class="nav nav-tabs">
+      <li class="active">
+        <a href="#1" data-toggle="tab">Tab1</a>
+      </li>
+      <li>
+        <a href="#2" data-toggle="tab">Tab2</a>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane active" id="1">
+        <div class="panel-group"
+             id="accordionMenu"
+             role="tablist"
+             aria-multiselectable="true">
+
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingOne">
+              <h4 class="panel-title">
+                <a role="button"
+                   data-toggle="collapse"
+                   data-parent="#accordionMenu"
+                   href="#collapseOne"
+                   aria-expanded="true"
+                   aria-controls="collapseOne">
+                  MenuA
+                </a>
+              </h4>
+            </div>
+            <div id="collapseOne"
+                 class="panel-collapse collapse in"
+                 role="tabpanel"
+                 aria-labelledby="headingOne">
+              <div class="panel-body">
+                <ul class="nav">
+                  <li>
+                    <a href="#">ItemA</a>
+                  </li>
+                  <li>
+                    <a href="#">Item B</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingTwo">
+              <h4 class="panel-title">
+                <a class="collapsed"
+                   role="button"
+                   data-toggle="collapse"
+                   data-parent="#accordionMenu"
+                   href="#collapseTwo"
+                   aria-expanded="false"
+                   aria-controls="collapseTwo">
+                  menu B
+                </a>
+              </h4>
+            </div>
+            <div id="collapseTwo"
+                 class="panel-collapse collapse"
+                 role="tabpanel"
+                 aria-labelledby="headingTwo">
+              <div class="panel-body">
+                <ul class="nav">
+                  <li>
+                    <a href="#" id="A1a">ItemA1</a>
+                  </li>
+                  <li>
+                    <a href="#" id="A1b">Item B2</a>
+                  </li>
+
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingThree">
+              <h4 class="panel-title">
+                <a class="collapsed"
+                   role="button"
+                   data-toggle="collapse"
+                   data-parent="#accordionMenu"
+                   href="#collapseThree"
+                   aria-expanded="false"
+                   aria-controls="collapseThree">
+                  Menu C
+                </a>
+              </h4>
+            </div>
+            <div id="collapseThree"
+                 class="panel-collapse collapse"
+                 role="tabpanel"
+                 aria-labelledby="headingThree">
+              <div class="panel-body">
+                <ul class="nav">
+                  <li>
+                    <a href="#">B1</a>
+                  </li>
+                  <li>
+                    <a href="#">B2</a>
+                  </li>
+                  <li>
+                    <a href="#">B3</a>
+                  </li>
+                  <li>
+                    <a href="#">B4</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="headingsix">
+              <h4 class="panel-title">
+                <a class="collapsed"
+                   role="button"
+                   data-toggle="collapse"
+                   data-parent="#accordionMenu"
+                   href="#collapsesix"
+                   aria-expanded="false"
+                   aria-controls="collapsesix">
+                  Menu D
+                </a>
+              </h4>
+            </div>
+            <div id="collapsesix"
+                 class="panel-collapse collapse"
+                 role="tabpanel"
+                 aria-labelledby="headingsix">
+              <div class="panel-body">
+                <ul class="nav">
+                  <li>
+                    <a href="#">A11</a>
+                  </li>
+                  <li>
+                    <a href="#">A12</a>
+                  </li>
+                  <li>
+                    <a href="#">A13</a>
+                  </li>
+                  <li>
+                    <a href="#">A2</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <div class="tab-pane" id="2">
+        <div>
+          <div class="panel-group"
+               id="accordionMenu2"
+               role="tablist"
+               aria-multiselectable="true">
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="heading1">
+                <h4 class="panel-title">
+                  <a role="button"
+                     data-toggle="collapse"
+                     data-parent="#accordionMenu2"
+                     href="#collapse1"
+                     aria-expanded="true"
+                     aria-controls="collapse1">
+                    Menu 0
+                  </a>
+                </h4>
+              </div>
+              <div id="collapse1"
+                   class="panel-collapse collapse in"
+                   role="tabpanel"
+                   aria-labelledby="heading1">
+                <div class="panel-body">
+                  <ul class="nav">
+                    <li>
+                      <a href="#">item 1</a>
+                    </li>
+                    <li>
+                      <a href="#">item 2</a>
+                    </li>
+                    <li>
+                      <a href="#">item 3</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="heading2">
+                <h4 class="panel-title">
+                  <a class="collapsed"
+                     role="button"
+                     data-toggle="collapse"
+                     data-parent="#accordionMenu2"
+                     href="#collapse2"
+                     aria-expanded="false"
+                     aria-controls="collapse2">
+                    Menu 1
+                  </a>
+                </h4>
+              </div>
+              <div id="collapse2"
+                   class="panel-collapse collapse"
+                   role="tabpanel"
+                   aria-labelledby="heading2">
+                <div class="panel-body">
+                  <ul class="nav">
+                    <li>
+                      <a href="#">item 1</a>
+                    </li>
+                    <li>
+                      <a href="#">item 2</a>
+                    </li>
+                    <li>
+                      <a href="#">item 3</a>
+                    </li>
+                    <li>
+                      <a href="#">item 4</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="heading3">
+                <h4 class="panel-title">
+                  <a class="collapsed"
+                     role="button"
+                     data-toggle="collapse"
+                     data-parent="#accordionMenu2"
+                     href="#collapse3"
+                     aria-expanded="false"
+                     aria-controls="collapse3">
+                    Menu 2
+                  </a>
+                </h4>
+              </div>
+              <div id="collapse3"
+                   class="panel-collapse collapse"
+                   role="tabpanel"
+                   aria-labelledby="heading3">
+                <div class="panel-body">
+                  <ul class="nav">
+                    <li>
+                      <a href="#">item 1</a>
+                    </li>
+                    <li>
+                      <a href="#">item 2</a>
+                    </li>
+                    <li>
+                      <a href="#">item 3</a>
+                    </li>
+                    <li>
+                      <a href="#">item 4</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+
+            <div class="panel panel-default">
+              <div class="panel-heading" role="tab" id="heading4">
+                <h4 class="panel-title">
+                  <a class="collapsed"
+                     role="button"
+                     data-toggle="collapse"
+                     data-parent="#accordionMenu2"
+                     href="#collapse4"
+                     aria-expanded="false"
+                     aria-controls="collapse4">
+                    Menu 3
+                  </a>
+                </h4>
+              </div>
+              <div id="collapse4"
+                   class="panel-collapse collapse"
+                   role="tabpanel"
+                   aria-labelledby="heading4">
+                <div class="panel-body">
+                  <ul class="nav">
+                    <li>
+                      <a href="#">item 1</a>
+                    </li>
+                    <li>
+                      <a href="#">item 2</a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+{% endblock app_content %}

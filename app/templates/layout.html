@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% block head %}
+      <!-- Required meta tags -->
+      <meta charset="utf-8">
+      <meta name="description" content="Agro planning software">
+      <meta name="keywords" content="DÜV, Agro, Planning, Fertilization">
+      <meta name="author" content="Philipp Brockmann">
+      <meta name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+      <link rel="shortcut icon"
+            href="../static/img/favicon.png"
+            type="image/x-icon">
+      <!-- Bootstrap CSS -->
+      {{ bootstrap.load_css() }}
+      <script src="https://kit.fontawesome.com/10e37a19bc.js" crossorigin="anonymous"></script>
+      <link rel="custom stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}">
+      {% block styles %}
+      {% endblock styles %}
+
+      <title>
+        {% block title %}
+        {% endblock title %}
+      </title>
+    {% endblock head %}
+  </head>
+  <body>
+    <header>
+      <!-- Nav bar -->
+      {% block navbar %}
+      {% endblock navbar %}
+    </header>
+
+    <div class="container-fluid d-flex p-0">
+      <!-- Side bar -->
+      {% block sidebar %}
+      {% endblock sidebar %}
+
+      <!-- Page content -->
+      <div class="col" id="content">
+        <!-- Main content -->
+        <main class="container-fluid">
+          {% block content %}
+          {% endblock content %}
+        </main>
+        <!-- Footer -->
+        <footer class="container-fluid p-0">
+          {% block footer %}
+          {% endblock footer %}
+        </footer>
+      </div>
+    </div>
+
+    {% block scripts %}
+      <!-- Optional JavaScript -->
+      {{ bootstrap.load_js() }}
+      <script type="module" src="{{ url_for('static', filename='js/index.js') }}"></script>
+    {% endblock scripts %}
+  </body>
+</html>

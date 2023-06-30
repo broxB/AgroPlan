@@ -1,0 +1,31 @@
+
+<table class="table table-sm table-cultivation align-middle">
+  <thead>
+    <tr>
+      <th scope="col">{{ cultivation.crop.name }}</th>
+      <th scope="col">N</th>
+      <th scope="col">
+        P<sub>2</sub>O<sub>5</sub>
+      </th>
+      <th scope="col">
+        K<sub>2</sub>O
+      </th>
+      <th scope="col">MgO</th>
+      <th scope="col">S</th>
+      <th scope="col">CaO</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for balance in cultivation.balances if not balance.is_empty %}
+      <tr>
+        <th scope="row">{{ balance.title }}</th>
+        <td>{{ balance.n | format_number(".0f") }}</td>
+        <td>{{ balance.p2o5 | format_number(".0f") }}</td>
+        <td>{{ balance.k2o | format_number(".0f") }}</td>
+        <td>{{ balance.mgo | format_number(".0f") }}</td>
+        <td>{{ balance.s | format_number(".0f") }}</td>
+        <td>{{ balance.cao | format_number(".0f") }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
