@@ -106,7 +106,7 @@ class FormHelper:
 Form = TypeVar("Form", FormHelper, FlaskForm)
 
 
-def create_form(form_type: str, params: list) -> Form:
+def create_form(form_type: str) -> FlaskForm | FormHelper | None:
     """Factory for forms that can be filled with new data."""
     form_types = {
         "base_field": BaseFieldForm,
@@ -119,7 +119,7 @@ def create_form(form_type: str, params: list) -> Form:
         "modifier": ModifierForm,
     }
     try:
-        form = form_types[form_type](params)
+        form = form_types[form_type]
     except KeyError:
         form = None
     return form

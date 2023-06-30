@@ -46,7 +46,7 @@ __all__ = [
 ]
 
 
-def create_edit_form(form_type: str, param: list) -> Form:
+def create_edit_form(form_type: str) -> FlaskForm | FormHelper | None:
     """Factory for forms that edit existing data."""
     form_types = {
         "base_field": EditBaseFieldForm,
@@ -59,7 +59,7 @@ def create_edit_form(form_type: str, param: list) -> Form:
         "modifier": EditModifierForm,
     }
     try:
-        form = form_types[form_type](param)
+        form = form_types[form_type]
     except KeyError:
         form = None
     return form
