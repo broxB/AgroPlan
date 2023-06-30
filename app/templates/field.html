@@ -22,7 +22,7 @@
       <h6>{{ db.field.field_type.value }} — {{ db.field.area | format_number(".2f", "ha") }}</h6>
     </div>
     <div class="col-4 col-sm-3 d-inline-flex justify-content-end align-items-start">
-      <button class="btn btn-link"
+      <button class="btn btn-link d-print-none"
               type="button"
               data-bs-toggle="modal"
               data-bs-target="#modal"
@@ -30,8 +30,9 @@
               data-modal="edit"
         {{ render_icon("pencil-square", extra_classes="color-green") }}
       </button>
-      <button class="btn btn-link"
+      <button class="btn btn-link d-print-none"
               type="button"
+              onclick="window.print();">
         {{ render_icon("printer", extra_classes="color-green") }}
       </button>
     </div>
