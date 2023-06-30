@@ -47,8 +47,19 @@
  its BSD License. Copyright (c) 2023, Philipp Brockmann. All rights reserved. #}
 
 
-{% macro render_icon(name, size=None, text_color=None, title=None, desc=None) %}
-  <svg class="{% if text_color %} {{ text_color }} {% endif %}"
+{% macro render_icon(name, size="md", extra_classes=None, title=None, desc=None) %}
+  {% set sizes = {
+    'xs': '0.75em',
+    'sm': '1em',
+    'md': '1.25em',
+    'lg': '1.5em',
+    'xl': '1.75em',
+    }
+  %}
+  {% if size in sizes %}
+    {% set size = sizes[size] %}
+  {% endif %}
+  <svg class="{% if extra_classes -%} {{ extra_classes }} {%- endif %}"
     width="{{ size }}" height="{{ size }}" fill="currentColor">
       {% if title is not none %}<title>{{ title }}</title>{% endif %}
       {% if desc is not none %}<desc>{{ desc }}</desc>{% endif %}
