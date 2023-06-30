@@ -156,7 +156,7 @@ def crop():
 @bp.route("/fertilizer", methods=["GET", "POST"])
 @login_required
 def fertilizer():
-    fertilizers = current_user.get_fertilizers()
+    fertilizers = sorted(current_user.get_fertilizers(), key=lambda x: (x.year), reverse=True)
     usage = current_user.get_fertilizer_usage()
     return render_template(
         "fertilizers.html", title="Fertilizers", fertilizers=fertilizers, usage=usage
