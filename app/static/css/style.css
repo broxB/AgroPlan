@@ -414,6 +414,12 @@ tr:hover .btn-edit {
 /* || media queries */
 /*  */
 
+@media print {
+  #content {
+    height: auto;
+  }
+}
+
 @media (max-width: 992px) {
   #main {
     padding: 0.5em;
