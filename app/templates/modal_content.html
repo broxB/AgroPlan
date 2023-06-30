@@ -1,32 +1,38 @@
 {% from "utils.html" import render_form %}
 
-{% set form_type = modal_type[1] %}
-{% set modal_type = modal_type[0] %}
+{% set modal, type = modal_type %}
 <div class="modal-header px-4">
-  <h5 class="modal-title" id="modalLabel">{{ modal_type | title }} {{ form_type }}
-  </h5>
+  <h5 class="modal-title" id="modalLabel">{{ modal | title }} {{ type }}</h5>
   <button type="button"
           class="btn-close"
           data-bs-dismiss="modal"
           aria-label="Close"></button>
 </div>
 <div class="modal-body">
-  <div class="container-fluid">{{ render_form(form, form_type="floating", id="modalForm") }}</div>
+  <div class="container-fluid">
+    {{ render_form(form, form_type="floating", id="modalForm", data_id=data_id, type=type, field_id=field_id) }}
+  </div>
 </div>
 <div class="modal-footer px-4">
-  <ul class="ps-0">
-    <input class="btn btn-danger"
-           type="submit"
-           for="submit"
-           form="modalForm"
-           value="Delete"/>
-  </ul>
+  {%- if modal == "edit" -%}
+    <ul class="ps-0">
+      <button class="btn btn-danger" type="submit" for="submit" form="modalForm">Delete</button>
+    </ul>
+  {%- endif -%}
   <ul class="ms-auto">
-    <input class="btn btn-success"
-           type="submit"
-           for="submit"
-           form="modalForm"
-           value="Save"/>
+    <button class="btn btn-success"
+            type="submit"
+            for="submit"
+            form="modalForm"
+            value="Save">
+      {%- if modal == "edit" -%}
+        Save
+      {%- else -%}
+        Create
+      {%- endif -%}
+    </button>
+  </ul>
+  <ul class="ps-0">
     <button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Close</button>
   </ul>
 </div>
