@@ -65,12 +65,13 @@
           </ul>
         </li>
       {% endif %}
-      <li class="nav-item">
-        <button class="nav-link fw-500" id="resetToast">Messages</button>
-      </li>
       {% if current_user.is_anonymous %}
+        {{ render_nav_item("auth.register", "Register", _use_li=True) }}
         {{ render_nav_item("auth.login", "Login", _use_li=True) }}
       {% else %}
+        <li class="nav-item">
+          <button class="nav-link fw-500" id="resetToast">Messages</button>
+        </li>
         {{ render_nav_item("main.user", "Profile", _use_li=True, username=current_user.username) }}
         {{ render_nav_item("auth.logout", "Logout", _use_li=True) }}
       {% endif %}
