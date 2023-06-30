@@ -124,21 +124,66 @@ def field_data(base_field_id):
     return asdict(field.total_balance())
 
 
-@bp.route("/modal", methods=["GET"])
+@bp.route("/modal", methods=["GET", "POST", "PUT", "DELETE"])
 @login_required
-def edit_modal():
-    modal_type = request.args.get("modalType")
-    form_type = request.args.get("formType")
-    id = request.args.get("id")
-    field_id = request.args.get("fieldId")
-    if modal_type == "edit":
-        form = create_edit_form(form_type, field_id)
-        form.populate(id)
-    elif modal_type == "new":
-        form = create_form(form_type, field_id)
-        form.default_selects()
-    modal = render_template("modal_content.html", form=form, modal_type=(modal_type, form_type))
-    return jsonify(modal)
+def modal():
+    if request.method == "GET":
+        modal_type = request.args.get("modalType")
+        form_type = request.args.get("formType")
+        try:
+            field_id = int(request.args.get("fieldId"))
+        except (TypeError, ValueError):
+            return jsonify("Unvalid request data."), 202
+
+        if modal_type == "edit":
+            try:
+                id = int(request.args.get("id"))
+            except (TypeError, ValueError):
+                return jsonify("Unvalid request data."), 202
+            form = create_edit_form(form_type)(field_id)
+            form.populate(id)
+            modal = render_template(
+                "modal_content.html",
+                form=form,
+                modal_type=(modal_type, form_type),
+                data_id=id,
+                field_id=field_id,
+            )
+        else:
+            form = create_form(form_type)(field_id)
+            form.default_selects()
+            modal = render_template(
+                "modal_content.html",
+                form=form,
+                modal_type=(modal_type, form_type),
+                field_id=field_id,
+            )
+        return jsonify(modal)
+
+    form_type = request.form.get("form_type")
+    try:
+        field_id = int(request.form.get("field_id"))
+    except TypeError or ValueError:
+        return jsonify("Unvalid request data.", 202)
+
+    if request.method == "DELETE":
+        return jsonify("Entry deleted."), 200
+
+    elif request.method == "PUT":
+        form = create_form(form_type)(field_id)
+
+    elif request.method == "POST":
+        try:
+            id = int(request.form.get("data_id"))
+        except TypeError or ValueError:
+            return jsonify("Unvalid request data.", 202)
+        form = create_edit_form(form_type)(field_id)
+        form.get_data(id)
+
+    if form.validate_on_submit():
+        return jsonify("Data saved successfully."), 200
+    else:
+        return jsonify("Unvalid request data."), 200
 
 
 @bp.route("/crop", methods=["GET", "POST"])
