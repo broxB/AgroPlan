@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'utils.html' import render_icon %}
 
 {% block app_content %}
   <div class="container">
@@ -23,11 +24,13 @@
               <strong>
                 {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
               </strong>
-              <i class="btn-edit fa-solid fa-pencil ms-2"
-                 data-bs-toggle="modal"
-                 data-bs-target="#modal"
-                 data-form="basefield"
-                 data-modal="edit"></i>
+              <div class="btn-edit ms-2"
+                   data-bs-toggle="modal"
+                   data-bs-target="#modal"
+                   data-form="basefield"
+                   data-modal="edit">
+                {{ render_icon("pencil-square", extra_classes="color-green") }}
+              </div>
             </button>
           </h2>
           <div class="accordion-collapse collapse" id="base{{ loop.index }}">

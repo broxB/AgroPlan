@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'utils.html' import render_icon %}
 
 {% block app_content %}
   <table class="table table-sm table-hover caption-top align-middle">
@@ -49,16 +50,16 @@
           <td>{{ crop.kind }}</td>
           <td>
             {% if crop.feedable %}
-              <i class="fa-solid fa-check fa-fw"></i>
+              {{ render_icon("check-circle", extra_classes="color-green") }}
             {% else %}
-              <i class="fa-solid fa-xmark fa-fw"></i>
+              {{ render_icon("x-circle", extra_classes="text-danger") }}
             {% endif %}
           </td>
           <td>
             {% if crop.residue %}
-              <i class="fa-solid fa-check fa-fw"></i>
+              {{ render_icon("check-circle", extra_classes="color-green") }}
             {% else %}
-              <i class="fa-solid fa-xmark fa-fw"></i>
+              {{ render_icon("x-circle", extra_classes="text-danger") }}
             {% endif %}
           </td>
           <td>{{ crop.legume_rate.value }}</td>
@@ -117,7 +118,7 @@
                     data-bs-target="#modal"
                     data-form="crop"
                     data-modal="edit">
-              <i class="fa-solid fa-pencil"></i>
+              {{ render_icon("pencil-square", extra_classes="color-green") }}
             </button>
           </td>
         </tr>

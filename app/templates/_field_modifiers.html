@@ -1,3 +1,5 @@
+{% from 'utils.html' import render_icon %}
+
 <div class="table-responsive">
   <table class="table table-sm table-hover">
     <thead>
@@ -22,7 +24,7 @@
                       data-form="modifier"
                       data-modal="edit"
                       data-id="{{ modifier.id }}">
-                <i class="fa-solid fa-pencil"></i>
+                {{ render_icon("pencil-square", extra_classes="color-green") }}
               </button>
             </td>
           </tr>

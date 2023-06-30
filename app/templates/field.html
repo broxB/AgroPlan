@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'utils.html' import render_icon %}
 {% from "utils.html" import render_accordion with context %}
 {% from "_field_fertilization.html" import render_fertilization with context %}
 {% from "_field_fertilization.html" import render_fertilization_nutrients with context %}
@@ -27,19 +28,11 @@
               data-bs-target="#modal"
               data-form="field"
               data-modal="edit"
-              data-id="{{ db.field.id }}"
-              data-field-id="{{ base_field.id }}">
-        <i class="fa-solid fa-pen-to-square fa-lg color-green"></i>
+        {{ render_icon("pencil-square", extra_classes="color-green") }}
       </button>
       <button class="btn btn-link"
               type="button"
-              data-bs-toggle="modal"
-              data-bs-target="#modal"
-              data-form="print"
-              data-modal="print"
-              data-id="{{ db.field.id }}"
-              data-field-id="{{ base_field.id }}">
-        <i class="fa-solid fa-print fa-lg color-green"></i>
+        {{ render_icon("printer", extra_classes="color-green") }}
       </button>
     </div>
     <!-- Maybe 3 dot menu -->
