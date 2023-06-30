@@ -25,7 +25,7 @@ from app.model.forms import (
     FertilizationForm,
     FertilizerForm,
     FieldForm,
-    Form,
+    FormHelper,
     ModifierForm,
     SoilForm,
 )

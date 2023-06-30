@@ -53,17 +53,30 @@ ModelType = TypeVar(
 
 
 class FormHelper:
+    def get_data(self, id: int):
+        self.model_data: ModelType = self.model_type.query.get(id)
+
     def populate(self: Form, id: int):
-        self.model_data: ModelType = self.model_type.query.get(int(id))
+        self.get_data(id)
         self.process(obj=self.model_data)
 
     def default_selects(self):
         for field in self._fields.values():
-            if field.type == "SelectField":
-                try:
-                    field.choices.insert(0, ("default", "Select one"))
-                except AttributeError:
-                    field.choices = [("default", "Select one")]
+            if field.type != "SelectField":
+                continue
+            self.model_data = Field.query.get(self.field_id)
+            if field.name == "cultivation":
+                field.choices = [
+                    (cultivation.id, cultivation.crop.name)
+                    for cultivation in self.model_data.cultivations
+                ]
+            elif field.name == "crop":
+                field.choices = [
+                    (crop.id, crop.name)
+                    for crop in current_user.get_crops(field_type=self.model_data.field_type)
+                ]
+            elif field.name == "fertilizer":
+                field.choices = [(fert.id, fert.name) for fert in current_user.get_fertilizers()]
 
     # credit: https://stackoverflow.com/a/71562719/16256581
     def set_disabled(self, input_field):
