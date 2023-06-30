@@ -99,27 +99,22 @@ def field_overview():
 @bp.route("/field/<base_field_id>", methods=["GET", "POST"])
 @login_required
 def field(base_field_id):
-    # if request.method == "GET":
-    base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
-    # field_data = (
-    #     Field.query.join(BaseField)
-    #     .filter(BaseField.id == base_field_id, Field.year == current_user.year)
-    #     .first_or_404()
-    # )
-    fields = current_user.get_fields(year=current_user.year)
-    field = create_field(current_user.id, base_field_id, current_user.year)
-    field.create_balances()
-    form = YearForm()
-    # elif request.method == "POST":
-    # pass
-    return render_template(
-        "field.html",
-        title=field.name,
-        base_field=base_field,
-        fields=fields,
-        form=form,
-        field=field,
-    )
+    if request.method == "GET":
+        base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
+        fields = current_user.get_fields(year=current_user.year)
+        field = create_field(current_user.id, base_field_id, current_user.year)
+        field.create_balances()
+        form = YearForm()
+        return render_template(
+            "field.html",
+            title=field.name,
+            base_field=base_field,
+            fields=fields,
+            form=form,
+            field=field,
+        )
+    else:
+        return jsonify("Invalid request."), 503
 
 
 @bp.route("/field/<base_field_id>/data", methods=["GET"])
