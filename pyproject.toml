@@ -1,3 +1,38 @@
+[tool.poetry]
+name = "AgroPlan"
+version = "0.1.0"
+description = "Plan cultivation and fertilization according to german fertilization laws (\"DüV\")."
+authors = ["Philipp Brockmann <philippbrockmann@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "2.2.2"
+Flask-SQLAlchemy = "3.0.2"
+Flask-Login = "0.6.2"
+Flask-Migrate = "3.1.0"
+Flask-WTF = "1.0.1"
+Bootstrap-Flask = "2.1.0"
+SQLAlchemy = "1.4.36"
+PyJWT = "2.4.0"
+python-dotenv = "0.21.0"
+loguru = "0.6.0"
+email-validator = "1.3.0"
+flask-mailman = "0.3.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "7.1.2"
+pytest-cov = "3.0.0"
+black = "22.6.0"
+isort = "5.12.0"
+pre-commit = "2.19.0"
+djlint = "1.19.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.black]
 line-length = 99 # override black's default line-length
 include = '\.pyi?$'
@@ -6,7 +41,7 @@ exclude = '''
     \.git
   | \.mypy_cache
   | \.tox
-  | venv
+  | \venv
   | \.venv
   | _build
   | buck-out
