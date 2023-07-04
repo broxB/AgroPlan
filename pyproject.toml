@@ -12,12 +12,11 @@ Flask = "2.3.2"
 Flask-SQLAlchemy = "3.0.5"
 Flask-Login = "0.6.2"
 Flask-Migrate = "4.0.4"
-Flask-WTF = "1.1.1"
+Flask-WTF = {extras = ["email"], version = "1.1.1"}
 Bootstrap-Flask = "2.2.0"
 PyJWT = "2.7.0"
 python-dotenv = "1.0.0"
 loguru = "0.7.0"
-email-validator = "2.0.0"
 flask-mailman = "0.3.0"
 
 [tool.poetry.group.dev.dependencies]
