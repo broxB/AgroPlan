@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TypeVar
 
+from flask_bootstrap import SwitchField
 from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import (
     BooleanField,
-    FloatField,
+    DecimalField,
     IntegerField,
     MonthField,
     SelectField,
@@ -133,8 +134,8 @@ def create_form(form_type: str) -> FlaskForm | FormHelper | None:
 
 
 class BaseFieldForm(FlaskForm, FormHelper):
-    prefix = IntegerField("Prefix:", validators=[DataRequired()])
-    suffix = IntegerField("Suffix:", validators=[DataRequired()])
+    prefix = IntegerField("Prefix:", validators=[InputRequired()])
+    suffix = IntegerField("Suffix:", validators=[InputRequired()])
     name = StringField("Name:", validators=[DataRequired()])
 
     def __init__(self, *args, **kwargs):
@@ -162,8 +163,8 @@ class BaseFieldForm(FlaskForm, FormHelper):
 class FieldForm(FlaskForm, FormHelper):
     sub_suffix = IntegerField("Sub-Partition:", validators=[InputRequired(), NumberRange(min=0)])
     year = IntegerField("Year:", validators=[InputRequired(), NumberRange(min=2000)])
-    area = FloatField("Area in ha:", validators=[InputRequired(), NumberRange(min=0)])
-    red_region = BooleanField("In red region?")
+    area = DecimalField("Area in ha:", validators=[InputRequired(), NumberRange(min=0)])
+    red_region = SwitchField("Red region?")
     field_type = SelectField(
         "Select field type:",
         choices=[(enum.name, enum.value) for enum in FieldType],
@@ -205,25 +206,25 @@ class CultivationForm(FlaskForm, FormHelper):
     cultivation_type = SelectField(
         "Select type of cultivation:",
         choices=[(enum.name, enum.value) for enum in CultivationType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
-    crop = SelectField("Select crop to grow:", validators=[DataRequired()])
-    crop_yield = IntegerField("Estimated yield in dt/ha:", validators=[DataRequired()])
-    crop_protein = FloatField("Estimated protein in % DM/ha:", validators=[DataRequired()])
+    crop = SelectField("Select crop to grow:", validators=[InputRequired()])
+    crop_yield = IntegerField("Estimated yield in dt/ha:", validators=[InputRequired()])
+    crop_protein = DecimalField("Estimated protein in % DM/ha:", validators=[InputRequired()])
     residue_type = SelectField(
         "Estimated residues:",
         choices=[(enum.name, enum.value) for enum in ResidueType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
     legume_type = SelectField(
         "Share of legumes:",
         choices=[(enum.name, enum.value) for enum in LegumeType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
-    nmin_30 = IntegerField("Nmin 30cm:", validators=[DataRequired()])
-    nmin_60 = IntegerField("Nmin 60cm:", validators=[DataRequired()])
-    nmin_90 = IntegerField("Nmin 90cm:", validators=[DataRequired()])
+    nmin_30 = IntegerField("Nmin 30cm:", validators=[InputRequired()])
+    nmin_60 = IntegerField("Nmin 60cm:", validators=[InputRequired()])
+    nmin_90 = IntegerField("Nmin 90cm:", validators=[InputRequired()])
 
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -241,11 +242,11 @@ class CultivationForm(FlaskForm, FormHelper):
 
 
 class FertilizationForm(FlaskForm, FormHelper):
-    cultivation = SelectField("Select a crop to fertilize:", validators=[DataRequired()])
+    cultivation = SelectField("Select a crop to fertilize:", validators=[InputRequired()])
     fert_class = SelectField(
         "Select a fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertClass],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
     cut_timing = SelectField(
@@ -254,12 +255,12 @@ class FertilizationForm(FlaskForm, FormHelper):
     measure_type = SelectField(
         "Select a measure:",
         choices=[(enum.name, enum.value) for enum in MeasureType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
-    fertilizer = SelectField("Select a fertilizer:", validators=[DataRequired()])
-    month = MonthField("Month:")
-    amount = FloatField("Amount", validators=[DataRequired()])
+    fertilizer = SelectField("Select a fertilizer:", validators=[InputRequired()])
+    month = IntegerField("Month:")
+    amount = DecimalField("Amount", validators=[InputRequired()])
 
     def __init__(self, field_id, *args, **kwargs):
         super(FlaskForm, self).__init__(*args, **kwargs)
@@ -320,32 +321,32 @@ class FertilizationForm(FlaskForm, FormHelper):
 
 class FertilizerForm(FlaskForm, FormHelper):
     name = StringField("Name:", validators=[DataRequired()])
-    year = IntegerField("Year:", validators=[DataRequired()])
+    year = IntegerField("Year:", validators=[InputRequired()])
     fert_class = SelectField(
         "Select fertilizer class:",
         choices=[(enum.name, enum.value) for enum in FertClass],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
     fert_type = SelectField(
         "Select fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
     active = BooleanField("Show fertilizer in list?")
     unit_type = SelectField(
         "Select measurement unit:",
         choices=[(enum.name, enum.value) for enum in UnitType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
-    price = FloatField("Price in €:", default=0.00)
-    n = FloatField("N:", validators=[DataRequired()])
-    p2o5 = FloatField("P2O5:", validators=[DataRequired()])
-    k2o = FloatField("K2O:", validators=[DataRequired()])
-    mgo = FloatField("MgO:", validators=[DataRequired()])
-    s = FloatField("S:", validators=[DataRequired()])
-    cao = FloatField("CaO:", validators=[DataRequired()])
-    nh4 = FloatField("NH4:", validators=[DataRequired()])
+    price = DecimalField("Price in €:", default=0.00)
+    n = DecimalField("N:", validators=[InputRequired()])
+    p2o5 = DecimalField("P2O5:", validators=[InputRequired()])
+    k2o = DecimalField("K2O:", validators=[InputRequired()])
+    mgo = DecimalField("MgO:", validators=[InputRequired()])
+    s = DecimalField("S:", validators=[InputRequired()])
+    cao = DecimalField("CaO:", validators=[InputRequired()])
+    nh4 = DecimalField("NH4:", validators=[InputRequired()])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -384,19 +385,19 @@ class CropForm(FlaskForm, FormHelper):
     field_type = SelectField(
         "Select on which type of field the crop grows:",
         choices=[(enum.name, enum.value) for enum in FieldType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
     crop_class = SelectField(
         "Select a crop class:",
         choices=[(enum.name, enum.value) for enum in CropClass],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
     crop_type = SelectField(
         "Select a crop type:",
         choices=[(enum.name, enum.value) for enum in CropType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
     kind = StringField(
         "Fruit subtype (e.g. 'barley' for 'winter barley'):", validators=[DataRequired()]
@@ -406,30 +407,30 @@ class CropForm(FlaskForm, FormHelper):
     nmin_depth = SelectField(
         "Select Nmin depth:",
         choices=[(enum.name, enum.value) for enum in NminType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
-    target_demand = IntegerField("Target demand in kg N/ha:", validators=[DataRequired()])
-    target_yield = IntegerField("Target yield in dt/ha:", validators=[DataRequired()])
-    pos_yield = FloatField(
-        "Change in demand with positive yield difference in kg N/ha:", validators=[DataRequired()]
+    target_demand = IntegerField("Target demand in kg N/ha:", validators=[InputRequired()])
+    target_yield = IntegerField("Target yield in dt/ha:", validators=[InputRequired()])
+    pos_yield = DecimalField(
+        "Change in demand with positive yield difference in kg N/ha:", validators=[InputRequired()]
     )
-    neg_yield = FloatField(
-        "Change in demand with negative yield difference in kg N/ha:", validators=[DataRequired()]
+    neg_yield = DecimalField(
+        "Change in demand with negative yield difference in kg N/ha:", validators=[InputRequired()]
     )
-    target_protein = FloatField("Target protein in 0.1% DM/ha:", validators=[DataRequired()])
-    var_protein = FloatField(
-        "Change in demand with protein difference in kg N/ha:", validators=[DataRequired()]
+    target_protein = DecimalField("Target protein in 0.1% DM/ha:", validators=[InputRequired()])
+    var_protein = DecimalField(
+        "Change in demand with protein difference in kg N/ha:", validators=[InputRequired()]
     )
-    n = FloatField("Fruit N:", validators=[DataRequired()])
-    p2o5 = FloatField("Fruit P2O5:", validators=[DataRequired()])
-    k2o = FloatField("Fruit K2O:", validators=[DataRequired()])
-    mgo = FloatField("Fruit MgO:", validators=[DataRequired()])
+    n = DecimalField("Fruit N:", validators=[InputRequired()])
+    p2o5 = DecimalField("Fruit P2O5:", validators=[InputRequired()])
+    k2o = DecimalField("Fruit K2O:", validators=[InputRequired()])
+    mgo = DecimalField("Fruit MgO:", validators=[InputRequired()])
     byproduct = StringField("Byproduct:")
-    byp_ratio = FloatField("Byproduct ratio:", validators=[DataRequired()])
-    byp_n = FloatField("Byproduct N:", validators=[DataRequired()])
-    byp_p2o5 = FloatField("Byproduct P2O5:", validators=[DataRequired()])
-    byp_k2o = FloatField("Byproduct K2O:", validators=[DataRequired()])
-    byp_mgo = FloatField("Byproduct MgO:", validators=[DataRequired()])
+    byp_ratio = DecimalField("Byproduct ratio:", validators=[InputRequired()])
+    byp_n = DecimalField("Byproduct N:", validators=[InputRequired()])
+    byp_p2o5 = DecimalField("Byproduct P2O5:", validators=[InputRequired()])
+    byp_k2o = DecimalField("Byproduct K2O:", validators=[InputRequired()])
+    byp_mgo = DecimalField("Byproduct MgO:", validators=[InputRequired()])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -442,21 +443,21 @@ class CropForm(FlaskForm, FormHelper):
 
 
 class SoilForm(FlaskForm, FormHelper):
-    year = IntegerField("Year:", validators=[DataRequired()])
+    year = IntegerField("Year:", validators=[InputRequired()])
     soil_type = SelectField(
         "Select soil composition:",
         choices=[(enum.name, enum.value) for enum in SoilType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
     humus_type = SelectField(
         "Select humus ratio:",
         choices=[(enum.name, enum.value) for enum in HumusType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
-    ph = FloatField("pH:", validators=[DataRequired()])
-    p2o5 = FloatField("P2O5:", validators=[DataRequired()])
-    k2o = FloatField("K2O:", validators=[DataRequired()])
-    mg = FloatField("Mg:", validators=[DataRequired()])
+    ph = DecimalField("pH:", validators=[InputRequired()])
+    p2o5 = DecimalField("P2O5:", validators=[InputRequired()])
+    k2o = DecimalField("K2O:", validators=[InputRequired()])
+    mg = DecimalField("Mg:", validators=[InputRequired()])
 
     def __init__(self, base_field_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -472,13 +473,13 @@ class SoilForm(FlaskForm, FormHelper):
 
 
 class ModifierForm(FlaskForm, FormHelper):
-    description = StringField("Description:", validators=[DataRequired()])
+    description = StringField("Description:", validators=[InputRequired()])
     modification = SelectField(
         "Select a modifier:",
         choices=[(enum.name, enum.value) for enum in NutrientType],
-        validators=[DataRequired()],
+        validators=[InputRequired()],
     )
-    amount = FloatField("Amount in kg/ha:", validators=[DataRequired()])
+    amount = DecimalField("Amount in kg/ha:", validators=[InputRequired()])
 
     def __init__(self, field_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
