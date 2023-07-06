@@ -11,3 +11,10 @@ repos:
     -   id: isort
         args: [--filter-files]
         files: \.py$
+
+-   repo: https://github.com/Riverside-Healthcare/djLint
+    rev: v1.31.1
+    hooks:
+    -   id: djlint
+    -   id: djlint-reformat
+        files: \.html$
