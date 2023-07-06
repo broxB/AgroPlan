@@ -1,5 +1,8 @@
 const sidebar = document.querySelector("#sidebarNav");
-const offcanvas = new bootstrap.Offcanvas(sidebar);
+var offcanvas;
+if (sidebar) {
+  offcanvas = new bootstrap.Offcanvas(sidebar);
+}
 
 export function manageSidebar() {
   window.addEventListener("show.bs.offcanvas", () => {
