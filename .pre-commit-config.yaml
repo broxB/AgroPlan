@@ -21,6 +21,9 @@ repos:
 -   repo: https://github.com/Riverside-Healthcare/djLint
     rev: v1.31.1
     hooks:
-    -   id: djlint
-    -   id: djlint-reformat
+    -   id: djlint-jinja
+        args: [--indent=2]
+        files: \.html$
+    -   id: djlint-reformat-jinja
+        args: [--indent=2]
         files: \.html$
