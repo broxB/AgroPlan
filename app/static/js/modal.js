@@ -13,13 +13,11 @@ class Modal {
 
   async initialContent(event) {
     const e = event.relatedTarget;
-    const fieldId = document.getElementById("field").dataset.fieldId;
     this.modal_type = e.dataset.modal;
     const params = {
-      modalType: this.modal_type,
-      formType: e.dataset.form,
+      modal: this.modal_type,
+      form: e.dataset.form,
       id: e.dataset.id,
-      fieldId: fieldId,
     };
     const modalURL = "/modal?" + new URLSearchParams(params).toString();
     console.log(modalURL);
@@ -27,10 +25,10 @@ class Modal {
     this.addContent(content);
   }
 
-  addContent(content) {
+  addContent(content, defaults = true) {
     this.content.innerHTML = content;
     this.form = this.content.querySelector("#modalForm");
-    if (this.modal_type === "new") {
+    if (this.modal_type === "new" && defaults) {
       this.setDefaults();
     }
     this.addEventListeners();
@@ -52,7 +50,7 @@ class Modal {
     selectElements.forEach((select) => {
       if (select.classList.contains("reload")) {
         select.addEventListener("change", async () => {
-          const content = await sendForm(this.form, "POST", "/modal/specifics");
+          const content = await sendForm(this.form, "POST", "/form/refresh");
           this.addContent(content);
         });
       }
@@ -81,34 +79,46 @@ class Modal {
 
   async newData() {
     console.log("new");
-    let response = await sendForm(this.form, "PUT", "/modal", true);
+    let response = await sendForm(this.form, "POST", "/form/new", true);
     this.handleResponse(response);
   }
 
   async editData() {
     console.log("update");
-    let response = await sendForm(this.form, "POST", "/modal", true);
+    let response = await sendForm(this.form, "POST", "/form/update", true);
     this.handleResponse(response);
   }
 
   async deleteData() {
     console.log("delete");
-    let response = await sendForm(this.form, "DELETE", "/modal", true);
+    let response = await sendForm(this.form, "DELETE", "/form/delete", true);
     this.handleResponse(response);
   }
 
   async handleResponse(response) {
-    if (response.status == 200) {
+    if (response.status == 201) {
       response.json().then((data) => {
+        this.clearErrors();
         this.content.querySelector(".modal-footer").innerHTML = `
-      <ul class="ps-0 me-auto">
-      <h6 class="">${data}</h6></ul>
-      <ul><button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Close</button></ul>`;
+        <ul class="ps-0 me-auto">
+        <h6 class="">${data}</h6></ul>
+        <ul><button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Close</button></ul>`;
       });
-    } else {
-      console.log(response);
-      // reload content
+    } else if (response.status == 206) {
+      response.json().then((data) => {
+        this.addContent(data, false);
+      });
     }
+  }
+
+  clearErrors() {
+    this.form.querySelectorAll(".invalid-feedback").forEach((elem) => {
+      elem.remove();
+    });
+    this.form.querySelectorAll(".is-invalid").forEach((elem) => {
+      elem.classList.remove("is-invalid");
+    });
+    // this.form.querySelectorAll("input, select").forEach((elem) => {elem.classList.add("is-valid")})
   }
 }
 

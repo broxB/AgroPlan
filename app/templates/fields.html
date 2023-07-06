@@ -7,10 +7,8 @@
             type="button"
             data-bs-toggle="modal"
             data-bs-target="#modal"
-            data-form="basefield"
-            data-modal="new">
-      ✚ New
-    </button>
+            data-form="base_field"
+            data-modal="new">✚ New</button>
     <p class="my-2">List of base fields</p>
     {% for base_field in base_fields %}
       <div class="accordion">
@@ -27,10 +25,9 @@
               <div class="btn-edit ms-2"
                    data-bs-toggle="modal"
                    data-bs-target="#modal"
-                   data-form="basefield"
-                   data-modal="edit">
-                {{ render_icon("pencil-square", extra_classes="color-green") }}
-              </div>
+                   data-form="base_field"
+                   data-modal="edit"
+                   data-id="{{ base_field.id }}">{{ render_icon("pencil-square", extra_classes="color-green") }}</div>
             </button>
           </h2>
           <div class="accordion-collapse collapse" id="base{{ loop.index }}">
@@ -41,9 +38,8 @@
                       data-bs-toggle="modal"
                       data-bs-target="#modal"
                       data-form="field"
-                      data-modal="new">
-                ✚ New
-              </button>
+                      data-modal="new"
+                      data-id="{{ base_field.id }}">✚ New</button>
             </div>
           </div>
         </div>

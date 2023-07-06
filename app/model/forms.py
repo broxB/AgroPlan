@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import Union
 
 from flask_bootstrap import SwitchField
 from flask_login import current_user
@@ -34,6 +34,7 @@ from app.database.types import (
     FertClass,
     FertType,
     FieldType,
+    FieldTypeForCrops,
     HumusType,
     LegumeType,
     MeasureType,
@@ -55,9 +56,7 @@ __all__ = [
     "SoilForm",
     "ModifierForm",
 ]
-ModelType = TypeVar(
-    "ModelType", BaseField, Field, Cultivation, Crop, Fertilization, Fertilizer, Modifier
-)
+ModelType = Union[BaseField, Field, Cultivation, Crop, Fertilization, Fertilizer, Modifier]
 
 
 class FormHelper:
@@ -65,14 +64,15 @@ class FormHelper:
         self.model_data: ModelType = self.model_type.query.get(id)
 
     def populate(self: Form, id: int):
-        self.get_data(id)
+        if not hasattr(self, "model_data"):
+            self.get_data(id)
         self.process(obj=self.model_data)
 
     def default_selects(self):
+        self.model_data = Field.query.get(self.field_id)
         for field in self._fields.values():
             if field.type != "SelectField":
                 continue
-            self.model_data = Field.query.get(self.field_id)
             if field.name == "cultivation":
                 field.choices = [
                     (cultivation.id, cultivation.crop.name)
@@ -87,7 +87,7 @@ class FormHelper:
                 field.choices = [(fert.id, fert.name) for fert in current_user.get_fertilizers()]
 
     # credit: https://stackoverflow.com/a/71562719/16256581
-    def set_disabled(self, input_field):
+    def set_disabled(self, input_field: Form.Field):
         """
         disable the given input
 
@@ -99,7 +99,7 @@ class FormHelper:
             input_field.render_kw = {}
         input_field.render_kw["disabled"] = "disabled"
 
-    def set_hidden(self, input_field: Field):
+    def set_hidden(self, input_field):
         """
         disable the given input
 
@@ -111,7 +111,7 @@ class FormHelper:
         input_field.render_kw["hidden"] = "hidden"
 
 
-Form = TypeVar("Form", FormHelper, FlaskForm)
+Form = Union[FormHelper, FlaskForm]
 
 
 def create_form(form_type: str) -> FlaskForm | FormHelper | None:
@@ -138,30 +138,31 @@ class BaseFieldForm(FlaskForm, FormHelper):
     suffix = IntegerField("Suffix:", validators=[InputRequired()])
     name = StringField("Name:", validators=[DataRequired()])
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, _, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model_type = BaseField
 
-    def validate(self):
-        valid = super().validate()
+    def default_selects(self):
+        ...
+
+    def validate(self, **kwargs):
+        valid = super().validate(**kwargs)
         if not valid:
             return False
         basefield = BaseField.query.filter(
             BaseField.prefix == self.prefix.data, BaseField.suffix == self.suffix.data
         ).first()
         if basefield is not None:
-            self.prefix.errors.append(
-                f"Basefield with Prefix:{self.prefix.data} and Suffix:{self.suffix.data} already exists."
-            )
             self.suffix.errors.append(
-                f"Basefield with Prefix:{self.prefix.data} and Suffix:{self.suffix.data} already exists."
+                f"Basefield with Prefix: {self.prefix.data} and Suffix: {self.suffix.data} already exists."
             )
             return False
         return True
 
 
 class FieldForm(FlaskForm, FormHelper):
-    sub_suffix = IntegerField("Sub-Partition:", validators=[InputRequired(), NumberRange(min=0)])
+    sub_suffix = IntegerField(
+        "Sub-Partition:", default=0, validators=[InputRequired(), NumberRange(min=0)]
+    )
     year = IntegerField("Year:", validators=[InputRequired(), NumberRange(min=2000)])
     area = DecimalField("Area in ha:", validators=[InputRequired(), NumberRange(min=0)])
     red_region = SwitchField("Red region?")
@@ -176,11 +177,12 @@ class FieldForm(FlaskForm, FormHelper):
         validators=[InputRequired()],
     )
 
-    def __init__(self, field_id, *args, **kwargs):
+    def __init__(self, base_field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.field_id = field_id
-        self.model_type = Field
-        self.sub_suffix.data = 0
+        self.base_id = base_field_id
+
+    def default_selects(self):
+        ...
 
     def validate_sub_suffix(self, sub_suffix):
         if sub_suffix.data:
@@ -190,7 +192,10 @@ class FieldForm(FlaskForm, FormHelper):
                 Field.year == self.year.data,
             ).first()
             if field is not None:
-                ValidationError(f"Field with Sub-Suffix:{sub_suffix} already exists.")
+                self.sub_suffix.errors.append(
+                    f"Field with Sub-Suffix:{sub_suffix} already exists."
+                )
+                return False
 
     def validate_year(self, year):
         field = Field.query.filter(
@@ -199,7 +204,8 @@ class FieldForm(FlaskForm, FormHelper):
             Field.year == year.data,
         ).first()
         if field is not None:
-            ValidationError(f"Field in {year} already exists.")
+            self.year.errors.append(f"Field in {year.data} already exists.")
+            return False
 
 
 class CultivationForm(FlaskForm, FormHelper):
@@ -229,7 +235,6 @@ class CultivationForm(FlaskForm, FormHelper):
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.field_id = field_id
-        self.model_type = Cultivation
 
     def validate_cultivation_type(self, cultivation_type):
         cultivation = (
@@ -263,9 +268,8 @@ class FertilizationForm(FlaskForm, FormHelper):
     amount = DecimalField("Amount", validators=[InputRequired()])
 
     def __init__(self, field_id, *args, **kwargs):
-        super(FlaskForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.field_id = field_id
-        self.model_type = Fertilization
 
     def validate_measure(self, measure):
         if self.fert_class.data == FertClass.mineral.value:
@@ -348,11 +352,11 @@ class FertilizerForm(FlaskForm, FormHelper):
     cao = DecimalField("CaO:", validators=[InputRequired()])
     nh4 = DecimalField("NH4:", validators=[InputRequired()])
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, _, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model_type = Fertilizer
-        self.fert_class.data = ("default", "")
-        self.fert_type.data = ("default", "")
+
+    def default_selects(self):
+        ...
 
     def validate(self):
         valid = super().validate()
@@ -384,7 +388,7 @@ class CropForm(FlaskForm, FormHelper):
     name = StringField("Name:", validators=[DataRequired()])
     field_type = SelectField(
         "Select on which type of field the crop grows:",
-        choices=[(enum.name, enum.value) for enum in FieldType],
+        choices=[(enum.name, enum.value) for enum in FieldTypeForCrops],
         validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
@@ -425,21 +429,24 @@ class CropForm(FlaskForm, FormHelper):
     p2o5 = DecimalField("Fruit P2O5:", validators=[InputRequired()])
     k2o = DecimalField("Fruit K2O:", validators=[InputRequired()])
     mgo = DecimalField("Fruit MgO:", validators=[InputRequired()])
-    byproduct = StringField("Byproduct:")
-    byp_ratio = DecimalField("Byproduct ratio:", validators=[InputRequired()])
+    byproduct = StringField("Byproduct name:")
+    byp_ratio = DecimalField("Byproduct ratio in %:", validators=[InputRequired()])
     byp_n = DecimalField("Byproduct N:", validators=[InputRequired()])
     byp_p2o5 = DecimalField("Byproduct P2O5:", validators=[InputRequired()])
     byp_k2o = DecimalField("Byproduct K2O:", validators=[InputRequired()])
     byp_mgo = DecimalField("Byproduct MgO:", validators=[InputRequired()])
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, _, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model_type = Crop
+
+    def default_selects(self):
+        ...
 
     def validate_name(self, name):
-        crop = Crop.query.filter(Crop.user_id == current_user.id, Crop.name == name).first()
+        crop = Crop.query.filter(Crop.user_id == current_user.id, Crop.name == name.data).first()
         if crop is not None:
-            raise ValidationError(f"{name} already exists.")
+            self.name.errors.append(f"{name.data} already exists.")
+            return False
 
 
 class SoilForm(FlaskForm, FormHelper):
@@ -461,15 +468,18 @@ class SoilForm(FlaskForm, FormHelper):
 
     def __init__(self, base_field_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model_type = SoilSample
-        self.base_id = int(base_field_id)
+        self.base_id = base_field_id
+
+    def default_selects(self):
+        ...
 
     def validate_year(self, year):
         soil_sample = SoilSample.query.filter(
-            SoilSample.base_id == self.base_id, SoilSample.year == year
+            SoilSample.base_id == self.base_id, SoilSample.year == year.data
         ).first()
         if soil_sample is not None:
-            raise ValidationError(f"Soil sample for {year} already exists.")
+            self.year.errors.append(f"Soil sample for {year.data} already exists.")
+            return False
 
 
 class ModifierForm(FlaskForm, FormHelper):
@@ -479,13 +489,13 @@ class ModifierForm(FlaskForm, FormHelper):
         choices=[(enum.name, enum.value) for enum in NutrientType],
         validators=[InputRequired()],
     )
-    amount = DecimalField("Amount in kg/ha:", validators=[InputRequired()])
+    amount = IntegerField("Amount in kg/ha:", validators=[InputRequired()])
 
     def __init__(self, field_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.model_type = Modifier
-        self.field_id = int(field_id)
+        self.field_id = field_id
 
-    def validate(self):
-        if self.data.amount > 1000:
-            raise ValidationError(f"Amount of {self.amount.data} kg/ha is too big.")
+    def validate_amount(self, amount):
+        if amount.data > 1000:
+            self.amount.errors.append(f"Only values under 1000kg/ha are allowed.")
+            return False

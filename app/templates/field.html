@@ -19,7 +19,7 @@
       <h1>
         {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
       </h1>
-      <h6>{{ db.field.field_type.value }} — {{ db.field.area | format_number(".2f", "ha") }}</h6>
+      <h6>{{ db.field.field_type.value }} — {{ db.field.area | format_number('.2f', 'ha') }}</h6>
     </div>
     <div class="col-4 col-sm-3 d-inline-flex justify-content-end align-items-start">
       <button class="btn btn-link d-print-none"
@@ -28,14 +28,10 @@
               data-bs-target="#modal"
               data-form="field"
               data-modal="edit"
-              data-id="{{ base_field.id }}">
-        {{ render_icon("pencil-square", extra_classes="color-green") }}
-      </button>
+              data-id="{{ db.field.id }}">{{ render_icon("pencil-square", extra_classes="color-green") }}</button>
       <button class="btn btn-link d-print-none"
               type="button"
-              onclick="window.print();">
-        {{ render_icon("printer", extra_classes="color-green") }}
-      </button>
+              onclick="window.print();">{{ render_icon("printer", extra_classes="color-green") }}</button>
     </div>
     <!-- Maybe 3 dot menu -->
     {# <div class="collapse collapse-horizontal show" id="fieldMenu">
@@ -56,9 +52,7 @@
             type="button"
             role="tab"
             aria-controls="cultivation"
-            aria-selected="true">
-      Cultivation
-    </button>
+            aria-selected="true">Cultivation</button>
     <button class="nav-link fw-500 text-white flex-sm-fill text-sm-center"
             id="soil-tab"
             data-bs-toggle="tab"
@@ -66,9 +60,7 @@
             type="button"
             role="tab"
             aria-controls="soil"
-            aria-selected="false">
-      Soil
-    </button>
+            aria-selected="false">Soil</button>
     <button class="nav-link fw-500 text-white flex-sm-fill text-sm-center"
             id="info-tab"
             data-bs-toggle="tab"
@@ -76,9 +68,7 @@
             type="button"
             role="tab"
             aria-controls="info"
-            aria-selected="false">
-      Info
-    </button>
+            aria-selected="false">Info</button>
   </nav>
 
   <!--cultivation data-->
@@ -104,9 +94,8 @@
                       data-bs-toggle="modal"
                       data-bs-target="#modal"
                       data-form="fertilization"
-                      data-modal="new">
-                Add fertilization
-              </button>
+                      data-modal="new"
+                      data-id="{{ db.field.id }}">Add fertilization</button>
             </div>
             <h6 class="fw-bolder text-decoration-underline">Organic</h6>
             <div class="col-xxl-6 ms-1">{{ render_fertilization(db.cultivation, "organic", db.field) }}</div>
@@ -126,9 +115,8 @@
               data-bs-toggle="modal"
               data-bs-target="#modal"
               data-form="cultivation"
-              data-modal="new">
-        Add cultivation
-      </button>
+              data-modal="new"
+              data-id="{{ db.field.id }}">Add cultivation</button>
     {% endif %}
   </div>
   <!--soil data-->
@@ -139,6 +127,13 @@
     {% call render_accordion(title="Soil Sample", target="soil-sample", style="accordion-soil", collapsed=false) %}
       {% include "_field_soil.html" %}
     {% endcall %}
+    <button class="btn btn-success fw-bolder d-print-none"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#modal"
+            data-form="soil"
+            data-modal="new"
+            data-id="{{ field.id }}">Add soil sample</button>
   </div>
   <!--modifier data-->
   <div class="tab-pane fade"
@@ -148,6 +143,13 @@
     {% call render_accordion(title="Modifiers", target="modifiers", collapsed=false) %}
       {% include "_field_modifiers.html" %}
     {% endcall %}
+    <button class="btn btn-success fw-bolder d-print-none"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#modal"
+            data-form="modifier"
+            data-modal="new"
+            data-id="{{ db.field.id }}">Add modifier</button>
   </div>
 
 {% endblock app_content %}

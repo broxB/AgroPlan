@@ -12,6 +12,7 @@ __all__ = [
     "LegumeType",
     "FertClass",
     "FertType",
+    "FieldTypeForCrops",
     "MeasureType",
     "NminType",
     "UnitType",
@@ -28,6 +29,11 @@ class FieldType(enum.Enum):
     exchanged_land = "Tauschfläche"
     fallow_grassland = "Grünland-Brache"
     fallow_cropland = "Ackerland-Brache"
+
+
+FieldTypeForCrops: enum.Enum = enum.Enum(
+    "FieldTypeForCrops", [(e.name, e.value) for e in FieldType if e.name != "exchanged_land"]
+)
 
 
 class SoilType(enum.Enum):

@@ -63,63 +63,32 @@
             {% endif %}
           </td>
           <td>{{ crop.legume_rate.value }}</td>
-          <td>
-            {{ crop.nmin_depth.value }}
-          </td>
-          <td>
-            {{ crop.target_demand }}
-          </td>
-          <td>
-            {{ crop.target_yield }}
-          </td>
-          <td>
-            {{ "{}, {}".format(crop.pos_yield, crop.neg_yield) }}
-          </td>
-          <td>
-            {{ crop.target_protein }}
-          </td>
-          <td>
-            {{ crop.var_protein }}
-          </td>
-          <td>
-            {{ crop.n }}
-          </td>
-          <td>
-            {{ crop.p2o5 }}
-          </td>
-          <td>
-            {{ crop.k2o }}
-          </td>
-          <td>
-            {{ crop.mgo }}
-          </td>
+          <td>{{ crop.nmin_depth.value }}</td>
+          <td>{{ crop.target_demand }}</td>
+          <td>{{ crop.target_yield }}</td>
+          <td>{{ "{}, {}".format(crop.pos_yield, crop.neg_yield) }}</td>
+          <td>{{ crop.target_protein }}</td>
+          <td>{{ crop.var_protein }}</td>
+          <td>{{ crop.n }}</td>
+          <td>{{ crop.p2o5 }}</td>
+          <td>{{ crop.k2o }}</td>
+          <td>{{ crop.mgo }}</td>
           <td>
             {% if crop.byproduct %}{{ crop.byproduct }}{% endif %}
           </td>
-          <td>
-            {{ crop.byp_ratio }}
-          </td>
-          <td>
-            {{ crop.byp_n }}
-          </td>
-          <td>
-            {{ crop.byp_p2o5 }}
-          </td>
-          <td>
-            {{ crop.byp_k2o }}
-          </td>
-          <td>
-            {{ crop.byp_mgo }}
-          </td>
+          <td>{{ crop.byp_ratio }}</td>
+          <td>{{ crop.byp_n }}</td>
+          <td>{{ crop.byp_p2o5 }}</td>
+          <td>{{ crop.byp_k2o }}</td>
+          <td>{{ crop.byp_mgo }}</td>
           <td class="table-action d-print-none">
             <button class="btn btn-link btn-edit"
                     type="button"
                     data-bs-toggle="modal"
                     data-bs-target="#modal"
                     data-form="crop"
-                    data-modal="edit">
-              {{ render_icon("pencil-square", extra_classes="color-green") }}
-            </button>
+                    data-modal="edit"
+                    data-id="{{ crop.id }}">{{ render_icon("pencil-square", extra_classes="color-green") }}</button>
           </td>
         </tr>
       {% endfor %}
@@ -130,7 +99,5 @@
           data-bs-toggle="modal"
           data-bs-target="#modal"
           data-form="crop"
-          data-modal="new">
-    ✚ New
-  </button>
+          data-modal="new">✚ New</button>
 {% endblock app_content %}
