@@ -287,5 +287,5 @@ class EditModifierForm(ModifierForm):
     def populate(self, id: int):
         super().populate(id)
         self.description.data = self.model_data.description
-        self.modification.data = self.model_data.modification.value
+        self.modification.data = self.model_data.modification.name
         self.amount.data = self.model_data.amount
