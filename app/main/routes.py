@@ -4,7 +4,7 @@ from flask import flash, g, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from loguru import logger
 
-from app.database.model import BaseField, Field, User
+from app.database import BaseField, User, confirm_id, delete_database_entry
 from app.extensions import db, login
 from app.main import bp
 from app.main.forms import EditProfileForm, YearForm
@@ -91,7 +91,7 @@ def set_year():
 @bp.route("/field", methods=["GET", "POST"])
 @login_required
 def field_overview():
-    base_fields = current_user.get_fields(year=current_user.year)
+    base_fields = current_user.get_fields()
     return render_template("fields.html", title="Fields", base_fields=base_fields)
 
 
@@ -125,52 +125,45 @@ def field_data(base_field_id):
 
 @bp.route("/modal", methods=["GET"])
 @login_required
-def modal():
-    if request.method == "GET":
-        modal_type = request.args.get("modal")
-        form_type = request.args.get("form")
-        id: str = request.args.get("id")
-        if id == "undefined" or not id:
-            id = None
-        elif id.isnumeric():
-            id = int(id)
-        else:
-            return jsonify("Unvalid request data."), 400
+def get_modal():
+    modal_type = request.args.get("modal")
+    form_type = request.args.get("form")
+    id: str = request.args.get("id")
+    id = confirm_id(id, current_user.id, form_type, modal_type)
+    if not id:
+        return jsonify("Unvalid request data."), 400
 
-        if modal_type == "edit":
-            form: Form = create_edit_form(form_type)(id)
-            form.populate(id)
-            modal = render_template(
-                "modal_content.html",
-                form=form,
-                modal_type=(modal_type, form_type),
-                data_id=id,
-            )
-        else:
-            form = create_form(form_type)(id)
-            form.default_selects()
-            modal = render_template(
-                "modal_content.html",
-                form=form,
-                modal_type=(modal_type, form_type),
-                data_id=id,
-            )
-        return jsonify(modal)
+    if modal_type == "edit":
+        form: Form = create_edit_form(form_type)(id)
+        form.populate(id)
+        modal = render_template(
+            "modal_content.html",
+            form=form,
+            modal_type=(modal_type, form_type),
+            data_id=id,
+        )
+    else:
+        form = create_form(form_type)(id)
+        form.default_selects()
+        modal = render_template(
+            "modal_content.html",
+            form=form,
+            modal_type=(modal_type, form_type),
+            data_id=id,
+        )
+    return jsonify(modal)
 
 
-@bp.route("/form/refresh", methods=["POST"])
+@bp.route("/modal/refresh", methods=["POST"])
 @login_required
 def refresh_form():
     form_type = request.form.get("form_type")
     id = request.form.get("data_id")
-    if id == "undefined" or not id:
-        id = None
-    elif id.isnumeric():
-        id = int(id)
-    else:
+    id = confirm_id(id, current_user.id, form_type, "new")
+    if not id:
         return jsonify("Unvalid request data."), 400
 
-    form = create_form(form_type)(id)
+    form: Form = create_form(form_type)(id)
     form.update(request.form)
     modal_type = "new"
     modal = jsonify(
@@ -184,25 +177,34 @@ def refresh_form():
     return modal, 206
 
 
-@bp.route("/form/new", methods=["POST"])
+@bp.route("/form", methods=["POST", "PUT", "DELETE"])
 @login_required
-def new_data():
+def submit_form():
     form_type = request.form.get("form_type")
     id = request.form.get("data_id")
-    if id == "undefined" or not id:
-        id = None
-    elif id.isnumeric():
-        id = int(id)
-    else:
+    modal_type = {"POST": "new", "PUT": "edit", "DELETE": "edit"}
+
+    id = confirm_id(id, current_user.id, form_type, modal_type[request.method])
+    if not id:
         return jsonify("Unvalid request data."), 400
 
-    form = create_form(form_type)(id)
-    modal_type = "new"
+    if request.method == "POST":
+        form: Form = create_form(form_type)(id)
+        modal_type = "new"
+    elif request.method == "PUT":
+        form = create_edit_form(form_type)(id)
+        modal_type = "edit"
+    elif request.method == "DELETE":
+        valid = delete_database_entry(id, form_type)
+        if valid:
+            return jsonify("Entry successfully deleted."), 201
+        else:
+            return jsonify("Deletion not available."), 400
 
-    if form.validate_on_submit():
+    if valid := form.validate_on_submit():
         return jsonify("Data saved successfully."), 201
 
-    else:
+    if not valid:
         modal = jsonify(
             render_template(
                 "modal_content.html",
@@ -212,51 +214,6 @@ def new_data():
             )
         )
         return modal, 206
-
-
-@bp.route("/form/update", methods=["POST"])
-@login_required
-def update_data():
-    form_type = request.form.get("form_type")
-    id = request.form.get("data_id")
-    if id == "undefined" or not id:
-        id = None
-    elif id.isnumeric():
-        id = int(id)
-    else:
-        return jsonify("Unvalid request data."), 400
-
-    form = create_edit_form(form_type)(id)
-    modal_type = "edit"
-
-    if form.validate_on_submit():
-        return jsonify("Data saved successfully."), 201
-
-    else:
-        modal = jsonify(
-            render_template(
-                "modal_content.html",
-                form=form,
-                modal_type=(modal_type, form_type),
-                data_id=id,
-            )
-        )
-        return modal, 206
-
-
-@bp.route("/form/delete", methods=["DELETE"])
-@login_required
-def delete_data():
-    form_type = request.form.get("form_type")
-    id = request.form.get("data_id")
-    if id == "undefined" or not id:
-        id = None
-    elif id.isnumeric():
-        id = int(id)
-    else:
-        return jsonify("Unvalid request data."), 400
-
-    return jsonify("Entry deleted."), 201
 
 
 @bp.route("/crop", methods=["GET", "POST"])
