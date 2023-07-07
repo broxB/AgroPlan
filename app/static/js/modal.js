@@ -50,7 +50,7 @@ class Modal {
     selectElements.forEach((select) => {
       if (select.classList.contains("reload")) {
         select.addEventListener("change", async () => {
-          const content = await sendForm(this.form, "POST", "/form/refresh");
+          const content = await sendForm(this.form, "POST", "/modal/refresh");
           this.addContent(content);
         });
       }
@@ -79,19 +79,19 @@ class Modal {
 
   async newData() {
     console.log("new");
-    let response = await sendForm(this.form, "POST", "/form/new", true);
+    let response = await sendForm(this.form, "POST", "/form", true);
     this.handleResponse(response);
   }
 
   async editData() {
     console.log("update");
-    let response = await sendForm(this.form, "POST", "/form/update", true);
+    let response = await sendForm(this.form, "PUT", "/form", true);
     this.handleResponse(response);
   }
 
   async deleteData() {
     console.log("delete");
-    let response = await sendForm(this.form, "DELETE", "/form/delete", true);
+    let response = await sendForm(this.form, "DELETE", "/form", true);
     this.handleResponse(response);
   }
 
@@ -107,6 +107,10 @@ class Modal {
     } else if (response.status == 206) {
       response.json().then((data) => {
         this.addContent(data, false);
+      });
+    } else if (response.status == 400) {
+      response.json().then((data) => {
+        this.content.innerHTML = data;
       });
     }
   }
