@@ -69,22 +69,7 @@ class FormHelper:
         self.process(obj=self.model_data)
 
     def default_selects(self):
-        self.model_data = Field.query.get(self.field_id)
-        for field in self._fields.values():
-            if field.type != "SelectField":
-                continue
-            if field.name == "cultivation":
-                field.choices = [
-                    (cultivation.id, cultivation.crop.name)
-                    for cultivation in self.model_data.cultivations
-                ]
-            elif field.name == "crop":
-                field.choices = [
-                    (crop.id, crop.name)
-                    for crop in current_user.get_crops(field_type=self.model_data.field_type)
-                ]
-            elif field.name == "fertilizer":
-                field.choices = [(fert.id, fert.name) for fert in current_user.get_fertilizers()]
+        ...
 
     # credit: https://stackoverflow.com/a/71562719/16256581
     def set_disabled(self, input_field: Form.Field):
@@ -141,9 +126,6 @@ class BaseFieldForm(FlaskForm, FormHelper):
     def __init__(self, _, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def default_selects(self):
-        ...
-
     def validate(self, **kwargs):
         valid = super().validate(**kwargs)
         if not valid:
@@ -180,9 +162,6 @@ class FieldForm(FlaskForm, FormHelper):
     def __init__(self, base_field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.base_id = base_field_id
-
-    def default_selects(self):
-        ...
 
     def validate_sub_suffix(self, sub_suffix):
         if sub_suffix.data:
@@ -236,6 +215,12 @@ class CultivationForm(FlaskForm, FormHelper):
         super().__init__(*args, **kwargs)
         self.field_id = field_id
 
+    def default_selects(self):
+        field = Field.query.get(self.field_id)
+        self.crop.choices = [
+            (crop.id, crop.name) for crop in current_user.get_crops(field_type=field.field_type)
+        ]
+
     def validate_cultivation_type(self, cultivation_type):
         cultivation = (
             Cultivation.query.join(Field)
@@ -270,6 +255,13 @@ class FertilizationForm(FlaskForm, FormHelper):
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.field_id = field_id
+
+    def default_selects(self):
+        field = Field.query.get(self.field_id)
+        self.cultivation.choices = [
+            (cultivation.id, cultivation.crop.name) for cultivation in field.cultivations
+        ]
+        self.fertilizer.choices = [(fert.id, fert.name) for fert in current_user.get_fertilizers()]
 
     def validate_measure(self, measure):
         if self.fert_class.data == FertClass.mineral.value:
@@ -355,9 +347,6 @@ class FertilizerForm(FlaskForm, FormHelper):
     def __init__(self, _, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def default_selects(self):
-        ...
-
     def validate(self):
         valid = super().validate()
         if not valid:
@@ -439,9 +428,6 @@ class CropForm(FlaskForm, FormHelper):
     def __init__(self, _, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def default_selects(self):
-        ...
-
     def validate_name(self, name):
         crop = Crop.query.filter(Crop.user_id == current_user.id, Crop.name == name.data).first()
         if crop is not None:
@@ -469,9 +455,6 @@ class SoilForm(FlaskForm, FormHelper):
     def __init__(self, base_field_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.base_id = base_field_id
-
-    def default_selects(self):
-        ...
 
     def validate_year(self, year):
         soil_sample = SoilSample.query.filter(
