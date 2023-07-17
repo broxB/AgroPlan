@@ -1,4 +1,4 @@
-const sidebar = document.querySelector("#sidebarNav");
+export const sidebar = document.querySelector("#sidebarNav");
 var offcanvas;
 if (sidebar) {
   offcanvas = new bootstrap.Offcanvas(sidebar);

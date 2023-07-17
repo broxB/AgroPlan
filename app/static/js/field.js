@@ -1,4 +1,5 @@
 import { fetchData } from "./request.js";
+import { sidebar } from "./sidebar.js";
 
 // restore field nav tab on reload
 export function restoreTab() {
@@ -10,6 +11,18 @@ export function restoreTab() {
   }
   var tab = new bootstrap.Tab(elem);
   tab.show();
+}
+
+// remove stored selected tab on page change
+export function removeStoredTab() {
+  if (sidebar) {
+    const links = sidebar.querySelectorAll("a");
+    links.forEach((link) => {
+      link.addEventListener("click", () => {
+        localStorage.removeItem("activeTab");
+      });
+    });
+  }
 }
 
 // save field nav tab on click

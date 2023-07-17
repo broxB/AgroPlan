@@ -1,6 +1,6 @@
 import { createModal } from "./modal.js";
 import { manageToast } from "./toast.js";
-import { fieldSaldo, restoreTab, storeTab } from "./field.js";
+import { fieldSaldo, removeStoredTab, restoreTab, storeTab } from "./field.js";
 import { manageSidebar } from "./sidebar.js";
 import { manageFields } from "./fields.js";
 
@@ -14,6 +14,7 @@ window.addEventListener("load", manageToast());
 if (window.location.pathname.includes("/field/")) {
   window.addEventListener("load", () => {
     fieldSaldo();
+    removeStoredTab();
     restoreTab();
     storeTab();
   });
