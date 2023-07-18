@@ -217,6 +217,19 @@ MineralFertType: enum.Enum = enum.Enum(
     "MineralFertType", [(e.name, e.value) for e in FertType if "org_" not in e.name]
 )
 
+NFertType: enum.Enum = enum.Enum(
+    "NFertType",
+    [(e.name, e.value) for e in FertType if e.name.startswith("n") or e.name == "n"],
+)
+BasicFertType: enum.Enum = enum.Enum(
+    "BasicFertType",
+    [(e.name, e.value) for e in FertType if e.name.startswith("p") or e.name.startswith("k")],
+)
+MiscFertType: enum.Enum = enum.Enum(
+    "MiscFertType", [(e.name, e.value) for e in (FertType.misc, FertType.auxiliary)]
+)
+LimeFertType: enum.Enum = enum.Enum("LimeFertType", [FertType.lime.name, FertType.lime.value])
+
 
 class MeasureType(enum.Enum):
     """Measures for fertilization: `fall`, `first_n_fert`, `lime_fert` etc."""
@@ -242,6 +255,19 @@ OrganicMeasureType: enum.Enum = enum.Enum(
 )
 MineralMeasureType: enum.Enum = enum.Enum(
     "MineralMeasureType", [(e.name, e.value) for e in MeasureType if "org_" not in e.name]
+)
+
+NMeasureType: enum.Enum = enum.Enum(
+    "MeasureType", [(e.name, e.value) for e in MeasureType if e.name.endswith("n_fert")]
+)
+BasicMeasureType: enum.Enum = enum.Enum(
+    "BasicMeasureType", [(e.name, e.value) for e in MeasureType if e.name.endswith("base_fert")]
+)
+MiscMeasureType: enum.Enum = enum.Enum(
+    "MiscMeasureType", [MeasureType.misc_fert.name, MeasureType.misc_fert.value]
+)
+LimeMeasureType: enum.Enum = enum.Enum(
+    "LimeMeasureType", [MeasureType.lime_fert.name, MeasureType.lime_fert.value]
 )
 
 
@@ -315,3 +341,23 @@ def find_crop_class(cultivation_type: CultivationType) -> CultivationType:
             return CropClass.second_crop
         case _:
             raise ValueError(f"Invalid cultivation type passed: {cultivation_type}")
+
+
+def find_min_fert_type_from_measure(measure_name: str) -> MineralFertType:
+    if measure_name not in [e.name for e in MineralMeasureType]:
+        raise TypeError(f"{measure_name} has no corresponding MineralFertType.")
+    if measure_name in [e.name for e in NMeasureType]:
+        return NFertType
+    elif measure_name in [e.name for e in BasicMeasureType]:
+        return BasicFertType
+    elif measure_name in [e.name for e in MiscMeasureType]:
+        return MiscFertType
+    elif measure_name in [e.name for e in LimeMeasureType]:
+        return LimeFertType
+    raise TypeError(f"{measure_name} has no corresponding FertType.")
+
+
+def find_org_fert_type_from_measure(measure_name: str) -> OrganicFertType:
+    if measure_name in [e.name for e in OrganicMeasureType]:
+        return OrganicFertType
+    raise TypeError(f"{measure_name} has no corresponding OrganicFertType.")
