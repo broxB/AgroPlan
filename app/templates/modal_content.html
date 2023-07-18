@@ -10,7 +10,7 @@
 </div>
 <div class="modal-body">
   <div class="container-fluid">
-    {{ render_form(form, form_type="floating", id="modalForm", data_id=data_id, type=type, field_id=field_id) }}
+    {{ render_form(form, form_type="floating", id="modalForm", data_id=data_id, modal_type=modal, type=type) }}
   </div>
 </div>
 <div class="modal-footer px-4">
@@ -33,6 +33,6 @@
     </button>
   </ul>
   <ul class="ps-0">
-    <button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Close</button>
+    <button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Cancel</button>
   </ul>
 </div>

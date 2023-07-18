@@ -393,6 +393,7 @@ the necessary fix for required=False attributes, but will also not set the requi
     form_group_classes='',
     form_inline_classes='',
     type='',
+    modal_type='',
     data_id='',
     field_id='') %}
     {#-
@@ -443,6 +444,7 @@ action="" is what we want, from http://www.ietf.org/rfc/rfc2396.txt:
           {%- if novalidate %} novalidate{% endif -%}
           {%- if render_kw %} {{ render_kw|xmlattr }}{% endif -%}>
       {% if type %}<input id="form_type" name="form_type" type="hidden" value="{{ type }}">{% endif %}
+      {% if modal_type %}<input id="modal_type" name="modal_type" type="hidden" value="{{ modal_type }}">{% endif %}
       {% if data_id %}<input id="data_id" name="data_id" type="hidden" value="{{ data_id }}">{% endif %}
       {% if field_id %}<input id="field_id" name="field_id" type="hidden" value="{{ field_id }}">{% endif %}
       {{ form.hidden_tag() }}
