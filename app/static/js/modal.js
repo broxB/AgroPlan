@@ -82,19 +82,19 @@ class Modal {
 
   async newData() {
     console.log("new");
-    let response = await sendForm(this.form, "POST", "/form", true);
+    let response = await sendForm(this.form, "POST", "/form/new", true);
     this.handleResponse(response);
   }
 
   async editData() {
     console.log("update");
-    let response = await sendForm(this.form, "PUT", "/form", true);
+    let response = await sendForm(this.form, "PUT", "/form/edit", true);
     this.handleResponse(response);
   }
 
   async deleteData() {
     console.log("delete");
-    let response = await sendForm(this.form, "DELETE", "/form", true);
+    let response = await sendForm(this.form, "DELETE", "/form/delete", true);
     this.handleResponse(response);
   }
 
