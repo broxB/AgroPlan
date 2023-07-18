@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Union
 
 from flask_bootstrap import SwitchField
@@ -24,6 +25,7 @@ from app.database.model import (
     Field,
     Modifier,
     SoilSample,
+    field_fertilization,
 )
 from app.database.types import (
     CropClass,
@@ -38,11 +40,15 @@ from app.database.types import (
     HumusType,
     LegumeType,
     MeasureType,
+    MineralMeasureType,
     NminType,
     NutrientType,
+    OrganicMeasureType,
     ResidueType,
     SoilType,
     UnitType,
+    find_min_fert_type_from_measure,
+    find_org_fert_type_from_measure,
 )
 
 __all__ = [
@@ -60,6 +66,19 @@ ModelType = Union[BaseField, Field, Cultivation, Crop, Fertilization, Fertilizer
 
 
 class FormHelper:
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        # reset render keywords because wtforms caches them between requests
+        for field in self._fields.values():
+            self.reset_kw(field)
+
+    @staticmethod
+    def reset_kw(field):
+        try:
+            field.render_kw.pop("selected")
+        except (AttributeError, KeyError):
+            pass
+
     def get_data(self, id: int):
         self.model_data: ModelType = self.model_type.query.get(id)
 
@@ -69,6 +88,9 @@ class FormHelper:
         self.process(obj=self.model_data)
 
     def default_selects(self):
+        ...
+
+    def update_content(self):
         ...
 
     # credit: https://stackoverflow.com/a/71562719/16256581
@@ -118,7 +140,7 @@ def create_form(form_type: str) -> FlaskForm | FormHelper | None:
     return form
 
 
-class BaseFieldForm(FlaskForm, FormHelper):
+class BaseFieldForm(FormHelper, FlaskForm):
     prefix = IntegerField("Prefix:", validators=[InputRequired()])
     suffix = IntegerField("Suffix:", validators=[InputRequired()])
     name = StringField("Name:", validators=[DataRequired()])
@@ -141,7 +163,7 @@ class BaseFieldForm(FlaskForm, FormHelper):
         return True
 
 
-class FieldForm(FlaskForm, FormHelper):
+class FieldForm(FormHelper, FlaskForm):
     sub_suffix = IntegerField(
         "Sub-Partition:", default=0, validators=[InputRequired(), NumberRange(min=0)]
     )
@@ -187,7 +209,7 @@ class FieldForm(FlaskForm, FormHelper):
             return False
 
 
-class CultivationForm(FlaskForm, FormHelper):
+class CultivationForm(FormHelper, FlaskForm):
     cultivation_type = SelectField(
         "Select type of cultivation:",
         choices=[(enum.name, enum.value) for enum in CultivationType],
@@ -231,16 +253,16 @@ class CultivationForm(FlaskForm, FormHelper):
             raise ValidationError("This type of cultivation already exists.")
 
 
-class FertilizationForm(FlaskForm, FormHelper):
+class FertilizationForm(FormHelper, FlaskForm):
     cultivation = SelectField("Select a crop to fertilize:", validators=[InputRequired()])
+    cut_timing = SelectField(
+        "Select a cut timing:", choices=[(enum.name, enum.value) for enum in CutTiming]
+    )
     fert_class = SelectField(
         "Select a fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertClass],
         validators=[InputRequired()],
         render_kw={"class": "reload"},
-    )
-    cut_timing = SelectField(
-        "Select a cut timing:", choices=[(enum.name, enum.value) for enum in CutTiming]
     )
     measure_type = SelectField(
         "Select a measure:",
@@ -250,7 +272,7 @@ class FertilizationForm(FlaskForm, FormHelper):
     )
     fertilizer = SelectField("Select a fertilizer:", validators=[InputRequired()])
     month = IntegerField("Month:")
-    amount = DecimalField("Amount", validators=[InputRequired()])
+    amount = DecimalField("Amount:", validators=[InputRequired()])
 
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -263,18 +285,72 @@ class FertilizationForm(FlaskForm, FormHelper):
         ]
         self.fertilizer.choices = [(fert.id, fert.name) for fert in current_user.get_fertilizers()]
 
-    def validate_measure(self, measure):
-        if self.fert_class.data == FertClass.mineral.value:
+    def update_content(self):
+        self.default_selects()
+
+        cultivation = Cultivation.query.get(self.cultivation.data)
+        if cultivation is None:
+            raise ValidationError(f"{self.cultivation.data} doesn't exists.")
+
+        for name, data in self.data.items():
+            if data is not None:
+                field = self._fields.get(name)
+                if field.render_kw is None:
+                    field.render_kw = {}
+                field.render_kw |= {"selected": ""}
+
+        if not cultivation.crop.feedable:
+            del self.cut_timing
+
+        if self.fert_class.data == FertClass.mineral.name:
+            del self.month
+            measure_type = MineralMeasureType
+            if self.measure_type.data:
+                try:
+                    fert_types = find_min_fert_type_from_measure(self.measure_type.data)
+                    choices = Fertilizer.query.filter(
+                        Fertilizer.fert_type.in_([e.name for e in fert_types])
+                    )
+                except TypeError:
+                    self.measure_type.data = None
+                    self.reset_kw(self.measure_type)
+                    self.fertilizer.data = None
+                    self.reset_kw(self.fertilizer)
+                    choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
+            else:
+                choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
+
+        elif self.fert_class.data == FertClass.organic.name:
+            measure_type = OrganicMeasureType
+            try:
+                fert_types = find_org_fert_type_from_measure(self.measure_type.data)
+            except TypeError:
+                self.measure_type.data = None
+                self.reset_kw(self.measure_type)
+                self.fertilizer.data = None
+                self.reset_kw(self.fertilizer)
+
+            choices = current_user.get_fertilizers(
+                fert_class=FertClass.organic, year=current_user.year
+            )
+
+        self.measure_type.choices = [(measure.name, measure.value) for measure in measure_type]
+        self.fertilizer.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
+
+    def validate_measure_type(self, measure_type):
+        if self.fert_class.data == FertClass.mineral.name:
             fertilization = (
-                Fertilization.query.join(Field)
+                Fertilization.query.join(field_fertilization)
+                .join(Field)
                 .filter(
                     Field.id == self.field_id,
-                    Fertilization.measure == measure,
+                    Fertilization.measure == measure_type.data,
                 )
-                .first()
+                .one_or_none()
             )
             if fertilization is not None:
-                raise ValidationError(f"{measure} for mineral fertilization already exists.")
+                self.measure_type.errors.append(f"Measure already exists for field.")
+                return False
 
     def validate_amount(self, amount):
         ...
@@ -315,7 +391,7 @@ class FertilizationForm(FlaskForm, FormHelper):
         #     return [sum(n) for n in zip(*sum_n)]
 
 
-class FertilizerForm(FlaskForm, FormHelper):
+class FertilizerForm(FormHelper, FlaskForm):
     name = StringField("Name:", validators=[DataRequired()])
     year = IntegerField("Year:", validators=[InputRequired()])
     fert_class = SelectField(
@@ -373,7 +449,7 @@ class FertilizerForm(FlaskForm, FormHelper):
         return True
 
 
-class CropForm(FlaskForm, FormHelper):
+class CropForm(FormHelper, FlaskForm):
     name = StringField("Name:", validators=[DataRequired()])
     field_type = SelectField(
         "Select on which type of field the crop grows:",
@@ -435,7 +511,7 @@ class CropForm(FlaskForm, FormHelper):
             return False
 
 
-class SoilForm(FlaskForm, FormHelper):
+class SoilForm(FormHelper, FlaskForm):
     year = IntegerField("Year:", validators=[InputRequired()])
     soil_type = SelectField(
         "Select soil composition:",
@@ -465,7 +541,7 @@ class SoilForm(FlaskForm, FormHelper):
             return False
 
 
-class ModifierForm(FlaskForm, FormHelper):
+class ModifierForm(FormHelper, FlaskForm):
     description = StringField("Description:", validators=[InputRequired()])
     modification = SelectField(
         "Select a modifier:",

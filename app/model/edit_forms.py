@@ -23,7 +23,9 @@ from app.database.types import (
     OrganicMeasureType,
     ResidueType,
     find_crop_class,
+    find_min_fert_type_from_measure,
     find_nmin_type,
+    find_org_fert_type_from_measure,
 )
 
 from .forms import (
@@ -171,6 +173,21 @@ class EditFertilizationForm(FertilizationForm):
         field_id = self.model_data.field[0].id
         super().__init__(field_id, *args, **kwargs)
 
+    def update_content(self):
+        self.fert_class.data = self.model_data.fertilizer.fert_class.name
+        super().update_content()
+        try:
+            fert_types = find_min_fert_type_from_measure(self.measure_type.data)
+            choices = Fertilizer.query.filter(
+                Fertilizer.fert_type.in_([e.name for e in fert_types])
+            )
+            self.fertilizer.data = None
+            self.reset_kw(self.fertilizer)
+            self.fertilizer.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
+        except TypeError:
+            pass
+        self.remove_inputs()
+
     def validate_measure(self, measure):
         if measure != self.original_measure:
             super().validate_measure(measure)
@@ -203,6 +220,9 @@ class EditFertilizationForm(FertilizationForm):
         self.original_measure = self.measure_type.data
         self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}:"
         # remove non-relevant inputs
+        self.remove_inputs()
+
+    def remove_inputs(self):
         fert_class = self.model_data.fertilizer.fert_class
         feedable = self.model_data.cultivation.crop.feedable
         if fert_class is FertClass.mineral:

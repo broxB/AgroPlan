@@ -37,6 +37,9 @@ class Modal {
   setDefaults() {
     const selectElements = this.content.querySelectorAll("select");
     selectElements.forEach((select) => {
+      if (select.attributes.getNamedItem("selected")) {
+        return;
+      }
       let selectDefault = new Option("");
       selectDefault.setAttribute("hidden", "");
       selectDefault.setAttribute("selected", "");
