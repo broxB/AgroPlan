@@ -14,7 +14,6 @@ window.addEventListener("load", manageToast());
 if (window.location.pathname.includes("/field/")) {
   window.addEventListener("load", () => {
     fieldSaldo();
-    removeStoredTab();
     restoreTab();
     storeTab();
   });
@@ -28,4 +27,5 @@ if (window.location.pathname.includes("/fields/")) {
 // Control sidebar
 if (document.querySelector("#sidebarNav")) {
   manageSidebar();
+  removeStoredTab();
 }
