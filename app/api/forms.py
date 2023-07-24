@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Union
+from typing import Any, Union
 
+import wtforms
 from flask_bootstrap import SwitchField
 from flask_login import current_user
 from flask_wtf import FlaskForm
@@ -14,7 +15,13 @@ from wtforms import (
     SelectField,
     StringField,
 )
-from wtforms.validators import DataRequired, InputRequired, NumberRange, ValidationError
+from wtforms.validators import (
+    DataRequired,
+    InputRequired,
+    NumberRange,
+    Optional,
+    ValidationError,
+)
 
 from app.database.model import (
     BaseField,
@@ -66,63 +73,114 @@ ModelType = Union[BaseField, Field, Cultivation, Crop, Fertilization, Fertilizer
 
 
 class FormHelper:
+    """
+    Class under which form functionality is handled.
+    """
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         # reset render keywords because wtforms caches them between requests
         for field in self._fields.values():
-            self.reset_kw(field)
+            self.remove_render_kw(field, "selected")
 
     @staticmethod
-    def reset_kw(field):
+    def add_render_kw(field: wtforms.Field, name: str, value: Any):
+        """
+        Add `name` to `render_kw` for `WTForms.Field`.
+        Doesn't override other render_kws.
+
+            :param field:
+                WTForm input to which `render_kw` should be add.
+            :param name:
+                `name` of the render_kw.
+            :param value:
+                `value` for the render_kw.
+        """
+        if field.render_kw is None:
+            field.render_kw = {}
+        field.render_kw[name] = value
+
+    @staticmethod
+    def remove_render_kw(field: wtforms.Field, name: str):
+        """
+        Removes `render_kw` with `name` for `WTForms.Field`,
+        because WTForms seems to cache them.
+
+        :param field:
+            WTForm input which `render_kw` should be reset.
+        :param name:
+            `name` of the render_kw.
+        """
         try:
-            field.render_kw.pop("selected")
+            field.render_kw.pop(name)
         except (AttributeError, KeyError):
             pass
 
+    def reset_data(self, field: wtforms.Field):
+        """
+        Reset inputs data and remove `selected` from `render_kw`.
+
+        :param field:
+            WTForm input which should be reset.
+        """
+        try:
+            field.data = None
+            field.raw_data = None
+            self.remove_render_kw(field, "selected")
+        except AttributeError:
+            pass
+
+    def set_selected_inputs(self):
+        """
+        Sets `selected` render_kw for inputs that have data.
+        """
+        for name, data in self.data.items():
+            if data is not None:
+                field = self._fields.get(name)
+                if field.render_kw is None:
+                    field.render_kw = {}
+                field.render_kw |= {"selected": ""}
+
     def get_data(self, id: int):
+        """
+        Fetches data for form specific model from database.
+
+        :param id:
+            Form specific database model `id`.
+        """
         self.model_data: ModelType = self.model_type.query.get(id)
 
     def populate(self: Form, id: int):
+        """
+        Populate form with data from provided database `id`.
+
+        :param id:
+            Form specific database `id`.
+        """
         if not hasattr(self, "model_data"):
             self.get_data(id)
         self.process(obj=self.model_data)
 
     def default_selects(self):
+        """
+        Creates default choices for form specific SelectFields.
+        """
         ...
 
     def update_content(self):
+        """
+        Updates form data based on selected SelectField choices.
+        """
         ...
-
-    # credit: https://stackoverflow.com/a/71562719/16256581
-    def set_disabled(self, input_field: Form.Field):
-        """
-        disable the given input
-
-        Args:
-            inputField(Input): the WTForms input to disable
-            disabled(bool): if true set the disabled attribute of the input
-        """
-        if input_field.render_kw is None:
-            input_field.render_kw = {}
-        input_field.render_kw["disabled"] = "disabled"
-
-    def set_hidden(self, input_field):
-        """
-        disable the given input
-
-        Args:
-            inputField(Input): the WTForms input to disable
-        """
-        if input_field.render_kw is None:
-            input_field.render_kw = {}
-        input_field.render_kw["hidden"] = "hidden"
 
 
 Form = Union[FormHelper, FlaskForm]
 
 
 def create_form(form_type: str) -> FlaskForm | FormHelper | None:
-    """Factory for forms that can be filled with new data."""
+    """
+    Factory for forms that can be filled with new data.
+    """
     form_types = {
         "base_field": BaseFieldForm,
         "field": FieldForm,
@@ -254,14 +312,18 @@ class CultivationForm(FormHelper, FlaskForm):
 
 
 class FertilizationForm(FormHelper, FlaskForm):
-    cultivation = SelectField("Select a crop to fertilize:", validators=[InputRequired()])
+    cultivation = SelectField(
+        "Select a crop to fertilize:", validators=[Optional()], render_kw={"class": "reload"}
+    )
     cut_timing = SelectField(
-        "Select a cut timing:", choices=[(enum.name, enum.value) for enum in CutTiming]
+        "Select a cut timing:",
+        choices=[(enum.name, enum.value) for enum in CutTiming],
+        validators=[Optional()],
     )
     fert_class = SelectField(
         "Select a fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertClass],
-        validators=[InputRequired()],
+        validators=[Optional()],
         render_kw={"class": "reload"},
     )
     measure_type = SelectField(
@@ -270,8 +332,10 @@ class FertilizationForm(FormHelper, FlaskForm):
         validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
-    fertilizer = SelectField("Select a fertilizer:", validators=[InputRequired()])
-    month = IntegerField("Month:")
+    fertilizer = SelectField(
+        "Select a fertilizer:", validators=[InputRequired()], render_kw={"class": "reload"}
+    )
+    month = IntegerField("Month:", validators=[Optional()])
     amount = DecimalField("Amount:", validators=[InputRequired()])
 
     def __init__(self, field_id, *args, **kwargs):
@@ -285,19 +349,26 @@ class FertilizationForm(FormHelper, FlaskForm):
         ]
         self.fertilizer.choices = [(fert.id, fert.name) for fert in current_user.get_fertilizers()]
 
+        if not any(cultivation.crop.feedable for cultivation in field.cultivations):
+            del self.cut_timing
+
     def update_content(self):
         self.default_selects()
+        self.set_selected_inputs()
 
-        cultivation = Cultivation.query.get(self.cultivation.data)
+        def reset_data():
+            self.reset_data(self.measure_type)
+            self.reset_data(self.fertilizer)
+            self.reset_data(self.month)
+            self.reset_data(self.amount)
+
+        cultivation = (
+            Cultivation.query.join(Field)
+            .filter(Cultivation.id == self.cultivation.data, Field.id == self.field_id)
+            .one_or_none()
+        )
         if cultivation is None:
-            raise ValidationError(f"{self.cultivation.data} doesn't exists.")
-
-        for name, data in self.data.items():
-            if data is not None:
-                field = self._fields.get(name)
-                if field.render_kw is None:
-                    field.render_kw = {}
-                field.render_kw |= {"selected": ""}
+            raise ValidationError(f"Selected cultivation doesn't exists.")
 
         if not cultivation.crop.feedable:
             del self.cut_timing
@@ -308,15 +379,13 @@ class FertilizationForm(FormHelper, FlaskForm):
             if self.measure_type.data:
                 try:
                     fert_types = find_min_fert_type_from_measure(self.measure_type.data)
+                except TypeError:
+                    reset_data()
+                    choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
+                else:
                     choices = Fertilizer.query.filter(
                         Fertilizer.fert_type.in_([e.name for e in fert_types])
                     )
-                except TypeError:
-                    self.measure_type.data = None
-                    self.reset_kw(self.measure_type)
-                    self.fertilizer.data = None
-                    self.reset_kw(self.fertilizer)
-                    choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
             else:
                 choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
 
@@ -325,70 +394,93 @@ class FertilizationForm(FormHelper, FlaskForm):
             try:
                 fert_types = find_org_fert_type_from_measure(self.measure_type.data)
             except TypeError:
-                self.measure_type.data = None
-                self.reset_kw(self.measure_type)
-                self.fertilizer.data = None
-                self.reset_kw(self.fertilizer)
-
+                reset_data()
             choices = current_user.get_fertilizers(
-                fert_class=FertClass.organic, year=current_user.year
+                fert_class=FertClass.organic, year=cultivation.field.year
             )
+
+        else:
+            # no fert_class option selected, needed for editform without fert_class shown
+            measure_type = MeasureType
+            choices = current_user.get_fertilizers()
+
+        if self.fertilizer.data:
+            fertilizer = Fertilizer.query.get(self.fertilizer.data)
+            self.amount.label.text = f"Amount in {fertilizer.unit.value}/ha:"
 
         self.measure_type.choices = [(measure.name, measure.value) for measure in measure_type]
         self.fertilizer.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
 
     def validate_measure_type(self, measure_type):
-        if self.fert_class.data == FertClass.mineral.name:
+        """
+        Verifies that mineral measures are unique.
+        """
+        if self.measure_type.data in [e.name for e in MineralMeasureType]:
             fertilization = (
-                Fertilization.query.join(field_fertilization)
-                .join(Field)
+                Fertilization.query.join(Cultivation)
                 .filter(
-                    Field.id == self.field_id,
+                    Cultivation.id == self.cultivation.data,
                     Fertilization.measure == measure_type.data,
                 )
-                .one_or_none()
+                .first()
             )
             if fertilization is not None:
-                self.measure_type.errors.append(f"Measure already exists for field.")
+                self.measure_type.errors.append(f"Measure already exists for cultivation.")
                 return False
 
-    def validate_amount(self, amount):
-        ...
-        # implement from field model class
+    def validate_amount(self, amount, edit_value=False) -> bool:
+        """
+        Verifies that amount of fertilizer is within the organic fall fertilization limit.
+        """
+        try:
+            fert_amount = amount.data
+        except AttributeError:
+            fert_amount = amount
 
-        # def fall_violation(self) -> bool:
-        #     """Checks if fertilization applied in fall exceeds the regulations"""
-        #     n_total, nh4 = self._sum_fall_fertilizations()
-        #     if (
-        #         self.field_type == FieldType.grassland
-        #         or self.main_crop
-        #         and self.main_crop.crop.feedable
-        #     ):
-        #         if n_total > (80 if not self.red_region else 60):
-        #             logger.info(
-        #                 f"{self.name}: {n_total=:.0f} is violating the maximum value of Nges for fall fertilizations."
-        #             )
-        #             return True
-        #     elif n_total > 60 or nh4 > 30:
-        #         logger.info(
-        #             f"{self.name}: {n_total=:.0f} or {nh4=:.0f} are violating the maximum values of NH4 for fall fertilizations."
-        #         )
-        #         return True
-        #     return False
+        if self.measure_type.data != MeasureType.org_fall.name:
+            return True
 
-        # def _sum_fall_fertilizations(self) -> list[Decimal]:
-        #     sum_n = [(0, 0)]
-        #     for fertilization in self.fertilizations:
-        #         if (
-        #             fertilization.fertilizer.is_class(FertClass.organic)
-        #             and fertilization.measure == MeasureType.org_fall
-        #         ):
-        #             n_total, nh4 = [
-        #                 fertilization.amount * n
-        #                 for n in (fertilization.fertilizer.n, fertilization.fertilizer.nh4)
-        #             ]
-        #             sum_n.append((n_total, nh4))
-        #     return [sum(n) for n in zip(*sum_n)]
+        try:
+            fertilizer = current_user.get_fertilizers(id=self.fertilizer.data)[0]
+        except IndexError:
+            self.fertilizer.errors.append(f"Invalid fertilizer selected.")
+            return False
+        cultivation = Cultivation.query.get(self.cultivation.data)
+        field = cultivation.field
+
+        n, nh4 = 0, 0
+        for fertilization in field.fertilizations:
+            if fertilization.measure is MeasureType.org_fall:
+                n += fertilization.fertilizer.n * fertilization.amount
+                nh4 += fertilization.fertilizer.nh4 * fertilization.amount
+        fert_n = fertilizer.n * fert_amount
+        fert_nh4 = fertilizer.nh4 * fert_amount
+        sum_n = n + fert_n
+        sum_nh4 = nh4 + fert_nh4
+
+        if sum_n <= 60 and sum_nh4 <= 30:
+            return True
+        # Grassland or perennial field forage have a different limit.
+        cultivations = [cultivation.cultivation_type for cultivation in field.cultivations]
+        if (
+            field.field_type is FieldType.grassland
+            or cultivation.cultivation_type is CultivationType.main_crop
+            and cultivation.crop.feedable
+            and (
+                CultivationType.second_main_crop not in cultivations
+                or CultivationType.second_crop not in cultivations
+            )
+        ):
+            if sum_n < (80 if not field.red_region else 60):
+                return True
+            else:
+                fert_amount = ((80 if not field.red_region else 60) - n) // fertilizer.n
+        else:
+            fert_amount = min((30 - nh4) // fertilizer.nh4, (60 - n) // fertilizer.n)
+        self.amount.errors.append(
+            f"Maximum amount for fall fertilizations: {(fert_amount if not edit_value else fert_amount + self.model_data.amount)} {fertilizer.unit.value}/ha"
+        )
+        return False
 
 
 class FertilizerForm(FormHelper, FlaskForm):

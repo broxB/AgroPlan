@@ -20,20 +20,16 @@ def accept_request(request: Request) -> list[str | int]:
     return form_type, modal_type[request.method], id
 
 
-def return_error_or_success(
-    valid: bool, form: Form, form_type: str, modal_type: str, id: int
-) -> Response:
-    if not valid:
-        modal = jsonify(
-            render_template(
-                "modal_content.html",
-                form=form,
-                modal_type=(modal_type, form_type),
-                data_id=id,
-            )
-        )
-        return modal, 206
-    return jsonify("Data saved successfully."), 201
+def rendered_form(
+    form: Form, form_type: str, modal_type: str, id: int, refreshed_content: bool = False
+) -> str:
+    return render_template(
+        "modal_content.html",
+        form=form,
+        modal_type=(modal_type, form_type),
+        data_id=id,
+        refreshed_content=refreshed_content,
+    )
 
 
 @bp.route("/modal", methods=["GET"])
@@ -49,22 +45,11 @@ def get_modal():
     if modal_type == "edit":
         form: Form = create_edit_form(form_type)(id)
         form.populate(id)
-        modal = render_template(
-            "modal_content.html",
-            form=form,
-            modal_type=(modal_type, form_type),
-            data_id=id,
-        )
     else:
         form = create_form(form_type)(id)
         form.default_selects()
-        modal = render_template(
-            "modal_content.html",
-            form=form,
-            modal_type=(modal_type, form_type),
-            data_id=id,
-        )
-    return jsonify(modal)
+
+    return jsonify(rendered_form(form, form_type, modal_type, id))
 
 
 @bp.route("/modal/refresh", methods=["POST"])
@@ -73,7 +58,7 @@ def refresh_form():
     form_type = request.form.get("form_type")
     modal_type = request.form.get("modal_type")
     id = request.form.get("data_id")
-    id = confirm_id(id, current_user.id, form_type, "new")
+    id = confirm_id(id, current_user.id, form_type, modal_type)
     if not id:
         return jsonify("Unvalid request data."), 400
 
@@ -81,21 +66,13 @@ def refresh_form():
         form: Form = create_form(form_type)(id)
     else:
         form: Form = create_edit_form(form_type)(id)
-        # form.populate(id)
+
     try:
         form.update_content()
-    except ValidationError:
-        return jsonify("Unvalid request data."), 400
+    except ValidationError as e:
+        return jsonify(f"Unvalid request data. {e}"), 400
 
-    modal = jsonify(
-        render_template(
-            "modal_content.html",
-            form=form,
-            modal_type=(modal_type, form_type),
-            data_id=id,
-        )
-    )
-    return modal, 206
+    return jsonify(rendered_form(form, form_type, modal_type, id, refreshed_content=True)), 206
 
 
 @bp.route("/form/new", methods=["POST"])
@@ -108,10 +85,12 @@ def new_data():
 
     form: Form = create_form(form_type)(id)
     form.default_selects()
-    logger.info(f"{request.form}")
     valid = form.validate_on_submit()
-    form.update_content()
-    return return_error_or_success(valid, form, form_type, modal_type, id)
+    if not valid:
+        form.update_content()
+        return jsonify(rendered_form(form, form_type, modal_type, id)), 206
+    logger.info(f"{request.form}")
+    return jsonify("Data saved successfully."), 201
 
 
 @bp.route("/form/edit", methods=["PUT"])
@@ -123,9 +102,14 @@ def edit_data():
         return jsonify("Unvalid request data."), 400
 
     form: Form = create_edit_form(form_type)(id)
+    form.default_selects()
     valid = form.validate_on_submit()
-    form.populate(id)
-    return return_error_or_success(valid, form, form_type, modal_type, id)
+    if not valid:
+        form.update_content()
+        logger.info(f"not valid")
+        return jsonify(rendered_form(form, form_type, modal_type, id)), 206
+    logger.info(f"{request.form}")
+    return jsonify("Data saved successfully."), 201
 
 
 @bp.route("/form/delete", methods=["DELETE"])

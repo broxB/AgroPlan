@@ -143,6 +143,9 @@ class EditCultivationForm(CultivationForm):
         self.crop.data = str(self.model_data.crop.id)
         self.original_cultivation_type = self.cultivation_type.data
         # remove non-relevant inputs
+        self.remove_inputs()
+
+    def remove_inputs(self):
         feedable = self.model_data.crop.feedable
         cultivation = self.model_data.cultivation_type
         residues = self.model_data.residues
@@ -175,22 +178,22 @@ class EditFertilizationForm(FertilizationForm):
 
     def update_content(self):
         self.fert_class.data = self.model_data.fertilizer.fert_class.name
+        self.cultivation.data = self.model_data.cultivation.id
         super().update_content()
-        try:
-            fert_types = find_min_fert_type_from_measure(self.measure_type.data)
-            choices = Fertilizer.query.filter(
-                Fertilizer.fert_type.in_([e.name for e in fert_types])
-            )
-            self.fertilizer.data = None
-            self.reset_kw(self.fertilizer)
-            self.fertilizer.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
-        except TypeError:
-            pass
         self.remove_inputs()
 
-    def validate_measure(self, measure):
-        if measure != self.original_measure:
-            super().validate_measure(measure)
+    def validate_measure_type(self, measure_type):
+        if measure_type.data != self.model_data.measure.name:
+            self.cultivation.data = self.model_data.cultivation.id
+            super().validate_measure_type(measure_type)
+        return True
+
+    def validate_amount(self, amount) -> bool:
+        if amount.data != self.model_data.amount:
+            self.cultivation.data = self.model_data.cultivation.id
+            fert_amount = amount.data - self.model_data.amount
+            return super().validate_amount(fert_amount, edit_value=True)
+        return True
 
     def populate(self, id: int):
         super().populate(id)
@@ -212,13 +215,14 @@ class EditFertilizationForm(FertilizationForm):
                 fert_class=self.fert_class.data, year=self.model_data.field[0].year
             )
         else:
-            fertilizers = current_user.get_fertilizers(
-                fert_class=self.fert_class.data, fert_type=self.model_data.fertilizer.fert_type
+            fert_types = find_min_fert_type_from_measure(self.model_data.measure.name)
+            fertilizers = Fertilizer.query.filter(
+                Fertilizer.fert_type.in_([e.name for e in fert_types])
             )
         self.fertilizer.choices = [(fert.id, fert.name) for fert in fertilizers]
         self.fertilizer.data = str(self.model_data.fertilizer.id)
         self.original_measure = self.measure_type.data
-        self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}:"
+        self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}/ha:"
         # remove non-relevant inputs
         self.remove_inputs()
 
@@ -230,6 +234,7 @@ class EditFertilizationForm(FertilizationForm):
         if not feedable:
             del self.cut_timing
         del self.fert_class
+        del self.cultivation
 
 
 class EditFertilizerForm(FertilizerForm):
@@ -250,6 +255,9 @@ class EditFertilizerForm(FertilizerForm):
         self.original_year = self.model_data.year
         self.original_name = self.model_data.name
         # remove non-relevant inputs
+        self.remove_inputs()
+
+    def remove_inputs(self):
         fert_class = self.model_data.fert_class
         del self.fert_class
         if fert_class is FertClass.mineral:

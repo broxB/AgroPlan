@@ -129,7 +129,14 @@ class Field:
                 cultivation.balances[fert_name] = fert_balances
 
     def cultivation_balances(self, cultivation: Cultivation) -> tuple[list[Balance], Balance]:
-        """Creates balances for the nutritional needs of the crop."""
+        """Creates balances for the nutritional needs of the crop.
+
+        Args:
+            cultivation (Cultivation): An instance of a Cultivation object. Can be from a field or an independent one.
+
+        Returns:
+            tuple[list[Balance], Balance]: Returns a tuple with a list of all crop related balances and a resulting crop needs balance.
+        """
         cult_balances = []
         cult_balances.append(cultivation.demand(self.demand_option))
         if cultivation is not self.catch_crop:
@@ -150,7 +157,14 @@ class Field:
     def fertilization_balances(
         self, cultivation: Cultivation
     ) -> tuple[list[Balance], list[Balance]]:
-        """Creates balances for the nutrient quantities of the fertilizations."""
+        """Creates balances for the nutrient quantities of the fertilizations.
+
+        Args:
+            cultivation (Cultivation): An instance of a Cultivation object. Can be from a field or an independent one.
+
+        Returns:
+            tuple[list[Balance], list[Balance]]: Returns a tuple of fertilization balances (organic, mineral).
+        """
         org_balances, min_balances = [], []
         for fertilization in self.fertilizations:
             if fertilization.cultivation_type is cultivation.cultivation_type:
@@ -277,6 +291,22 @@ class Field:
         for fertilization in self.fertilizations:
             n_total += fertilization.n_total(measure_type, cultivation_type, netto)
         return n_total
+
+    def sum_fall_fertilizations(self) -> tuple[Decimal]:
+        """Summarizes all organic fertilizations in fall with the FertClass `org_fall`.
+
+        Returns:
+            tuple[Decimal]: Returns summed values of total `N` and `NH-4`.
+        """
+        n_total, nh4 = 0, 0
+        for fertilization in self.fertilizations:
+            if (
+                fertilization.fertilizer.is_class(FertClass.organic)
+                and fertilization.measure == MeasureType.org_fall
+            ):
+                n_total += fertilization.fertilizer.n * fertilization.amount
+                nh4 += fertilization.fertilizer.nh4 * fertilization.amount
+        return n_total, nh4
 
     def _adjust_to_demand_option(self, balance: Balance) -> Balance:
         """Reduce nutritional needs to zero if demand option is `demand` and soil class is E."""
