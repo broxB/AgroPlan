@@ -1,5 +1,9 @@
 import { fetchData, sendForm } from "./request.js";
 
+export function createModal(event) {
+  new Modal(event);
+}
+
 class Modal {
   constructor(event) {
     const modal = document.querySelector("#modal");
@@ -49,12 +53,16 @@ class Modal {
   }
 
   addEventListeners() {
-    const selectElements = this.content.querySelectorAll("select");
-    selectElements.forEach((select) => {
-      if (select.classList.contains("reload")) {
-        select.addEventListener("change", async () => {
+    const formControls = this.content.querySelectorAll("select, input");
+    formControls.forEach((control) => {
+      if (control.classList.contains("reload")) {
+        control.addEventListener("change", async () => {
           const content = await sendForm(this.form, "POST", "/modal/refresh");
           this.addContent(content);
+        });
+      } else {
+        control.addEventListener("change", () => {
+          this.content.querySelector(".btn-success").removeAttribute("hidden");
         });
       }
     });
@@ -100,6 +108,7 @@ class Modal {
 
   async handleResponse(response) {
     if (response.status == 201) {
+      // success
       response.json().then((data) => {
         this.clearErrors();
         this.content.querySelector(".modal-footer").innerHTML = `
@@ -108,10 +117,12 @@ class Modal {
         <ul><button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Close</button></ul>`;
       });
     } else if (response.status == 206) {
+      // changed content
       response.json().then((data) => {
         this.addContent(data, false);
       });
     } else if (response.status == 400) {
+      // failed
       response.json().then((data) => {
         this.content.innerHTML = data;
       });
@@ -127,8 +138,4 @@ class Modal {
     });
     // this.form.querySelectorAll("input, select").forEach((elem) => {elem.classList.add("is-valid")})
   }
-}
-
-export function createModal(event) {
-  new Modal(event);
 }

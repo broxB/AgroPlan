@@ -24,7 +24,8 @@
             type="submit"
             for="submit"
             form="modalForm"
-            value="Save">
+            {%- if not refreshed_content %} hidden="" {% endif -%}
+            value="">
       {%- if modal == "edit" -%}
         Save
       {%- else -%}
