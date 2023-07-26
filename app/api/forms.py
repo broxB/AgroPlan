@@ -22,6 +22,11 @@ from wtforms.validators import (
     ValidationError,
 )
 
+from app.database.conversions import (
+    find_crop_class,
+    find_min_fert_type,
+    find_org_fert_type,
+)
 from app.database.model import (
     BaseField,
     Crop,
@@ -59,9 +64,6 @@ from app.database.types import (
     SoilType,
     UnitType,
     UsedCultivationType,
-    find_crop_class,
-    find_min_fert_type,
-    find_org_fert_type,
 )
 
 __all__ = [

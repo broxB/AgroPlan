@@ -5,6 +5,7 @@ from pathlib import Path
 from flask import current_app
 from loguru import logger
 
+from app.database.conversions import find_nmin_type
 from app.database.model import (
     Base,
     BaseField,
@@ -33,7 +34,6 @@ from app.database.types import (
     ResidueType,
     SoilType,
     UnitType,
-    find_nmin_type,
 )
 from app.extensions import db
 
@@ -55,7 +55,6 @@ def setup_database(seed: list[dict] = None) -> None:
 
 
 def seed_database(data: list[dict]) -> None:
-
     logger.info("Seeding data into tables.")
 
     def update_session(data: Base) -> None:

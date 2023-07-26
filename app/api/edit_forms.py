@@ -1,6 +1,12 @@
 from flask_login import current_user
 from flask_wtf import FlaskForm
 
+from app.database.conversions import (
+    find_crop_class,
+    find_legume_type,
+    find_min_fert_type,
+    find_residue_type,
+)
 from app.database.model import (
     BaseField,
     Crop,
@@ -21,10 +27,6 @@ from app.database.types import (
     OrganicMeasureType,
     ResidueType,
     UsedCultivationType,
-    find_crop_class,
-    find_legume_type,
-    find_min_fert_type,
-    find_residue_type,
 )
 
 from .forms import (
