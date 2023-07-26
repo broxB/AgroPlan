@@ -84,14 +84,6 @@ class CropType(enum.Enum):
     catch_other = "andere Zwischenfrüchte"
 
 
-MainCropType: enum.Enum = enum.Enum(
-    "MainCropType", [(e.name, e.value) for e in CropType if e.name in "main_"]
-)
-CatchCropType: enum.Enum = enum.Enum(
-    "CatchCropType", [(e.name, e.value) for e in CropType if e.name in "main_"]
-)
-
-
 class CultivationType(enum.Enum):
     """Cultivation classes for crop rotation: `main_crop` etc."""
 
@@ -99,6 +91,17 @@ class CultivationType(enum.Enum):
     main_crop = "Hauptfrucht"
     second_main_crop = "Zweite Hauptfrucht"
     second_crop = "Zweitfrucht"
+
+
+UsedCultivationType: enum.Enum = enum.Enum(
+    "UsedCultivationType",
+    [(e.name, e.value) for e in CultivationType if e is not CultivationType.second_crop],
+)
+
+
+MainCultivationType: enum.Enum = enum.Enum(
+    "MainCultivationType", [(e.name, e.value) for e in CultivationType if "main" in e.name]
+)
 
 
 class CutTiming(enum.Enum):
@@ -128,16 +131,16 @@ class ResidueType(enum.Enum):
     main_no_residues = "keine"
     # Zwischenfrüchte
     catch_frozen = "abgefroren"
-    catch_not_frozen_fall = "nicht abgf., eing. Herbst"
-    catch_not_frozen_spring = "nicht abgf., eing. Frühjahr"
+    catch_not_frozen_fall = "nicht abgefroren, eingearbeitet Herbst"
+    catch_not_frozen_spring = "nicht abgefroren, eingearbeitet Frühjahr"
     catch_used = "mit Nutzung"
 
 
 MainCropResidueType: enum.Enum = enum.Enum(
-    "MainCropResidueType", [(e.name, e.value) for e in ResidueType if e.name in "main_"]
+    "MainCropResidueType", [(e.name, e.value) for e in ResidueType if "main_" in e.name]
 )
 CatchCropResidueType: enum.Enum = enum.Enum(
-    "CatchCropResidueType", [(e.name, e.value) for e in ResidueType if e.name in "catch_"]
+    "CatchCropResidueType", [(e.name, e.value) for e in ResidueType if "catch_" in e.name]
 )
 
 
@@ -169,13 +172,13 @@ class LegumeType(enum.Enum):
 
 
 GrasslandLegumeType: enum.Enum = enum.Enum(
-    "GrasslandLegumeType", [(e.name, e.value) for e in LegumeType if e.name in "grass_"]
+    "GrasslandLegumeType", [(e.name, e.value) for e in LegumeType if "grass_" in e.name]
 )
 MainCropLegumeType: enum.Enum = enum.Enum(
-    "MainCropLegumeType", [(e.name, e.value) for e in LegumeType if e.name in "main_"]
+    "MainCropLegumeType", [(e.name, e.value) for e in LegumeType if "main_" in e.name]
 )
 CatchCropLegumeType: enum.Enum = enum.Enum(
-    "CatchCropLegumeType", [(e.name, e.value) for e in LegumeType if e.name in "catch_"]
+    "CatchCropLegumeType", [(e.name, e.value) for e in LegumeType if "catch_" in e.name]
 )
 
 
@@ -331,7 +334,7 @@ def find_nmin_type(nmin: int) -> NminType:
             raise ValueError("Invalid Nmin value.")
 
 
-def find_crop_class(cultivation_type: CultivationType) -> CultivationType:
+def find_crop_class(cultivation_type: CultivationType) -> CropClass:
     match cultivation_type:
         case CultivationType.main_crop | CultivationType.second_main_crop:
             return CropClass.main_crop
@@ -343,7 +346,31 @@ def find_crop_class(cultivation_type: CultivationType) -> CultivationType:
             raise ValueError(f"Invalid cultivation type passed: {cultivation_type}")
 
 
-def find_min_fert_type_from_measure(measure_name: str) -> MineralFertType:
+def find_legume_type(cultivation_type: CultivationType) -> LegumeType:
+    match cultivation_type:
+        case CultivationType.main_crop | CultivationType.second_main_crop:
+            return MainCropLegumeType
+        case CultivationType.catch_crop:
+            return CatchCropLegumeType
+        case CultivationType.second_crop:
+            return LegumeType
+        case _:
+            raise TypeError(f"Invalid cultivation type passed: {cultivation_type}")
+
+
+def find_residue_type(cultivation_type: CultivationType) -> ResidueType:
+    match cultivation_type:
+        case CultivationType.main_crop | CultivationType.second_main_crop:
+            return MainCropResidueType
+        case CultivationType.catch_crop:
+            return CatchCropResidueType
+        case CultivationType.second_crop:
+            return ResidueType
+        case _:
+            raise TypeError(f"Invalid cultivation type passed: {cultivation_type}")
+
+
+def find_min_fert_type(measure_name: str) -> MineralFertType:
     if measure_name not in [e.name for e in MineralMeasureType]:
         raise TypeError(f"{measure_name} has no corresponding MineralFertType.")
     if measure_name in [e.name for e in NMeasureType]:
@@ -357,7 +384,7 @@ def find_min_fert_type_from_measure(measure_name: str) -> MineralFertType:
     raise TypeError(f"{measure_name} has no corresponding FertType.")
 
 
-def find_org_fert_type_from_measure(measure_name: str) -> OrganicFertType:
+def find_org_fert_type(measure_name: str) -> OrganicFertType:
     if measure_name in [e.name for e in OrganicMeasureType]:
         return OrganicFertType
     raise TypeError(f"{measure_name} has no corresponding OrganicFertType.")

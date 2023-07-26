@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Any, Union
 
 import wtforms
@@ -32,9 +31,10 @@ from app.database.model import (
     Field,
     Modifier,
     SoilSample,
-    field_fertilization,
 )
 from app.database.types import (
+    CatchCropLegumeType,
+    CatchCropResidueType,
     CropClass,
     CropType,
     CultivationType,
@@ -44,8 +44,12 @@ from app.database.types import (
     FertType,
     FieldType,
     FieldTypeForCrops,
+    GrasslandLegumeType,
     HumusType,
     LegumeType,
+    MainCropLegumeType,
+    MainCropResidueType,
+    MainCultivationType,
     MeasureType,
     MineralMeasureType,
     NminType,
@@ -54,8 +58,10 @@ from app.database.types import (
     ResidueType,
     SoilType,
     UnitType,
-    find_min_fert_type_from_measure,
-    find_org_fert_type_from_measure,
+    UsedCultivationType,
+    find_crop_class,
+    find_min_fert_type,
+    find_org_fert_type,
 )
 
 __all__ = [
@@ -115,6 +121,23 @@ class FormHelper:
             field.render_kw.pop(name)
         except (AttributeError, KeyError):
             pass
+
+    @staticmethod
+    def field_data(field: wtforms.Field) -> Any | None:
+        """
+        Tries to get data from input. Looks at data and raw_data attributes.
+
+        :param field:
+            WTForm input from which data should be extracted.
+        :return:
+            Returns input data or None.
+        """
+        if field.data is not None:
+            return field.data
+        try:
+            return field.raw_data[0]
+        except (IndexError, TypeError):
+            return None
 
     def reset_data(self, field: wtforms.Field):
         """
@@ -270,26 +293,28 @@ class FieldForm(FormHelper, FlaskForm):
 class CultivationForm(FormHelper, FlaskForm):
     cultivation_type = SelectField(
         "Select type of cultivation:",
-        choices=[(enum.name, enum.value) for enum in CultivationType],
+        choices=[(enum.name, enum.value) for enum in UsedCultivationType],
         validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
-    crop = SelectField("Select crop to grow:", validators=[InputRequired()])
-    crop_yield = IntegerField("Estimated yield in dt/ha:", validators=[InputRequired()])
-    crop_protein = DecimalField("Estimated protein in % DM/ha:", validators=[InputRequired()])
+    crop = SelectField(
+        "Select crop to grow:", validators=[InputRequired()], render_kw={"class": "reload"}
+    )
+    crop_yield = IntegerField("Estimated yield in dt/ha:", validators=[Optional()])
+    crop_protein = DecimalField("Estimated protein in % DM/ha:", validators=[Optional()])
     residue_type = SelectField(
         "Estimated residues:",
         choices=[(enum.name, enum.value) for enum in ResidueType],
-        validators=[InputRequired()],
+        validators=[Optional()],
     )
     legume_type = SelectField(
         "Share of legumes:",
         choices=[(enum.name, enum.value) for enum in LegumeType],
-        validators=[InputRequired()],
+        validators=[Optional()],
     )
-    nmin_30 = IntegerField("Nmin 30cm:", validators=[InputRequired()])
-    nmin_60 = IntegerField("Nmin 60cm:", validators=[InputRequired()])
-    nmin_90 = IntegerField("Nmin 90cm:", validators=[InputRequired()])
+    nmin_30 = IntegerField("Nmin 30cm:", validators=[Optional()])
+    nmin_60 = IntegerField("Nmin 60cm:", validators=[Optional()])
+    nmin_90 = IntegerField("Nmin 90cm:", validators=[Optional()])
 
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -300,15 +325,113 @@ class CultivationForm(FormHelper, FlaskForm):
         self.crop.choices = [
             (crop.id, crop.name) for crop in current_user.get_crops(field_type=field.field_type)
         ]
+        if field.field_type is FieldType.grassland:
+            self.cultivation_type.choices = [
+                (e.name, e.value) for e in [CultivationType.main_crop]
+            ]
+
+    def update_content(self):
+        self.default_selects()
+        self.set_selected_inputs()
+
+        def reset_data():
+            self.reset_data(self.crop)
+            self.reset_data(self.legume_type)
+            self.reset_data(self.residue_type)
+
+        if self.cultivation_type.data != CultivationType.main_crop.name:
+            del self.nmin_30
+            del self.nmin_60
+            del self.nmin_90
+
+        field_type = Field.query.get(self.field_id).field_type
+        try:
+            crop_class = find_crop_class(CultivationType[self.cultivation_type.data])
+        except TypeError:
+            crop_class = None
+
+        if self.cultivation_type.data in [e.name for e in MainCultivationType]:
+            crop = Crop.query.filter(
+                Crop.id == self.crop.data, Crop.crop_class == crop_class
+            ).first()
+            if crop is None:
+                reset_data()
+
+            crop_choices = current_user.get_crops(
+                crop_class=CropClass.main_crop, field_type=field_type
+            )
+            residue_type = MainCropResidueType
+
+            if field_type is FieldType.grassland:
+                legume_type = GrasslandLegumeType
+            elif field_type is FieldType.cropland:
+                legume_type = MainCropLegumeType
+            else:
+                legume_type = LegumeType
+
+        elif self.cultivation_type.data == CultivationType.catch_crop.name:
+            crop = Crop.query.filter(
+                Crop.user_id == current_user.id,
+                Crop.id == self.crop.data,
+                Crop.crop_class == crop_class,
+            ).first()
+            if crop is None:
+                reset_data()
+
+            crop_choices = current_user.get_crops(crop_class=CropClass.catch_crop)
+            residue_type = CatchCropResidueType
+            legume_type = CatchCropLegumeType
+
+            del self.crop_yield
+            del self.crop_protein
+
+        self.crop.choices = [(crop.id, crop.name) for crop in crop_choices]
+        self.residue_type.choices = [(e.name, e.value) for e in residue_type]
+        self.legume_type.choices = [(e.name, e.value) for e in legume_type]
+
+        if crop:
+            match crop.nmin_depth:
+                case NminType.nmin_0:
+                    del self.nmin_30
+                    del self.nmin_60
+                    del self.nmin_90
+                case NminType.nmin_30:
+                    del self.nmin_60
+                    del self.nmin_90
+                case NminType.nmin_60:
+                    del self.nmin_90
+
+            if not crop.residue:
+                del self.residue_type
+
+            if not crop.feedable:
+                del self.crop_protein
+                if crop.crop_class is not CropClass.catch_crop:
+                    del self.legume_type
+
+            if self.crop_yield and not self.crop_yield.data:
+                self.add_render_kw(self.crop_yield, "value", crop.target_yield)
+
+            if self.crop_protein and not self.crop_protein.data:
+                self.add_render_kw(self.crop_protein, "value", crop.target_protein)
 
     def validate_cultivation_type(self, cultivation_type):
+        """
+        Verifies that cultivations are unique on a field.
+
+        :raises ValidationError: Raises error when cultivation already exists.
+        """
         cultivation = (
             Cultivation.query.join(Field)
-            .filter(Field.id == self.field_id, Cultivation.cultivation_type == cultivation_type)
+            .filter(
+                Field.id == self.field_id, Cultivation.cultivation_type == cultivation_type.data
+            )
             .first()
         )
         if cultivation is not None:
-            raise ValidationError("This type of cultivation already exists.")
+            self.cultivation_type.errors.append("This type of cultivation type already exists.")
+            return False
+        return True
 
 
 class FertilizationForm(FormHelper, FlaskForm):

@@ -14,18 +14,17 @@ from app.database.model import (
 from app.database.types import (
     CultivationType,
     FertClass,
-    FertType,
-    MeasureType,
-    MineralFertType,
+    FieldType,
+    GrasslandLegumeType,
     MineralMeasureType,
     NminType,
-    OrganicFertType,
     OrganicMeasureType,
     ResidueType,
+    UsedCultivationType,
     find_crop_class,
-    find_min_fert_type_from_measure,
-    find_nmin_type,
-    find_org_fert_type_from_measure,
+    find_legume_type,
+    find_min_fert_type,
+    find_residue_type,
 )
 
 from .forms import (
@@ -124,8 +123,11 @@ class EditCultivationForm(CultivationForm):
         field_id = self.model_data.field.id
         super().__init__(field_id, *args, **kwargs)
 
+    def update_content(self):
+        return super().update_content()
+
     def validate_cultivation_type(self, cultivation_type):
-        if cultivation_type != self.original_cultivation_type:
+        if cultivation_type.data != self.model_data.cultivation_type.name:
             super().validate_cultivation_type(cultivation_type)
 
     def populate(self, id: int):
@@ -141,7 +143,18 @@ class EditCultivationForm(CultivationForm):
             )
         ]
         self.crop.data = str(self.model_data.crop.id)
-        self.original_cultivation_type = self.cultivation_type.data
+
+        if self.model_data.field.field_type is FieldType.grassland:
+            cultivation_types = [CultivationType.main_crop]
+            legume_types = GrasslandLegumeType
+        else:
+            cultivation_types = UsedCultivationType
+            legume_types = find_legume_type(self.model_data.cultivation_type)
+        residue_types = find_residue_type(self.model_data.cultivation_type)
+
+        self.cultivation_type.choices = [(e.name, e.value) for e in cultivation_types]
+        self.residue_type.choices = [(e.name, e.value) for e in residue_types]
+        self.legume_type.choices = [(e.name, e.value) for e in legume_types]
         # remove non-relevant inputs
         self.remove_inputs()
 
@@ -215,13 +228,12 @@ class EditFertilizationForm(FertilizationForm):
                 fert_class=self.fert_class.data, year=self.model_data.field[0].year
             )
         else:
-            fert_types = find_min_fert_type_from_measure(self.model_data.measure.name)
+            fert_types = find_min_fert_type(self.model_data.measure.name)
             fertilizers = Fertilizer.query.filter(
                 Fertilizer.fert_type.in_([e.name for e in fert_types])
             )
         self.fertilizer.choices = [(fert.id, fert.name) for fert in fertilizers]
         self.fertilizer.data = str(self.model_data.fertilizer.id)
-        self.original_measure = self.measure_type.data
         self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}/ha:"
         # remove non-relevant inputs
         self.remove_inputs()
