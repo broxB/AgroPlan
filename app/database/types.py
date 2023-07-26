@@ -343,7 +343,7 @@ def find_crop_class(cultivation_type: CultivationType) -> CropClass:
         case CultivationType.second_crop:
             return CropClass.second_crop
         case _:
-            raise ValueError(f"Invalid cultivation type passed: {cultivation_type}")
+            raise TypeError(f"Invalid cultivation type passed: {cultivation_type}")
 
 
 def find_legume_type(cultivation_type: CultivationType) -> LegumeType:

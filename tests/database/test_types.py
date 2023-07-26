@@ -23,5 +23,5 @@ def test_find_crop_class():
     assert find_crop_class(CultivationType.second_main_crop) is CropClass.main_crop
     assert find_crop_class(CultivationType.catch_crop) is CropClass.catch_crop
     assert find_crop_class(CultivationType.second_crop) is CropClass.second_crop
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         find_crop_class("main_crop")
