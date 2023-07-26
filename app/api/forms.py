@@ -501,7 +501,7 @@ class FertilizationForm(FormHelper, FlaskForm):
             measure_type = MineralMeasureType
             if self.measure_type.data:
                 try:
-                    fert_types = find_min_fert_type_from_measure(self.measure_type.data)
+                    fert_types = find_min_fert_type(self.measure_type.data)
                 except TypeError:
                     reset_data()
                     choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
@@ -515,7 +515,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         elif self.fert_class.data == FertClass.organic.name:
             measure_type = OrganicMeasureType
             try:
-                fert_types = find_org_fert_type_from_measure(self.measure_type.data)
+                fert_types = find_org_fert_type(self.measure_type.data)
             except TypeError:
                 reset_data()
             choices = current_user.get_fertilizers(
@@ -738,10 +738,10 @@ class SoilForm(FormHelper, FlaskForm):
         choices=[(enum.name, enum.value) for enum in HumusType],
         validators=[InputRequired()],
     )
-    ph = DecimalField("pH:", validators=[InputRequired()])
-    p2o5 = DecimalField("P2O5:", validators=[InputRequired()])
-    k2o = DecimalField("K2O:", validators=[InputRequired()])
-    mg = DecimalField("Mg:", validators=[InputRequired()])
+    ph = DecimalField("pH:", validators=[Optional()])
+    p2o5 = DecimalField("P2O5:", validators=[Optional()])
+    k2o = DecimalField("K2O:", validators=[Optional()])
+    mg = DecimalField("Mg:", validators=[Optional()])
 
     def __init__(self, base_field_id: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
