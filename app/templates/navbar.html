@@ -13,7 +13,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
   {% endif %}
-  <a class="navbar-brand ps-3" href="{{ url_for('main.home') }}">AgroPlan</a>
+  <a class="navbar-brand ps-3" href="{{ url_for("main.home") }}">AgroPlan</a>
   <button class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
@@ -26,7 +26,7 @@
   <div class="navbar-collapse collapse" id="navbarNav">
     <ul class="navbar-nav">
       {% if not current_user.is_anonymous %}
-        {{ render_nav_item("main.field_overview", "Field", _use_li=True)}}
+        {{ render_nav_item("main.fields", "Field", _use_li=True) }}
         {{ render_nav_item("main.crop", "Crop", _use_li=True) }}
         {{ render_nav_item("main.fertilizer", "Fertilizer", _use_li=True) }}
       {% endif %}

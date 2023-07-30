@@ -23,8 +23,8 @@ if (window.location.pathname.includes("/field/")) {
 }
 
 // Control /fields/ scripts
-if (window.location.pathname.includes("/fields/")) {
-  // manageFields();
+if (window.location.pathname.includes("/fields")) {
+  manageFields();
 }
 
 // Control sidebar

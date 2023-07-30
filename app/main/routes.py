@@ -88,9 +88,9 @@ def set_year():
     return redirect(request.referrer)
 
 
-@bp.route("/field", methods=["GET", "POST"])
+@bp.route("/fields", methods=["GET"])
 @login_required
-def field_overview():
+def fields():
     base_fields = current_user.get_fields()
     return render_template("fields.html", title="Fields", base_fields=base_fields)
 
@@ -102,11 +102,12 @@ def field(base_field_id):
         base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
         fields = current_user.get_fields(year=current_user.year)
         field = create_field(current_user.id, base_field_id, current_user.year)
-        field.create_balances()
+        if field is not None:
+            field.create_balances()
         form = YearForm()
         return render_template(
             "field.html",
-            title=field.name,
+            title=base_field.name,
             base_field=base_field,
             fields=fields,
             form=form,
