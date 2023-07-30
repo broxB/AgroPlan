@@ -12,11 +12,14 @@ window.addEventListener("load", manageToast());
 
 // Control /field/ scripts
 if (window.location.pathname.includes("/field/")) {
-  window.addEventListener("load", () => {
-    fieldSaldo();
-    restoreTab();
-    storeTab();
-  });
+  const hasFieldNav = document.querySelector("#field-nav");
+  if (hasFieldNav) {
+    window.addEventListener("load", () => {
+      fieldSaldo();
+      restoreTab();
+      storeTab();
+    });
+  }
 }
 
 // Control /fields/ scripts
