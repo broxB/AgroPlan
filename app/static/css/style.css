@@ -93,6 +93,21 @@ main {
   color: var(--green) !important;
 }
 
+
+/*  */
+/* || form styles */
+/*  */
+
+/* error handling because html5 form validation doesn't work on firefox mobile */
+
+input:user-invalid {
+  border-color: #dc3545;
+}
+
+input:user-invalid ~ span {
+  display: block !important;
+}
+
 /*  */
 /* || table styles */
 /*  */

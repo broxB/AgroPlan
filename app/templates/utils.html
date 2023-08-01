@@ -371,6 +371,12 @@ the necessary fix for required=False attributes, but will also not set the requi
                     <small class="form-text text-muted">{{ field.description|safe }}</small>
                 {%- endif %}
             {%- endif %}
+            {# error handling because html5 form validation doesn't work on firefox mobile #}
+            {%- if field.type == "IntegerField" %}
+              {% if field.widget.validation_attrs and "step" in field.widget.validation_attrs -%}
+                <span class="invalid-feedback">Please use integer without decimal.</span>
+              {%- endif %}
+            {%- endif %}
         </div>
     {% endif %}
 {% endmacro %}
@@ -395,7 +401,8 @@ the necessary fix for required=False attributes, but will also not set the requi
     type='',
     modal_type='',
     data_id='',
-    field_id='') %}
+    field_id='',
+    auto_complete=false) %}
     {#-
 action="" is what we want, from http://www.ietf.org/rfc/rfc2396.txt:
 
@@ -442,6 +449,7 @@ action="" is what we want, from http://www.ietf.org/rfc/rfc2396.txt:
           {%- if _enctype[0] %} enctype="{{ _enctype[0] }}"{% endif -%}
           {%- if role %} role="{{ role }}"{% endif -%}
           {%- if novalidate %} novalidate{% endif -%}
+          {%- if auto_complete %} autocomplete="on"{% else %} autocomplete="off"{% endif -%}
           {%- if render_kw %} {{ render_kw|xmlattr }}{% endif -%}>
       {% if type %}<input id="form_type" name="form_type" type="hidden" value="{{ type }}">{% endif %}
       {% if modal_type %}<input id="modal_type" name="modal_type" type="hidden" value="{{ modal_type }}">{% endif %}
