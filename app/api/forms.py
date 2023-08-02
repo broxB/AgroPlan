@@ -22,11 +22,6 @@ from wtforms.validators import (
     ValidationError,
 )
 
-from app.database.conversions import (
-    find_crop_class,
-    find_min_fert_type,
-    find_org_fert_type,
-)
 from app.database.model import (
     BaseField,
     Crop,
@@ -341,18 +336,18 @@ class CultivationForm(FormHelper, FlaskForm):
             self.reset_data(self.legume_type)
             self.reset_data(self.residue_type)
 
-        if self.cultivation_type.data != CultivationType.main_crop.name:
+        if self.cultivation_type.data == CultivationType.main_crop:
             del self.nmin_30
             del self.nmin_60
             del self.nmin_90
 
         field_type = Field.query.get(self.field_id).field_type
         try:
-            crop_class = find_crop_class(CultivationType[self.cultivation_type.data])
-        except TypeError:
+            crop_class = CropClass.from_cultivation(CultivationType[self.cultivation_type.data])
+        except (TypeError, KeyError):
             crop_class = None
 
-        if self.cultivation_type.data in [e.name for e in MainCultivationType]:
+        if crop_class is CropClass.main_crop:
             crop = Crop.query.filter(
                 Crop.id == self.crop.data, Crop.crop_class == crop_class
             ).first()
@@ -371,7 +366,7 @@ class CultivationForm(FormHelper, FlaskForm):
             else:
                 legume_type = LegumeType
 
-        elif self.cultivation_type.data == CultivationType.catch_crop.name:
+        elif crop_class is CropClass.catch_crop:
             crop = Crop.query.filter(
                 Crop.user_id == current_user.id,
                 Crop.id == self.crop.data,
@@ -502,24 +497,23 @@ class FertilizationForm(FormHelper, FlaskForm):
             del self.month
             measure_type = MineralMeasureType
             if self.measure_type.data:
-                try:
-                    fert_types = find_min_fert_type(self.measure_type.data)
-                except TypeError:
+                fert_type = FertType.from_measure(MeasureType[self.measure_type.data])
+                if FertType.is_organic(fert_type):
                     reset_data()
                     choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
                 else:
                     choices = Fertilizer.query.filter(
-                        Fertilizer.fert_type.in_([e.name for e in fert_types])
+                        Fertilizer.fert_type.in_([e.name for e in fert_type])
                     )
             else:
                 choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
 
         elif self.fert_class.data == FertClass.organic.name:
             measure_type = OrganicMeasureType
-            try:
-                fert_types = find_org_fert_type(self.measure_type.data)
-            except TypeError:
-                reset_data()
+            if self.measure_type.data:
+                fert_type = FertType.from_measure(MeasureType[self.measure_type.data])
+                if FertType.is_mineral(fert_type):
+                    reset_data()
             choices = current_user.get_fertilizers(
                 fert_class=FertClass.organic, year=cultivation.field.year
             )

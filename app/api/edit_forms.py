@@ -1,12 +1,6 @@
 from flask_login import current_user
 from flask_wtf import FlaskForm
 
-from app.database.conversions import (
-    find_crop_class,
-    find_legume_type,
-    find_min_fert_type,
-    find_residue_type,
-)
 from app.database.model import (
     BaseField,
     Crop,
@@ -18,10 +12,13 @@ from app.database.model import (
     SoilSample,
 )
 from app.database.types import (
+    CropClass,
     CultivationType,
     FertClass,
+    FertType,
     FieldType,
     GrasslandLegumeType,
+    LegumeType,
     MineralMeasureType,
     NminType,
     OrganicMeasureType,
@@ -140,7 +137,7 @@ class EditCultivationForm(CultivationForm):
         self.crop.choices = [
             (crop.id, crop.name)
             for crop in current_user.get_crops(
-                crop_class=find_crop_class(self.model_data.cultivation_type),
+                crop_class=CropClass.from_cultivation(self.model_data.cultivation_type),
                 field_type=self.model_data.field.field_type,
             )
         ]
@@ -151,8 +148,8 @@ class EditCultivationForm(CultivationForm):
             legume_types = GrasslandLegumeType
         else:
             cultivation_types = UsedCultivationType
-            legume_types = find_legume_type(self.model_data.cultivation_type)
-        residue_types = find_residue_type(self.model_data.cultivation_type)
+            legume_types = LegumeType.from_cultivation(self.model_data.cultivation_type)
+        residue_types = ResidueType.from_cultivation(self.model_data.cultivation_type)
 
         self.cultivation_type.choices = [(e.name, e.value) for e in cultivation_types]
         self.residue_type.choices = [(e.name, e.value) for e in residue_types]
@@ -230,7 +227,7 @@ class EditFertilizationForm(FertilizationForm):
                 fert_class=self.fert_class.data, year=self.model_data.field[0].year
             )
         else:
-            fert_types = find_min_fert_type(self.model_data.measure.name)
+            fert_types = FertType.from_measure(self.model_data.measure)
             fertilizers = Fertilizer.query.filter(
                 Fertilizer.fert_type.in_([e.name for e in fert_types])
             )

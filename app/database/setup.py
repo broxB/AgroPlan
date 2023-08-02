@@ -5,7 +5,6 @@ from pathlib import Path
 from flask import current_app
 from loguru import logger
 
-from app.database.conversions import find_nmin_type
 from app.database.model import (
     Base,
     BaseField,
@@ -31,6 +30,7 @@ from app.database.types import (
     HumusType,
     LegumeType,
     MeasureType,
+    NminType,
     ResidueType,
     SoilType,
     UnitType,
@@ -276,7 +276,7 @@ def seed_database(data: list[dict]) -> None:
                         feedable=crop_dict.get("Feldfutter", None),
                         residue=crop_dict.get("Erntereste", None),
                         legume_rate=get_legume_type(crop_dict.get("Leguminosenanteil", None)),
-                        nmin_depth=find_nmin_type(crop_dict.get("Nmin_Tiefe", 0)),
+                        nmin_depth=NminType.from_int(crop_dict.get("Nmin_Tiefe", 0)),
                         target_demand=crop_dict.get("Richtbedarf", None),
                         target_yield=crop_dict.get("Richtertrag", None),
                         pos_yield=crop_dict.get("Differenz_Ertrag", None)[1],
