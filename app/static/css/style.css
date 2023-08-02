@@ -98,8 +98,29 @@ main {
 /* || form styles */
 /*  */
 
-/* error handling because html5 form validation doesn't work on firefox mobile */
+/* show placeholder value with bs floating label */
+.required > input::after {
+  content: "*";
+  color: red;
+}
 
+.form-floating > label.has-placeholder {
+  opacity: .65;
+  transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+}
+
+.form-floating > input.form-control.has-placeholder {
+  padding-top: 1.625rem;
+  padding-bottom: .625rem;
+}
+
+.form-floating > input.form-control::placeholder {
+  color: revert;
+  padding-top: 1.625rem;
+  padding-bottom: .625rem;
+}
+
+/* error handling because html5 form validation doesn't work on firefox mobile */
 input:user-invalid {
   border-color: #dc3545;
 }
