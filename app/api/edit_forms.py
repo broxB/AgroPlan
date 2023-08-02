@@ -182,10 +182,10 @@ class EditFertilizationForm(FertilizationForm):
         field_id = self.model_data.field[0].id
         super().__init__(field_id, *args, **kwargs)
 
-    def update_content(self):
+    def update_content(self, *args, **kwargs):
         self.fert_class.data = self.model_data.fertilizer.fert_class.name
         self.cultivation.data = self.model_data.cultivation.id
-        super().update_content()
+        super().update_content(*args, **kwargs)
         self.remove_inputs()
 
     def validate_measure_type(self, measure_type):

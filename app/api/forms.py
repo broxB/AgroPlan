@@ -457,17 +457,17 @@ class CultivationForm(FormHelper, FlaskForm):
 
 class FertilizationForm(FormHelper, FlaskForm):
     cultivation = SelectField(
-        "Select a crop to fertilize:", validators=[Optional()], render_kw={"class": "reload"}
+        "Select a crop to fertilize:", validators=[InputRequired()], render_kw={"class": "reload"}
     )
     cut_timing = SelectField(
         "Select a cut timing:",
         choices=[(enum.name, enum.value) for enum in CutTiming],
-        validators=[Optional()],
+        validators=[InputRequired()],
     )
     fert_class = SelectField(
         "Select a fertilizer type:",
         choices=[(enum.name, enum.value) for enum in FertClass],
-        validators=[Optional()],
+        validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
     measure_type = SelectField(
@@ -479,8 +479,8 @@ class FertilizationForm(FormHelper, FlaskForm):
     fertilizer = SelectField(
         "Select a fertilizer:", validators=[InputRequired()], render_kw={"class": "reload"}
     )
-    month = IntegerField("Month:", validators=[Optional()])
-    amount = DecimalField("Amount:", validators=[InputRequired()])
+    month = IntegerField("Month:", validators=[InputRequired(), NumberRange(min=1, max=12)])
+    amount = DecimalField("Amount:", validators=[InputRequired(), NumberRange(min=0)])
 
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -496,7 +496,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         if not any(cultivation.crop.feedable for cultivation in field.cultivations):
             del self.cut_timing
 
-    def update_content(self):
+    def update_content(self, validation: bool = False):
         self.default_selects()
         self.set_selected_inputs()
 
@@ -504,7 +504,6 @@ class FertilizationForm(FormHelper, FlaskForm):
             self.reset_data(self.measure_type)
             self.reset_data(self.fertilizer)
             self.reset_data(self.month)
-            self.reset_data(self.amount)
 
         cultivation = (
             Cultivation.query.join(Field)
@@ -512,8 +511,11 @@ class FertilizationForm(FormHelper, FlaskForm):
             .one_or_none()
         )
         if cultivation is None:
-            raise ValidationError(f"Selected cultivation doesn't exists.")
-
+            self.cultivation.errors = ["Please select a cultivation first."]
+            self.reset_data(self.fert_class)
+            reset_data()
+            self.default_selects()
+            return
         if not cultivation.crop.feedable:
             del self.cut_timing
 
@@ -531,7 +533,6 @@ class FertilizationForm(FormHelper, FlaskForm):
                     )
             else:
                 choices = current_user.get_fertilizers(fert_class=FertClass.mineral)
-
         elif self.fert_class.data == FertClass.organic.name:
             measure_type = OrganicMeasureType
             if self.measure_type.data:
@@ -541,9 +542,8 @@ class FertilizationForm(FormHelper, FlaskForm):
             choices = current_user.get_fertilizers(
                 fert_class=FertClass.organic, year=cultivation.field.year
             )
-
+        # no fert_class option selected, needed for editform without fert_class shown
         else:
-            # no fert_class option selected, needed for editform without fert_class shown
             measure_type = MeasureType
             choices = current_user.get_fertilizers()
 
@@ -553,6 +553,8 @@ class FertilizationForm(FormHelper, FlaskForm):
 
         self.measure_type.choices = [(measure.name, measure.value) for measure in measure_type]
         self.fertilizer.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
+        if not validation:
+            self.reset_data(self.amount)
 
     def validate_measure_type(self, measure_type):
         """
