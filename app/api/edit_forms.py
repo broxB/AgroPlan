@@ -40,9 +40,6 @@ from .forms import (
 
 __all__ = [
     "create_edit_form",
-    "EditProfileForm",
-    "EmptyForm",
-    "YearForm",
     "EditBaseFieldForm",
     "EditFieldForm",
     "EditCultivationForm",
@@ -121,9 +118,6 @@ class EditCultivationForm(CultivationForm):
         self.get_data(id)
         field_id = self.model_data.field.id
         super().__init__(field_id, *args, **kwargs)
-
-    def update_content(self):
-        return super().update_content()
 
     def validate_cultivation_type(self, cultivation_type):
         if cultivation_type.data != self.model_data.cultivation_type.name:

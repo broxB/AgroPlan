@@ -1,7 +1,6 @@
 from flask import Request, Response, jsonify, render_template, request
 from flask_login import current_user, login_required
 from loguru import logger
-from wtforms.validators import ValidationError
 
 from app.api import Form, bp, create_edit_form, create_form
 from app.database import confirm_id, delete_database_entry
@@ -66,11 +65,7 @@ def refresh_form():
         form: Form = create_form(form_type)(id)
     else:
         form: Form = create_edit_form(form_type)(id)
-
-    try:
-        form.update_content()
-    except ValidationError as e:
-        return jsonify(f"Unvalid request data. {e}"), 400
+    form.update_content()
 
     return jsonify(rendered_form(form, form_type, modal_type, id, refreshed_content=True)), 206
 

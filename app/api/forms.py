@@ -308,21 +308,25 @@ class CultivationForm(FormHelper, FlaskForm):
     crop = SelectField(
         "Select crop to grow:", validators=[InputRequired()], render_kw={"class": "reload"}
     )
-    crop_yield = IntegerField("Estimated yield in dt/ha:", validators=[Optional()])
-    crop_protein = DecimalField("Estimated protein in % DM/ha:", validators=[Optional()])
+    crop_yield = IntegerField(
+        "Estimated yield in dt/ha:", validators=[InputRequired(), NumberRange(min=0)]
+    )
+    crop_protein = DecimalField(
+        "Estimated protein in % DM/ha:", validators=[InputRequired(), NumberRange(min=0)]
+    )
     residue_type = SelectField(
         "Estimated residues:",
         choices=[(enum.name, enum.value) for enum in ResidueType],
-        validators=[Optional()],
+        validators=[InputRequired()],
     )
     legume_type = SelectField(
         "Share of legumes:",
         choices=[(enum.name, enum.value) for enum in LegumeType],
-        validators=[Optional()],
+        validators=[InputRequired()],
     )
-    nmin_30 = IntegerField("Nmin 30cm:", validators=[Optional()])
-    nmin_60 = IntegerField("Nmin 60cm:", validators=[Optional()])
-    nmin_90 = IntegerField("Nmin 90cm:", validators=[Optional()])
+    nmin_30 = IntegerField("Nmin 30cm:", validators=[InputRequired(), NumberRange(min=0)])
+    nmin_60 = IntegerField("Nmin 60cm:", validators=[InputRequired(), NumberRange(min=0)])
+    nmin_90 = IntegerField("Nmin 90cm:", validators=[InputRequired(), NumberRange(min=0)])
 
     def __init__(self, field_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -347,7 +351,11 @@ class CultivationForm(FormHelper, FlaskForm):
             self.reset_data(self.legume_type)
             self.reset_data(self.residue_type)
 
-        if self.cultivation_type.data == CultivationType.main_crop:
+        if not self.cultivation_type.data:
+            self.cultivation_type.errors = ["Please select a cultivation type first."]
+            reset_data()
+            return
+        elif self.cultivation_type.data != CultivationType.main_crop:
             del self.nmin_30
             del self.nmin_60
             del self.nmin_90
