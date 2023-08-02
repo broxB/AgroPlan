@@ -85,12 +85,13 @@ def new_data():
 
     form: Form = create_form(form_type)(id)
     form.default_selects()
-    valid = form.validate_on_submit()
-    if not valid:
-        form.update_content()
+    form.update_content(validation=True)
+    if form.validate_on_submit():
+        logger.info(f"{request.form}")
+        return jsonify("Data saved successfully."), 201
+    else:
+        logger.error(f"Not valid: {request.form}")
         return jsonify(rendered_form(form, form_type, modal_type, id)), 206
-    logger.info(f"{request.form}")
-    return jsonify("Data saved successfully."), 201
 
 
 @bp.route("/form/edit", methods=["PUT"])
@@ -103,13 +104,13 @@ def edit_data():
 
     form: Form = create_edit_form(form_type)(id)
     form.default_selects()
-    valid = form.validate_on_submit()
-    if not valid:
-        form.update_content()
-        logger.info(f"not valid")
+    form.update_content(validation=True)
+    if form.validate_on_submit():
+        logger.info(f"{request.form}")
+        return jsonify("Data saved successfully."), 201
+    else:
+        logger.info(f"{request.form} not valid")
         return jsonify(rendered_form(form, form_type, modal_type, id)), 206
-    logger.info(f"{request.form}")
-    return jsonify("Data saved successfully."), 201
 
 
 @bp.route("/form/delete", methods=["DELETE"])

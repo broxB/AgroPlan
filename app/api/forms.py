@@ -6,6 +6,7 @@ import wtforms
 from flask_bootstrap import SwitchField
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from loguru import logger
 from wtforms import (
     BooleanField,
     DecimalField,
@@ -14,13 +15,7 @@ from wtforms import (
     SelectField,
     StringField,
 )
-from wtforms.validators import (
-    DataRequired,
-    InputRequired,
-    NumberRange,
-    Optional,
-    ValidationError,
-)
+from wtforms.validators import InputRequired, NumberRange, Optional
 
 from app.database.model import (
     BaseField,
@@ -83,25 +78,32 @@ class FormHelper:
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         # reset render keywords because wtforms caches them between requests
+        self._reset_render_kw()
+
+    def _reset_render_kw(self):
+        """
+        Resets certain render_kw because WTForms seems to cache them between requests.
+        """
         for field in self._fields.values():
             self.remove_render_kw(field, "selected")
+            self.remove_render_kw(field, "disabled")
 
     @staticmethod
-    def add_render_kw(field: wtforms.Field, name: str, value: Any):
+    def add_render_kw(field: wtforms.Field, key: str, value: Any):
         """
-        Add `name` to `render_kw` for `WTForms.Field`.
-        Doesn't override other render_kws.
+        Add `key` to `render_kw` for `WTForms.Field`.
+        Does override render_kw with the same key.
 
             :param field:
-                WTForm input to which `render_kw` should be add.
-            :param name:
-                `name` of the render_kw.
+                WTForm input to which `key` should be add.
+            :param key:
+                `key` of the render_kw.
             :param value:
-                `value` for the render_kw.
+                `value` for the `key`.
         """
         if field.render_kw is None:
             field.render_kw = {}
-        field.render_kw[name] = value
+        field.render_kw[key] = value
 
     @staticmethod
     def remove_render_kw(field: wtforms.Field, name: str):
@@ -118,6 +120,8 @@ class FormHelper:
             field.render_kw.pop(name)
         except (AttributeError, KeyError):
             pass
+        except Exception as e:
+            logger.warning(f"{e} with params {field=} and {name=}")
 
     @staticmethod
     def field_data(field: wtforms.Field) -> Any | None:
@@ -129,11 +133,14 @@ class FormHelper:
         :return:
             Returns input data or None.
         """
-        if field.data is not None:
-            return field.data
+        try:
+            if field.data is not None:
+                return field.data
+        except AttributeError:
+            pass
         try:
             return field.raw_data[0]
-        except (IndexError, TypeError):
+        except (IndexError, TypeError, AttributeError):
             return None
 
     def reset_data(self, field: wtforms.Field):
@@ -157,9 +164,10 @@ class FormHelper:
         for name, data in self.data.items():
             if data is not None:
                 field = self._fields.get(name)
-                if field.render_kw is None:
-                    field.render_kw = {}
-                field.render_kw |= {"selected": ""}
+                if field.type == "SelectField":
+                    if field.render_kw is None:
+                        field.render_kw = {}
+                    field.render_kw |= {"selected": ""}
 
     def get_data(self, id: int):
         """
@@ -187,9 +195,12 @@ class FormHelper:
         """
         ...
 
-    def update_content(self):
+    def update_content(self, validation: bool):
         """
         Updates form data based on selected SelectField choices.
+
+        :validation:
+            Turn to `True` when run before form validation.
         """
         ...
 
@@ -221,7 +232,7 @@ def create_form(form_type: str) -> FlaskForm | FormHelper | None:
 class BaseFieldForm(FormHelper, FlaskForm):
     prefix = IntegerField("Prefix:", validators=[InputRequired()])
     suffix = IntegerField("Suffix:", validators=[InputRequired()])
-    name = StringField("Name:", validators=[DataRequired()])
+    name = StringField("Name:", validators=[InputRequired()])
 
     def __init__(self, _, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -327,7 +338,7 @@ class CultivationForm(FormHelper, FlaskForm):
                 (e.name, e.value) for e in [CultivationType.main_crop]
             ]
 
-    def update_content(self):
+    def update_content(self, validation: bool = False):
         self.default_selects()
         self.set_selected_inputs()
 
@@ -406,17 +417,22 @@ class CultivationForm(FormHelper, FlaskForm):
                 if crop.crop_class is not CropClass.catch_crop:
                     del self.legume_type
 
-            if self.crop_yield and not self.crop_yield.data:
-                self.add_render_kw(self.crop_yield, "value", crop.target_yield)
+            if self.crop_yield and not validation:
+                self.reset_data(self.crop_yield)
+                self.add_render_kw(self.crop_yield, "placeholder", f"eg. {crop.target_yield}")
 
-            if self.crop_protein and not self.crop_protein.data:
-                self.add_render_kw(self.crop_protein, "value", crop.target_protein)
+            if self.crop_protein and not validation:
+                self.reset_data(self.crop_protein)
+                # hacky solution for decimal locale
+                self.add_render_kw(
+                    self.crop_protein,
+                    "placeholder",
+                    "eg. " + f"{crop.target_protein}".replace(".", ","),
+                )
 
     def validate_cultivation_type(self, cultivation_type):
         """
         Verifies that cultivations are unique on a field.
-
-        :raises ValidationError: Raises error when cultivation already exists.
         """
         cultivation = (
             Cultivation.query.join(Field)
@@ -426,7 +442,7 @@ class CultivationForm(FormHelper, FlaskForm):
             .first()
         )
         if cultivation is not None:
-            self.cultivation_type.errors.append("This type of cultivation type already exists.")
+            self.cultivation_type.errors.append("This type of cultivation already exists.")
             return False
         return True
 
