@@ -103,6 +103,18 @@ main {
   color: red;
 }
 
+/* hide spinner buttons in chrome and safari */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* hide spinner buttons in firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* show placeholder value with bs floating label */
 .form-floating > label.has-placeholder {
   opacity: 0.65;
