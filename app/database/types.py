@@ -385,6 +385,16 @@ class MeasureType(BaseType):
     lime_fert = "Kalkung"
     misc_fert = "Sonstige"
 
+    @classmethod
+    def from_fert_class(cls, fert_class: FertClass) -> MeasureType:
+        match fert_class:
+            case FertClass.organic:
+                return OrganicMeasureType
+            case FertClass.mineral:
+                return MineralMeasureType
+            case _:
+                raise TypeError(f"{fert_class} has no corresponding MeasureType.")
+
 
 OrganicMeasureType: enum.Enum = enum.Enum(
     "OrganicMeasureType", [(e.name, e.value) for e in MeasureType if "org_" in e.name]
