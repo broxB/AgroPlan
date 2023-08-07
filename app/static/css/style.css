@@ -93,31 +93,31 @@ main {
   color: var(--green) !important;
 }
 
-
 /*  */
 /* || form styles */
 /*  */
 
-/* show placeholder value with bs floating label */
-.required > input::after {
+/* add *-star to required labels */
+.required > label::after {
   content: "*";
   color: red;
 }
 
+/* show placeholder value with bs floating label */
 .form-floating > label.has-placeholder {
-  opacity: .65;
-  transform: scale(.85) translateY(-.5rem) translateX(.15rem);
+  opacity: 0.65;
+  transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
 }
 
 .form-floating > input.form-control.has-placeholder {
   padding-top: 1.625rem;
-  padding-bottom: .625rem;
+  padding-bottom: 0.625rem;
 }
 
 .form-floating > input.form-control::placeholder {
-  color: revert;
+  color: var(--bs-gray-500);
   padding-top: 1.625rem;
-  padding-bottom: .625rem;
+  padding-bottom: 0.625rem;
 }
 
 /* error handling because html5 form validation doesn't work on firefox mobile */
@@ -456,6 +456,7 @@ tr:hover .btn-edit {
   }
 }
 
+/* tablet size */
 @media (max-width: 992px) {
   #main {
     padding: 0.5em;
@@ -466,6 +467,7 @@ tr:hover .btn-edit {
   }
 }
 
+/* phone size */
 @media (max-width: 575px) {
   .table {
     font-size: 0.8rem;
