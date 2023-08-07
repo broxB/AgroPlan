@@ -61,7 +61,7 @@ class Modal {
           this.addContent(content);
         });
       } else {
-        control.addEventListener("change", () => {
+        control.addEventListener("keypress", () => {
           this.content.querySelector(".btn-success").removeAttribute("hidden");
         });
       }
@@ -69,7 +69,7 @@ class Modal {
     try {
       this.form.addEventListener("submit", (event) => {
         event.preventDefault();
-        if (this.form.checkValidity() === false) {
+        if (!this.form.checkValidity()) {
           this.form.reportValidity();
         } else {
           const btn = event.submitter.textContent;
