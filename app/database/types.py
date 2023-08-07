@@ -215,6 +215,7 @@ class ResidueType(BaseType):
     main_stayed = "verbleibt"
     main_removed = "abgefahren"
     main_no_residues = "keine"
+    # no_residues = "keine"
     # Zwischenfrüchte
     catch_frozen = "abgefroren"
     catch_not_frozen_fall = "nicht abgefroren, eingearbeitet Herbst"
@@ -234,8 +235,10 @@ class ResidueType(BaseType):
                 raise TypeError(f"Invalid CultivationType passed: {cultivation_type}")
 
 
+# "MainCropResidueType", [(e.name, e.value) for e in ResidueType if "main_" in e.name]
 MainCropResidueType: enum.Enum = enum.Enum(
-    "MainCropResidueType", [(e.name, e.value) for e in ResidueType if "main_" in e.name]
+    "MainCropResidueType",
+    [(e.name, e.value) for e in (ResidueType.main_stayed, ResidueType.main_removed)],
 )
 CatchCropResidueType: enum.Enum = enum.Enum(
     "CatchCropResidueType", [(e.name, e.value) for e in ResidueType if "catch_" in e.name]
