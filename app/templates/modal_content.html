@@ -19,7 +19,8 @@
       <button class="btn btn-danger shadow"
               type="submit"
               for="submit"
-              form="modalForm">Delete</button>
+              form="modalForm"
+              name="delete">Delete</button>
     </ul>
   {%- endif -%}
   <ul class="ms-auto">
@@ -28,7 +29,7 @@
             for="submit"
             form="modalForm"
             {%- if not refreshed_content %} hidden="" {% endif -%}
-            value="">
+            name="submit">
       {%- if modal == "edit" -%}
         Save
       {%- else -%}
@@ -39,6 +40,7 @@
   <ul class="ps-0">
     <button type="button"
             class="btn btn-secondary shadow ms-1"
-            data-bs-dismiss="modal">Cancel</button>
+            data-bs-dismiss="modal"
+            name="cancel">Cancel</button>
   </ul>
 </div>

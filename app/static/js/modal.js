@@ -63,9 +63,19 @@ class Modal {
           this.addContent(content);
         });
       } else {
-        control.addEventListener("keypress", () => {
-          this.content.querySelector(".btn-success").removeAttribute("hidden");
-        });
+        if (control.tagName === "SELECT") {
+          control.addEventListener("change", () => {
+            this.content
+              .querySelector(".btn-success")
+              .removeAttribute("hidden");
+          });
+        } else {
+          control.addEventListener("keypress", () => {
+            this.content
+              .querySelector(".btn-success")
+              .removeAttribute("hidden");
+          });
+        }
       }
     });
     try {
