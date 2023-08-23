@@ -8,7 +8,6 @@ class Modal {
   constructor(event) {
     const modal = document.querySelector("#modal");
     this.content = modal.querySelector(".modal-content");
-    this.form = modal.querySelector("form");
     modal.addEventListener("hidden.bs.modal", () => {
       this.content.innerHTML = "";
     });
@@ -34,6 +33,9 @@ class Modal {
     this.form = this.content.querySelector("#modalForm");
     if (this.modal_type === "new" && defaults) {
       this.setDefaults();
+    } else {
+      // neccessary to delete entries when form validation fails, e.g. missing data.
+      this.form.setAttribute("novalidate", "");
     }
     this.addEventListeners();
   }
@@ -69,10 +71,10 @@ class Modal {
     try {
       this.form.addEventListener("submit", (event) => {
         event.preventDefault();
-        if (!this.form.checkValidity()) {
+        const btn = event.submitter.textContent;
+        if (btn != "Delete" && !this.form.checkValidity()) {
           this.form.reportValidity();
         } else {
-          const btn = event.submitter.textContent;
           if (btn === "Save") {
             this.editData();
           } else if (btn === "Create") {
