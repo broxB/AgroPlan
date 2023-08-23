@@ -4,7 +4,7 @@ from app.extensions import db
 
 from .model import *
 
-model_hierachie = {
+MODEL_HIERACHIE = {
     "base_field": (BaseField, User),
     "field": (Field, BaseField, User),
     "cultivation": (Cultivation, Field, BaseField, User),
@@ -16,22 +16,45 @@ model_hierachie = {
 }
 
 
-def confirm_id(id: str, user_id: int, form_type: str, modal_type: str) -> int | bool:
+class UnvalidFormTypeError(Exception):
+    def __init__(self, value) -> None:
+        self.message = f"Unvalid form type passed: '{value}'"
+        super().__init__(self.message)
+
+
+def confirm_id(id: str, user_id: int, form_type: str, modal_type: str) -> tuple[bool, int]:
+    """
+    Verifies if send data is coherent with database.
+
+    :param id:
+        ID of the content that gets manipulated.
+    :param user_id:
+        User ID.
+    :param form_type:
+        Form type which should be used.
+    :param modal_type:
+        Variable for the root of the manipulation, eg. `new` or `edit` data.
+    :return:
+        Validation, `ID`
+    """
     if id in (None, "undefined"):
         if form_type in ("base_field", "crop", "fertilizer"):
-            return True
+            return True, id
         else:
-            return False
+            return False, id
 
     try:
         id = int(id)
     except (ValueError, TypeError):
-        return False
+        return False, id
 
-    if modal_type == "new":
-        _, model, *join_tables = model_hierachie[form_type]
-    else:
-        model, *join_tables = model_hierachie[form_type]
+    try:
+        if modal_type == "new":
+            _, model, *join_tables = MODEL_HIERACHIE[form_type]
+        else:
+            model, *join_tables = MODEL_HIERACHIE[form_type]
+    except KeyError as e:
+        raise UnvalidFormTypeError(form_type) from e
 
     query = model.query
     for table in join_tables:
@@ -39,12 +62,12 @@ def confirm_id(id: str, user_id: int, form_type: str, modal_type: str) -> int | 
     data = query.filter(User.id == user_id, model.id == id).one_or_none()
 
     if data is None:
-        return False
-    return id
+        return False, id
+    return True, id
 
 
 def delete_database_entry(id: int, form_type: str) -> bool:
-    model, *_ = model_hierachie[form_type]
+    model, *_ = MODEL_HIERACHIE[form_type]
     try:
         model.query.filter(model.id == id).delete()
         logger.info(f"Deleted {form_type=} with {id=}")

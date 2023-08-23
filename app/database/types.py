@@ -340,13 +340,23 @@ class FertType(BaseType):
             return OrganicFertType
         raise TypeError(f"{measure_type=} has no corresponding FertType.")
 
+    @classmethod
+    def from_fert_class(cls, fert_class: FertClass) -> FertType:
+        match fert_class:
+            case FertClass.organic:
+                return OrganicFertType
+            case FertClass.mineral:
+                return MineralFertType
+            case _:
+                raise TypeError(f"{fert_class=} has no corresponding FertType.")
+
     @staticmethod
     def is_organic(fert_type: FertType) -> bool:
-        return fert_type in OrganicFertType._member_names_
+        return fert_type in OrganicFertType._member_names_ or fert_type is OrganicFertType
 
     @staticmethod
     def is_mineral(fert_type: FertType) -> bool:
-        return fert_type in MineralFertType._member_names_
+        return fert_type in MineralFertType._member_names_ or fert_type is MineralFertType
 
 
 OrganicFertType: enum.Enum = enum.Enum(
