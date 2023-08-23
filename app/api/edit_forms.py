@@ -1,4 +1,3 @@
-from flask_login import current_user
 from flask_wtf import FlaskForm
 
 from app.database.model import (
@@ -10,20 +9,6 @@ from app.database.model import (
     Field,
     Modifier,
     SoilSample,
-)
-from app.database.types import (
-    CropClass,
-    CultivationType,
-    FertClass,
-    FertType,
-    FieldType,
-    GrasslandLegumeType,
-    LegumeType,
-    MineralMeasureType,
-    NminType,
-    OrganicMeasureType,
-    ResidueType,
-    UsedCultivationType,
 )
 
 from .forms import (
@@ -86,12 +71,6 @@ class EditBaseFieldForm(BaseFieldForm):
             return super().validate(**kwargs)
         return True
 
-    def populate(self, id: int):
-        super().populate(id)
-        self.prefix.data = self.model_data.prefix
-        self.suffix.data = self.model_data.suffix
-        self.name.data = self.model_data.name
-
 
 class EditFieldForm(FieldForm):
     def __init__(self, id: int, *args, **kwargs):
@@ -130,51 +109,7 @@ class EditCultivationForm(CultivationForm):
         self.cultivation_type.data = self.model_data.cultivation_type.name
         self.residue_type.data = self.model_data.residues.name
         self.legume_type.data = self.model_data.legume_rate.name
-        self.crop.choices = [
-            (crop.id, crop.name)
-            for crop in current_user.get_crops(
-                crop_class=CropClass.from_cultivation(self.model_data.cultivation_type),
-                field_type=self.model_data.field.field_type,
-            )
-        ]
         self.crop.data = str(self.model_data.crop.id)
-
-        if self.model_data.field.field_type is FieldType.grassland:
-            cultivation_types = [CultivationType.main_crop]
-            legume_types = GrasslandLegumeType
-        else:
-            cultivation_types = UsedCultivationType
-            legume_types = LegumeType.from_cultivation(self.model_data.cultivation_type)
-        residue_types = ResidueType.from_cultivation(self.model_data.cultivation_type)
-
-        self.cultivation_type.choices = [(e.name, e.value) for e in cultivation_types]
-        self.residue_type.choices = [(e.name, e.value) for e in residue_types]
-        self.legume_type.choices = [(e.name, e.value) for e in legume_types]
-        # remove non-relevant inputs
-        self.remove_inputs()
-
-    def remove_inputs(self):
-        feedable = self.model_data.crop.feedable
-        cultivation = self.model_data.cultivation_type
-        residues = self.model_data.residues
-        nmin_depth = self.model_data.crop.nmin_depth
-        if feedable or cultivation is not CultivationType.main_crop:
-            del self.nmin_30
-            del self.nmin_60
-            del self.nmin_90
-        if nmin_depth is NminType.nmin_30:
-            del self.nmin_60
-            del self.nmin_90
-        if nmin_depth is NminType.nmin_60:
-            del self.nmin_90
-        if not feedable:
-            del self.crop_protein
-        if not (feedable or cultivation is CultivationType.catch_crop):
-            del self.legume_type
-        if cultivation is CultivationType.catch_crop:
-            del self.crop_yield
-        if residues is ResidueType.main_no_residues:
-            del self.residue_type
 
 
 class EditFertilizationForm(FertilizationForm):
@@ -205,43 +140,11 @@ class EditFertilizationForm(FertilizationForm):
 
     def populate(self, id: int):
         super().populate(id)
-        self.cultivation.choices = [
-            (cult.id, cult.crop.name) for cult in self.model_data.field[0].cultivations
-        ]
-        self.cultivation.data = str(self.model_data.cultivation.id)
+        self.cultivation.data = str(self.model_data.cultivation_id)
         self.fert_class.data = self.model_data.fertilizer.fert_class.name
         self.cut_timing.data = self.model_data.cut_timing.name
-        measure_type = (
-            OrganicMeasureType
-            if self.model_data.fertilizer.fert_class == FertClass.organic
-            else MineralMeasureType
-        )
-        self.measure_type.choices = [(enum.name, enum.value) for enum in measure_type]
         self.measure_type.data = self.model_data.measure.name
-        if self.model_data.fertilizer.fert_class == FertClass.organic:
-            fertilizers = current_user.get_fertilizers(
-                fert_class=self.fert_class.data, year=self.model_data.field[0].year
-            )
-        else:
-            fert_types = FertType.from_measure(self.model_data.measure)
-            fertilizers = Fertilizer.query.filter(
-                Fertilizer.fert_type.in_([e.name for e in fert_types])
-            )
-        self.fertilizer.choices = [(fert.id, fert.name) for fert in fertilizers]
-        self.fertilizer.data = str(self.model_data.fertilizer.id)
-        self.amount.label.text += f" in {self.model_data.fertilizer.unit.value}/ha:"
-        # remove non-relevant inputs
-        self.remove_inputs()
-
-    def remove_inputs(self):
-        fert_class = self.model_data.fertilizer.fert_class
-        feedable = self.model_data.cultivation.crop.feedable
-        if fert_class is FertClass.mineral:
-            del self.month
-        if not feedable:
-            del self.cut_timing
-        del self.fert_class
-        del self.cultivation
+        self.fertilizer.data = str(self.model_data.fertilizer_id)
 
 
 class EditFertilizerForm(FertilizerForm):
@@ -259,19 +162,6 @@ class EditFertilizerForm(FertilizerForm):
         self.fert_class.data = self.model_data.fert_class.name
         self.fert_type.data = self.model_data.fert_type.name
         self.unit_type.data = self.model_data.unit.name
-        self.original_year = self.model_data.year
-        self.original_name = self.model_data.name
-        # remove non-relevant inputs
-        self.remove_inputs()
-
-    def remove_inputs(self):
-        fert_class = self.model_data.fert_class
-        del self.fert_class
-        if fert_class is FertClass.mineral:
-            del self.year
-        if fert_class is FertClass.organic:
-            del self.active
-            del self.price
 
 
 class EditCropForm(CropForm):
@@ -289,7 +179,6 @@ class EditCropForm(CropForm):
         self.crop_class.data = self.model_data.crop_class.name
         self.crop_type.data = self.model_data.crop_type.name
         self.nmin_depth.data = self.model_data.nmin_depth.name
-        self.original_name = self.model_data.name
 
 
 class EditSoilForm(SoilForm):
@@ -321,6 +210,4 @@ class EditModifierForm(ModifierForm):
 
     def populate(self, id: int):
         super().populate(id)
-        self.description.data = self.model_data.description
         self.modification.data = self.model_data.modification.name
-        self.amount.data = self.model_data.amount
