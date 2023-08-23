@@ -3,6 +3,12 @@
 
 {% block app_content %}
   <div class="container">
+    <button class="btn btn-success fw-500 d-print-none"
+            type="button"
+            data-bs-toggle="modal"
+            data-bs-target="#modal"
+            data-form="fertilizer"
+            data-modal="new">Add fertilizer</button>
     <table class="table table-sm table-hover caption-top align-middle">
       <caption>List of organic fertilizers</caption>
       <thead class="no-border-top">
@@ -68,12 +74,6 @@
         {% endfor %}
       </tbody>
     </table>
-    <button class="btn btn-success fw-500 d-print-none"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target="#modal"
-            data-form="fertilizer"
-            data-modal="new">✚ New</button>
 
     <table class="table table-sm table-hover caption-top align-middle">
       <caption>List of mineral fertilizers</caption>
@@ -143,11 +143,5 @@
         {% endfor %}
       </tbody>
     </table>
-    <button class="btn btn-success fw-500 d-print-none"
-            type="button"
-            data-bs-toggle="modal"
-            data-bs-target="#modal"
-            data-form="fertilizer"
-            data-modal="new">✚ New</button>
   </div>
 {% endblock app_content %}

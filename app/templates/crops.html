@@ -2,6 +2,13 @@
 {% from 'utils.html' import render_icon %}
 
 {% block app_content %}
+  <button class="btn btn-success fw-500"
+          type="button"
+          data-bs-toggle="modal"
+          data-bs-target="#modal"
+          data-form="crop"
+          data-modal="new"
+          data-id="{{ current_user.id }}">Add crop</button>
   <table class="table table-sm table-hover caption-top align-middle">
     <caption>List of crops</caption>
     <thead class="no-border-top">
@@ -94,10 +101,4 @@
       {% endfor %}
     </tbody>
   </table>
-  <button class="btn btn-success fw-500"
-          type="button"
-          data-bs-toggle="modal"
-          data-bs-target="#modal"
-          data-form="crop"
-          data-modal="new">✚ New</button>
 {% endblock app_content %}
