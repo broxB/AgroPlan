@@ -94,12 +94,12 @@ class FormHelper:
         Add `key` to `render_kw` for `WTForms.Field`.
         Does override render_kw with the same key.
 
-            :param field:
-                WTForm input to which `key` should be add.
-            :param key:
-                `key` of the render_kw.
-            :param value:
-                `value` for the `key`.
+        :param field:
+            WTForm input to which `key` should be add.
+        :param key:
+            `key` of the render_kw.
+        :param value:
+            `value` for the `key`.
         """
         if field.render_kw is None:
             field.render_kw = {}
@@ -131,7 +131,7 @@ class FormHelper:
         :param field:
             WTForm input from which data should be extracted.
         :return:
-            Returns input data or None.
+            Returns input field data.
         """
         try:
             if field.data is not None:
@@ -143,7 +143,7 @@ class FormHelper:
         except (IndexError, TypeError, AttributeError):
             return None
 
-    def reset_data(self, field: wtforms.Field):
+    def reset_field(self, field: wtforms.Field):
         """
         Reset inputs data and remove `selected` from `render_kw`.
 
@@ -178,7 +178,7 @@ class FormHelper:
         """
         self.model_data: ModelType = self.model_type.query.get(id)
 
-    def populate(self: Form, id: int):
+    def populate(self: Form, id: int, **kwargs):
         """
         Populate form with data from provided database `id`.
 
@@ -187,7 +187,7 @@ class FormHelper:
         """
         if not hasattr(self, "model_data"):
             self.get_data(id)
-        self.process(obj=self.model_data)
+        self.process(obj=self.model_data, **kwargs)
 
     def default_selects(self):
         """
@@ -195,12 +195,12 @@ class FormHelper:
         """
         ...
 
-    def update_content(self, validation: bool):
+    def update_fields(self, reset_data: bool = False):
         """
         Updates form data based on selected SelectField choices.
 
-        :validation:
-            Turn to `True` when run before form validation.
+        :reset_data:
+            Set to `True` when you refresh form fields.
         """
         ...
 
@@ -208,7 +208,7 @@ class FormHelper:
 Form = Union[FormHelper, FlaskForm]
 
 
-def create_form(form_type: str) -> FlaskForm | FormHelper | None:
+def create_form(form_type: str, id: int) -> FlaskForm | FormHelper:
     """
     Factory for forms that can be filled with new data.
     """
@@ -223,9 +223,9 @@ def create_form(form_type: str) -> FlaskForm | FormHelper | None:
         "modifier": ModifierForm,
     }
     try:
-        form = form_types[form_type]
-    except KeyError:
-        form = None
+        form = form_types[form_type](id)
+    except TypeError:
+        form = form_types[form_type]()
     return form
 
 
