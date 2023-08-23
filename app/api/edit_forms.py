@@ -58,26 +58,26 @@ def create_edit_form(form_type: str, id: int) -> FlaskForm | FormHelper:
 
 
 class EditBaseFieldForm(BaseFieldForm):
-    def __init__(self, id, *args, **kwargs):
+    def __init__(self, id):
         self.model_type = BaseField
         self.get_data(id)
-        super().__init__(id, *args, **kwargs)
+        super().__init__()
 
     def validate(self, **kwargs):
         if (
             self.model_data.prefix != self.prefix.data
             or self.model_data.suffix != self.suffix.data
         ):
-            return super().validate(**kwargs)
+            return super().validate()
         return True
 
 
 class EditFieldForm(FieldForm):
-    def __init__(self, id: int, *args, **kwargs):
+    def __init__(self, id: int):
         self.model_type = Field
         self.get_data(id)
         base_field_id = self.model_data.base_field.id
-        super().__init__(base_field_id, *args, **kwargs)
+        super().__init__(base_field_id)
 
     def validate_sub_suffix(self, sub_suffix):
         if sub_suffix.data != self.model_data.sub_suffix:
@@ -94,11 +94,11 @@ class EditFieldForm(FieldForm):
 
 
 class EditCultivationForm(CultivationForm):
-    def __init__(self, id, *args, **kwargs):
+    def __init__(self, id):
         self.model_type = Cultivation
         self.get_data(id)
         field_id = self.model_data.field.id
-        super().__init__(field_id, *args, **kwargs)
+        super().__init__(field_id)
 
     def validate_cultivation_type(self, cultivation_type):
         if cultivation_type.data != self.model_data.cultivation_type.name:
@@ -113,17 +113,11 @@ class EditCultivationForm(CultivationForm):
 
 
 class EditFertilizationForm(FertilizationForm):
-    def __init__(self, id, *args, **kwargs):
+    def __init__(self, id):
         self.model_type = Fertilization
         self.get_data(id)
         field_id = self.model_data.field[0].id
-        super().__init__(field_id, *args, **kwargs)
-
-    def update_content(self, *args, **kwargs):
-        self.fert_class.data = self.model_data.fertilizer.fert_class.name
-        self.cultivation.data = self.model_data.cultivation.id
-        super().update_content(*args, **kwargs)
-        self.remove_inputs()
+        super().__init__(field_id)
 
     def validate_measure_type(self, measure_type):
         if measure_type.data != self.model_data.measure.name:
@@ -148,12 +142,13 @@ class EditFertilizationForm(FertilizationForm):
 
 
 class EditFertilizerForm(FertilizerForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, id):
+        super().__init__()
         self.model_type = Fertilizer
+        self.get_data(id)
 
-    def validate(self):
-        if self.name.data != self.original_name or self.year.data != self.original_year:
+    def validate(self, **kwargs):
+        if self.name.data != self.model_data.name or self.year.data != self.model_data.year:
             return super().validate()
         return True
 
@@ -165,12 +160,13 @@ class EditFertilizerForm(FertilizerForm):
 
 
 class EditCropForm(CropForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, id):
+        super().__init__()
         self.model_type = Crop
+        self.get_data(id)
 
     def validate_name(self, name):
-        if name != self.original_name:
+        if name.data != self.model_data.name:
             super().validate_name(name)
 
     def populate(self, id: int):
@@ -189,7 +185,7 @@ class EditSoilForm(SoilForm):
         super().__init__(base_field_id, *args, **kwargs)
 
     def validate_year(self, year):
-        if year != self.year.data:
+        if year.data != self.model_data.year:
             super().validate_year(year)
 
     def populate(self, id: int):
@@ -204,9 +200,6 @@ class EditModifierForm(ModifierForm):
         self.get_data(id)
         field_id = self.model_data.field.id
         super().__init__(field_id, *args, **kwargs)
-
-    def validate(self):
-        super().validate()
 
     def populate(self, id: int):
         super().populate(id)

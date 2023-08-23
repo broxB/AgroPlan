@@ -218,8 +218,8 @@ class Cultivation(Base):
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     cultivation_type = Column("cultivation_type", Enum(CultivationType))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
-    crop_yield = Column("yield", Float(asdecimal=True, decimal_return_scale=2))
-    crop_protein = Column("protein", Float(asdecimal=True, decimal_return_scale=2))
+    crop_yield = Column("yield", Float(asdecimal=True, decimal_return_scale=0))  # to Int
+    crop_protein = Column("protein", Float(asdecimal=True, decimal_return_scale=1))
     residues = Column("residues", Enum(ResidueType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
     nmin_30 = Column("nmin_30", Integer)
@@ -253,8 +253,10 @@ class Crop(Base):
     residue = Column("residue", Boolean)
     legume_rate = Column("legume_rate", Enum(LegumeType))
     nmin_depth = Column("nmin_depth", Enum(NminType))
-    target_demand = Column("target_demand", Float(asdecimal=True, decimal_return_scale=0))
-    target_yield = Column("target_yield", Float(asdecimal=True, decimal_return_scale=0))
+    target_demand = Column(
+        "target_demand", Float(asdecimal=True, decimal_return_scale=0)
+    )  # to Int
+    target_yield = Column("target_yield", Float(asdecimal=True, decimal_return_scale=0))  # to Int
     pos_yield = Column("pos_yield", Float(asdecimal=True, decimal_return_scale=2))
     neg_yield = Column("neg_yield", Float(asdecimal=True, decimal_return_scale=2))
     target_protein = Column("target_protein", Float(asdecimal=True, decimal_return_scale=2))
@@ -286,7 +288,7 @@ class Fertilization(Base):
     cultivation_id = Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id"))
     fertilizer_id = Column("fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id"))
     cut_timing = Column("cut_timing", Enum(CutTiming))
-    amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
+    amount = Column("amount", Float(asdecimal=True, decimal_return_scale=1))
     measure = Column("measure", Enum(MeasureType))
     month = Column("month", Integer)
 
@@ -300,7 +302,7 @@ class Fertilization(Base):
 
     def __repr__(self):
         return (
-            f"Fertilization(id='{self.id}', name='{self.fertilizer.name}', amount='{self.amount:.2f}', "
+            f"Fertilization(id='{self.id}', name='{self.fertilizer.name}', amount='{self.amount:.1f}', "
             f"measure='{self.measure.value}', month='{self.month}', crop='{self.cultivation.crop.name}', "
             f"field='{[field.base_field.name for field in self.field][0]}')"
         )
