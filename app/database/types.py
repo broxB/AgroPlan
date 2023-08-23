@@ -352,11 +352,14 @@ class FertType(BaseType):
 
     @staticmethod
     def is_organic(fert_type: FertType) -> bool:
-        return fert_type in OrganicFertType._member_names_ or fert_type is OrganicFertType
+        return fert_type in [OrganicFertType] or fert_type is OrganicFertType
 
     @staticmethod
     def is_mineral(fert_type: FertType) -> bool:
-        return fert_type in MineralFertType._member_names_ or fert_type is MineralFertType
+        return (
+            fert_type in [NFertType, BasicFertType, MiscFertType, LimeFertType]
+            or fert_type is MineralFertType
+        )
 
 
 OrganicFertType: enum.Enum = enum.Enum(
