@@ -490,8 +490,8 @@ class CultivationForm(FormHelper, FlaskForm):
         return True
 
     def save(self):
+        field = Field.query.get(self.field_id)
         crop = Crop.query.get(self.crop_id.data)
-        field = Field.query.get(self.field_id.data)
         cultivation = Cultivation(
             cultivation_type=self.cultivation_type.data,
             crop_yield=self.crop_yield.data,
@@ -685,7 +685,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         fertilization = Fertilization(
             cut_timing=self.cut_timing.data,
             measure=self.measure_type.data,
-            month=self.month.data,
+            month=self.get(self.month, 0),
             amount=self.amount.data,
         )
         fertilization.cultivation = cultivation
@@ -766,7 +766,7 @@ class FertilizerForm(FormHelper, FlaskForm):
         fertilizer = Fertilizer(
             user_id=current_user.id,
             name=self.name.data,
-            year=self.get(self.year.data, 0),
+            year=self.get(self.year, 0),
             fert_class=self.fert_class.data,
             fert_type=self.fert_type.data,
             active=self.active.data,
@@ -904,10 +904,10 @@ class CropForm(FormHelper, FlaskForm):
             crop_class=self.crop_class.data,
             crop_type=self.crop_type.data,
             kind=self.kind.data,
-            feedable=self.get(self.feedable.data, False),
-            residue=self.get(self.residue.data, False),
+            feedable=self.get(self.feedable, False),
+            residue=self.get(self.residue, False),
             legume_rate=None,  # needs to be removed
-            nmin_depth=self.get(self.nmin_depth.data, NminType.nmin_0),
+            nmin_depth=self.get(self.nmin_depth, NminType.nmin_0),
             target_demand=self.get(self.target_demand, 0),
             target_yield=self.get(self.target_yield, 0),
             pos_yield=self.get(self.pos_yield, 0),
