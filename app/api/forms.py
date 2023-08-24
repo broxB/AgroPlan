@@ -46,10 +46,12 @@ from app.database.types import (
     NminType,
     NutrientType,
     OrganicMeasureType,
+    ResidueType,
     SoilType,
     UnitType,
     UsedCultivationType,
 )
+from app.extensions import db
 
 __all__ = [
     "create_form",
@@ -119,14 +121,16 @@ class FormHelper:
             logger.warning(f"{e} with params {field=} and {name=}")
 
     @staticmethod
-    def field_data(field: wtforms.Field) -> Any | None:
+    def get(field: wtforms.Field, default=None) -> Any | None:
         """
         Tries to get data from input. Looks at data and raw_data attributes.
 
         :param field:
             WTForm input from which data should be extracted.
+        :param default:
+            If there is not data returns default value.
         :return:
-            Returns input field data.
+            Returns input field data or default value if there is none.
         """
         try:
             if field.data is not None:
@@ -136,7 +140,19 @@ class FormHelper:
         try:
             return field.raw_data[0]
         except (IndexError, TypeError, AttributeError):
-            return None
+            return default
+
+    def has_field(self, field: wtforms.Field) -> bool:
+        """
+        Check if form has `field`.
+
+        :param field:
+            WTForms input field.
+        """
+        try:
+            return hasattr(self, field.name)
+        except (ValueError, AttributeError):
+            return False
 
     def reset_field(self, field: wtforms.Field):
         """
@@ -175,14 +191,20 @@ class FormHelper:
 
     def populate(self: Form, id: int, **kwargs):
         """
-        Populate form with data from provided database `id`.
+        Populate form with data from provided database entry.
 
         :param id:
-            Form specific database `id`.
+            Form specific database model `id`.
         """
         if not hasattr(self, "model_data"):
             self.get_data(id)
         self.process(obj=self.model_data, **kwargs)
+
+    def save(self):
+        """
+        Save form data to database.
+        """
+        raise NotImplementedError
 
     def default_selects(self):
         """
@@ -243,6 +265,17 @@ class BaseFieldForm(FormHelper, FlaskForm):
             return False
         return True
 
+    def save(self):
+        base_field = BaseField(
+            user_id=current_user.id,
+            prefix=self.prefix.data,
+            suffix=self.suffix.data,
+            name=self.name.data,
+        )
+        base_field.user = current_user
+        db.session.add(base_field)
+        db.session.commit()
+
 
 class FieldForm(FormHelper, FlaskForm):
     sub_suffix = IntegerField(
@@ -289,6 +322,20 @@ class FieldForm(FormHelper, FlaskForm):
             self.year.errors.append(f"Field in {year.data} already exists.")
             return False
 
+    def save(self):
+        field = Field(
+            base_id=self.base_id,
+            sub_suffix=self.sub_suffix.data,
+            area=self.year.data,
+            red_region=self.red_region.data,
+            field_type=self.field_type.data,
+            demand_type=self.demand_type.data,
+        )
+        base_field = BaseField.query.get(self.base_id)
+        field.base_field = base_field
+        db.session.add(field)
+        db.session.commit()
+
 
 class CultivationForm(FormHelper, FlaskForm):
     cultivation_type = SelectField(
@@ -297,7 +344,7 @@ class CultivationForm(FormHelper, FlaskForm):
         validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
-    crop = SelectField(
+    crop_id = SelectField(
         "Select crop to grow:", validators=[InputRequired()], render_kw={"class": "reload"}
     )
     crop_yield = IntegerField(
@@ -308,11 +355,11 @@ class CultivationForm(FormHelper, FlaskForm):
         validators=[InputRequired(), NumberRange(min=0)],
         places=1,
     )
-    residue_type = SelectField(
+    residues = SelectField(
         "Estimated residues:",
         validators=[InputRequired()],
     )
-    legume_type = SelectField(
+    legume_rate = SelectField(
         "Share of legumes:",
         validators=[InputRequired()],
     )
@@ -371,7 +418,7 @@ class CultivationForm(FormHelper, FlaskForm):
             )
 
             crop = Crop.query.filter(
-                Crop.id == self.crop.data, Crop.crop_class == crop_class
+                Crop.id == self.crop_id.data, Crop.crop_class == crop_class
             ).first()
             if crop is None:
                 reset_form_data()
@@ -385,15 +432,15 @@ class CultivationForm(FormHelper, FlaskForm):
 
             crop = Crop.query.filter(
                 Crop.user_id == current_user.id,
-                Crop.id == self.crop.data,
+                Crop.id == self.crop_id.data,
                 Crop.crop_class == crop_class,
             ).first()
             if crop is None:
                 reset_form_data()
 
-        self.crop.choices = [(crop.id, crop.name) for crop in crop_choices]
-        self.residue_type.choices = [(e.name, e.value) for e in residue_type]
-        self.legume_type.choices = [(e.name, e.value) for e in legume_type]
+        self.crop_id.choices = [(crop.id, crop.name) for crop in crop_choices]
+        self.residues.choices = [(e.name, e.value) for e in residue_type]
+        self.legume_rate.choices = [(e.name, e.value) for e in legume_type]
 
         if crop:
             match crop.nmin_depth:
@@ -408,12 +455,12 @@ class CultivationForm(FormHelper, FlaskForm):
                     del self.nmin_90
 
             if not crop.residue:
-                del self.residue_type
+                del self.residues
 
             if not crop.feedable:
                 del self.crop_protein
                 if crop.crop_class is not CropClass.catch_crop:
-                    del self.legume_type
+                    del self.legume_rate
 
             if self.crop_yield:
                 self.add_render_kw(self.crop_yield, "placeholder", f"eg. {crop.target_yield}")
@@ -442,9 +489,27 @@ class CultivationForm(FormHelper, FlaskForm):
             return False
         return True
 
+    def save(self):
+        crop = Crop.query.get(self.crop_id.data)
+        field = Field.query.get(self.field_id.data)
+        cultivation = Cultivation(
+            cultivation_type=self.cultivation_type.data,
+            crop_yield=self.crop_yield.data,
+            crop_protein=self.get(self.crop_protein, None),
+            residues=self.get(self.residues, ResidueType.main_no_residues),
+            legume_rate=self.get(self.legume_rate, LegumeType.none),
+            nmin_30=self.get(self.nmin_30, 0),
+            nmin_60=self.get(self.nmin_60, 0),
+            nmin_90=self.get(self.nmin_90, 0),
+        )
+        cultivation.crop = crop
+        cultivation.field = field
+        db.session.add(cultivation)
+        db.session.commit()
+
 
 class FertilizationForm(FormHelper, FlaskForm):
-    cultivation = SelectField(
+    cultivation_id = SelectField(
         "Select a crop to fertilize:", validators=[InputRequired()], render_kw={"class": "reload"}
     )
     cut_timing = SelectField(
@@ -464,7 +529,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         validators=[InputRequired()],
         render_kw={"class": "reload"},
     )
-    fertilizer = SelectField(
+    fertilizer_id = SelectField(
         "Select a fertilizer:", validators=[InputRequired()], render_kw={"class": "reload"}
     )
     month = IntegerField("Month:", validators=[InputRequired(), NumberRange(min=1, max=12)])
@@ -485,19 +550,19 @@ class FertilizationForm(FormHelper, FlaskForm):
         self.set_selected_inputs()
 
         field = Field.query.get(self.field_id)
-        self.cultivation.choices = [
+        self.cultivation_id.choices = [
             (cultivation.id, cultivation.crop.name) for cultivation in field.cultivations
         ]
 
         cultivation = (
             Cultivation.query.join(Field)
-            .filter(Cultivation.id == self.cultivation.data, Field.id == self.field_id)
+            .filter(Cultivation.id == self.cultivation_id.data, Field.id == self.field_id)
             .one_or_none()
         )
         if cultivation is None:
             if not any(self.data.values()):
                 return
-            self.cultivation.errors = ["Please select a cultivation first."]
+            self.cultivation_id.errors = ["Please select a cultivation first."]
             reset_form_data()
             self.reset_field(self.fert_class)
             # self.default_selects()
@@ -535,12 +600,12 @@ class FertilizationForm(FormHelper, FlaskForm):
             measure_type = MeasureType
             choices = current_user.get_fertilizers()
 
-        if self.fertilizer.data:
-            fertilizer = Fertilizer.query.get(self.fertilizer.data)
+        if self.fertilizer_id.data:
+            fertilizer = Fertilizer.query.get(self.fertilizer_id.data)
             self.amount.label.text = f"Amount in {fertilizer.unit.value}/ha:"
 
         self.measure_type.choices = [(measure.name, measure.value) for measure in measure_type]
-        self.fertilizer.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
+        self.fertilizer_id.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
 
     def validate_measure_type(self, measure_type):
         """
@@ -550,7 +615,7 @@ class FertilizationForm(FormHelper, FlaskForm):
             fertilization = (
                 Fertilization.query.join(Cultivation)
                 .filter(
-                    Cultivation.id == self.cultivation.data,
+                    Cultivation.id == self.cultivation_id.data,
                     Fertilization.measure == measure_type.data,
                 )
                 .first()
@@ -572,11 +637,11 @@ class FertilizationForm(FormHelper, FlaskForm):
             return True
 
         try:
-            fertilizer = current_user.get_fertilizers(id=self.fertilizer.data)[0]
+            fertilizer = current_user.get_fertilizers(id=self.fertilizer_id.data)[0]
         except IndexError:
-            self.fertilizer.errors.append(f"Invalid fertilizer selected.")
+            self.fertilizer_id.errors.append(f"Invalid fertilizer selected.")
             return False
-        cultivation = Cultivation.query.get(self.cultivation.data)
+        cultivation = Cultivation.query.get(self.cultivation_id.data)
         field = cultivation.field
 
         n, nh4 = 0, 0
@@ -613,10 +678,25 @@ class FertilizationForm(FormHelper, FlaskForm):
         )
         return False
 
+    def save(self):
+        field = Field.query.get(self.field_id)
+        cultivation = Cultivation.query.get(self.cultivation_id.data)
+        fertilizer = Fertilizer.query.get(self.fertilizer_id.data)
+        fertilization = Fertilization(
+            cut_timing=self.cut_timing.data,
+            measure=self.measure_type.data,
+            month=self.month.data,
+            amount=self.amount.data,
+        )
+        fertilization.cultivation = cultivation
+        fertilization.fertilizer = fertilizer
+        fertilization.field.append(field)
+        db.session.add(fertilization)
+        db.session.commit()
+
 
 class FertilizerForm(FormHelper, FlaskForm):
     name = StringField("Name:", validators=[InputRequired(), Length(min=1, max=25)])
-    year = IntegerField("Year:", validators=[InputRequired()])
     fert_class = SelectField(
         "Select fertilizer class:",
         choices=[(enum.name, enum.value) for enum in FertClass],
@@ -628,12 +708,12 @@ class FertilizerForm(FormHelper, FlaskForm):
         choices=[(enum.name, enum.value) for enum in FertType],
         validators=[InputRequired()],
     )
-    active = BooleanField("Show fertilizer in list?")
     unit_type = SelectField(
         "Select measurement unit:",
         choices=[(enum.name, enum.value) for enum in UnitType],
         validators=[InputRequired()],
     )
+    year = IntegerField("Year:", validators=[InputRequired()])
     price = DecimalField("Price in €:", default=0.00)
     n = DecimalField("N:", validators=[InputRequired()])
     p2o5 = DecimalField("P2O5:", validators=[InputRequired()])
@@ -642,6 +722,7 @@ class FertilizerForm(FormHelper, FlaskForm):
     s = DecimalField("S:", validators=[InputRequired()])
     cao = DecimalField("CaO:", validators=[InputRequired()])
     nh4 = DecimalField("NH4:", validators=[InputRequired()])
+    active = BooleanField("Show fertilizer in list?")
 
     def __init__(self):
         super().__init__()
@@ -680,6 +761,27 @@ class FertilizerForm(FormHelper, FlaskForm):
             if fertilizer is not None:
                 self.name.errors.append(f"{self.name.data} already exists.")
         return True
+
+    def save(self):
+        fertilizer = Fertilizer(
+            user_id=current_user.id,
+            name=self.name.data,
+            year=self.get(self.year.data, 0),
+            fert_class=self.fert_class.data,
+            fert_type=self.fert_type.data,
+            active=self.active.data,
+            unit=self.unit_type.data,
+            price=self.price.data,
+            n=self.n.data,
+            p2o5=self.p2o5.data,
+            k2o=self.k2o.data,
+            mgo=self.mgo.data,
+            s=self.s.data,
+            cao=self.cao.data,
+            nh4=self.nh4.data,
+        )
+        db.session.add(fertilizer)
+        db.session.commit()
 
 
 class CropForm(FormHelper, FlaskForm):
@@ -776,11 +878,11 @@ class CropForm(FormHelper, FlaskForm):
             del self.mgo
             del self.nmin_depth
 
-        if not self.field_data(self.feedable):
+        if not self.get(self.feedable):
             del self.target_protein
             del self.var_protein
 
-        if not self.field_data(self.residue):
+        if not self.get(self.residue):
             del self.byproduct
             del self.byp_ratio
             del self.byp_n
@@ -793,6 +895,38 @@ class CropForm(FormHelper, FlaskForm):
         if crop is not None:
             self.name.errors.append(f"{name.data} already exists.")
             return False
+
+    def save(self):
+        crop = Crop(
+            user_id=current_user.id,
+            name=self.name.data,
+            field_type=self.field_type.data,
+            crop_class=self.crop_class.data,
+            crop_type=self.crop_type.data,
+            kind=self.kind.data,
+            feedable=self.get(self.feedable.data, False),
+            residue=self.get(self.residue.data, False),
+            legume_rate=None,  # needs to be removed
+            nmin_depth=self.get(self.nmin_depth.data, NminType.nmin_0),
+            target_demand=self.get(self.target_demand, 0),
+            target_yield=self.get(self.target_yield, 0),
+            pos_yield=self.get(self.pos_yield, 0),
+            neg_yield=self.get(self.neg_yield, 0),
+            target_protein=self.get(self.target_protein, 0),
+            var_protein=self.get(self.var_protein, 0),
+            n=0,  # needs to be removed
+            p2o5=self.get(self.p2o5, 0),
+            k2o=self.get(self.k2o, 0),
+            mgo=self.get(self.mgo, 0),
+            byproduct=self.get(self.byproduct, False),
+            byp_ratio=self.get(self.byp_ratio, 0),
+            byp_n=self.get(self.byp_n, 0),
+            byp_p2o5=self.get(self.byp_p2o5, 0),
+            byp_k2o=self.get(self.byp_k2o, 0),
+            byp_mgo=self.get(self.byp_mgo, 0),
+        )
+        db.session.add(crop)
+        db.session.commit()
 
 
 class SoilForm(FormHelper, FlaskForm):
@@ -824,6 +958,21 @@ class SoilForm(FormHelper, FlaskForm):
             self.year.errors.append(f"Soil sample for {year.data} already exists.")
             return False
 
+    def save(self):
+        soil_sample = SoilSample(
+            year=self.year.data,
+            ph=self.ph.data,
+            p2o5=self.p2o5.data,
+            k2o=self.k2o.data,
+            mg=self.mg.data,
+            soil_type=self.soil_type.data,
+            humus=self.humus_type.data,
+        )
+        base_field = BaseField.query.get(self.base_id)
+        soil_sample.base_field = base_field
+        db.session.add(soil_sample)
+        db.session.commit()
+
 
 class ModifierForm(FormHelper, FlaskForm):
     description = StringField("Description:", validators=[InputRequired()])
@@ -842,3 +991,14 @@ class ModifierForm(FormHelper, FlaskForm):
         if abs(amount.data) > 1000:
             self.amount.errors.append(f"Only values up to 1000 kg/ha are allowed.")
             return False
+
+    def save(self):
+        modifier = Modifier(
+            description=self.description.data,
+            modification=self.modification.data,
+            amount=self.amount.data,
+        )
+        field = Field.query.get(self.field_id)
+        modifier.field = field
+        db.session.add(modifier)
+        db.session.commit()

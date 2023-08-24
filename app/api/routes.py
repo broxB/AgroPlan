@@ -93,6 +93,7 @@ def submit_data():
 
     if form.validate_on_submit():
         logger.info(f"{request.form}")
+        form.save()
         return jsonify("Data saved successfully."), 201
     else:
         logger.error(f"Not valid: {request.form}")
