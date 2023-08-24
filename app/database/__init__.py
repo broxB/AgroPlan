@@ -69,9 +69,10 @@ def confirm_id(id: str, user_id: int, form_type: str, modal_type: str) -> tuple[
 def delete_database_entry(id: int, form_type: str) -> bool:
     model, *_ = MODEL_HIERACHIE[form_type]
     try:
-        model.query.filter(model.id == id).delete()
-        logger.info(f"Deleted {form_type=} with {id=}")
+        m = model.query.get(id)
+        db.session.delete(m)
         db.session.commit()
+        logger.info(f"Deleted {form_type=} with {id=}")
     except Exception as e:
         logger.warning(e)
         return False
