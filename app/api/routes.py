@@ -49,7 +49,6 @@ def get_modal():
     else:
         form = create_edit_form(form_type, id)
         form.populate(id)
-
     form.update_fields()
 
     return jsonify(rendered_form(form, form_type, modal_type, id))
@@ -67,9 +66,7 @@ def refresh_form():
         form: Form = create_form(form_type, id)
     else:
         form: Form = create_edit_form(form_type, id)
-
-    reset_data = True if modal_type == "new" else False
-    form.update_fields(reset_data=reset_data)
+    form.update_fields()
 
     return jsonify(rendered_form(form, form_type, modal_type, id, refreshed_content=True)), 206
 

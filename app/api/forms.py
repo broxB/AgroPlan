@@ -190,12 +190,9 @@ class FormHelper:
         """
         ...
 
-    def update_fields(self, reset_data: bool = False):
+    def update_fields(self):
         """
-        Updates form data based on selected SelectField choices.
-
-        :reset_data:
-            Set to `True` when you refresh form fields.
+        Updates form fields based on chosen SelectField choices.
         """
         ...
 
@@ -327,14 +324,14 @@ class CultivationForm(FormHelper, FlaskForm):
         super().__init__()
         self.field_id = field_id
 
-    def update_fields(self, reset_data: bool = False):
+    def update_fields(self):
         def reset_form_data():
             """Resets data of multiple fields"""
-            self.reset_field(self.crop)
-            self.reset_field(self.legume_type)
-            self.reset_field(self.residue_type)
-            nonlocal reset_data
-            reset_data = True
+            self.reset_field(self.crop_id)
+            self.reset_field(self.legume_rate)
+            self.reset_field(self.residues)
+            self.reset_field(self.crop_yield)
+            self.reset_field(self.crop_protein)
 
         self.set_selected_inputs()
 
@@ -418,12 +415,10 @@ class CultivationForm(FormHelper, FlaskForm):
                 if crop.crop_class is not CropClass.catch_crop:
                     del self.legume_type
 
-            if self.crop_yield and reset_data:
-                self.reset_field(self.crop_yield)
+            if self.crop_yield:
                 self.add_render_kw(self.crop_yield, "placeholder", f"eg. {crop.target_yield}")
 
-            if self.crop_protein and reset_data:
-                self.reset_field(self.crop_protein)
+            if self.crop_protein:
                 # hacky solution for decimal locale
                 self.add_render_kw(
                     self.crop_protein,
@@ -479,13 +474,13 @@ class FertilizationForm(FormHelper, FlaskForm):
         super().__init__()
         self.field_id = field_id
 
-    def update_fields(self, reset_data: bool = False):
+    def update_fields(self):
         def reset_form_data():
             """Resets data of multiple fields"""
             self.reset_field(self.measure_type)
-            self.reset_field(self.fertilizer)
-            nonlocal reset_data
-            reset_data = True
+            self.reset_field(self.fertilizer_id)
+            self.reset_field(self.month)
+            self.reset_field(self.amount)
 
         self.set_selected_inputs()
 
@@ -546,10 +541,6 @@ class FertilizationForm(FormHelper, FlaskForm):
 
         self.measure_type.choices = [(measure.name, measure.value) for measure in measure_type]
         self.fertilizer.choices = [(fertilizer.id, fertilizer.name) for fertilizer in choices]
-
-        if reset_data:
-            self.reset_field(self.month)
-            self.reset_field(self.amount)
 
     def validate_measure_type(self, measure_type):
         """
@@ -655,12 +646,15 @@ class FertilizerForm(FormHelper, FlaskForm):
     def __init__(self):
         super().__init__()
 
-    def update_fields(self, reset_data: bool = True):
+    def update_fields(self):
         self.set_selected_inputs()
 
         if self.fert_class.data in FertClass._member_map_:
             fert_type = FertType.from_fert_class(FertClass[self.fert_class.data])
             self.fert_type.choices = [(e.name, e.value) for e in fert_type]
+
+        if self.fert_class.data == FertClass.mineral:
+            del self.year
 
     def validate(self, **kwargs):
         valid = super().validate()
@@ -753,7 +747,7 @@ class CropForm(FormHelper, FlaskForm):
     def __init__(self):
         super().__init__()
 
-    def update_fields(self, reset_data: bool = False):
+    def update_fields(self):
         self.set_selected_inputs()
 
         if self.field_type.data == FieldType.grassland.name:
