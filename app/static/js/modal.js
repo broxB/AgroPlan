@@ -127,6 +127,12 @@ class Modal {
         <ul class="ps-0 me-auto">
         <h6 class="">${data}</h6></ul>
         <ul><button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Close</button></ul>`;
+        for (let control of this.form) {
+          control.setAttribute("disabled", "");
+        }
+        document.addEventListener("hidden.bs.modal", () => {
+          window.location.reload();
+        });
       });
     } else if (response.status == 206) {
       // changed content
