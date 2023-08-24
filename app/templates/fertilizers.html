@@ -55,11 +55,7 @@
             <td class="text-end">{{ fert.s }}</td>
             <td class="text-end">{{ fert.cao }}</td>
             <td class="text-end">{{ fert.nh4 }}</td>
-            <td class="text-end">
-              {% for ferti in usage if ferti.name == fert.name and ferti.year == fert.year %}
-                {{ ferti.amount | format_number(".1f") }}
-              {% endfor %}
-            </td>
+            <td class="text-end">{{ fert.usage() | format_number(".1f") }}</td>
             <td>{{ fert.unit.value + "/ha" }}</td>
             <td class="d-print-none">
               <button class="btn btn-link btn-edit"
@@ -121,14 +117,7 @@
             <td class="text-end">{{ fert.s }}</td>
             <td class="text-end">{{ fert.cao }}</td>
             <td class="text-end">{{ fert.nh4 }}</td>
-            <td class="text-end">
-              {% set ns = namespace(used = false) %}
-              {% for ferti in usage if ferti.name == fert.name and ferti.year == current_user.year %}
-                {{ ferti.amount | format_number(".1f") }}
-                {% set ns.used = true %}
-              {% endfor %}
-              {% if not ns.used %}{{ 0 }}{% endif %}
-            </td>
+            <td class="text-end">{{ fert.usage(current_user.year) | format_number(".1f") }}</td>
             <td>{{ fert.unit.value + "/ha" }}</td>
             <td class="d-print-none">
               <button class="btn btn-link btn-edit"

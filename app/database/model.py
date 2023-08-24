@@ -200,6 +200,10 @@ class Field(Base):
     saldo = relationship("Saldo", back_populates="field", uselist=False)
     modifiers = relationship("Modifier", back_populates="field")
 
+    @property
+    def fertilizers(self):
+        return [fert.fertilizer for fert in self.fertilizations]
+
     def __repr__(self):
         return (
             f"Field(id='{self.id}', name='{self.base_field.prefix:02d}-{self.base_field.suffix} {self.base_field.name}', "
@@ -251,7 +255,7 @@ class Crop(Base):
     kind = Column("kind", String)
     feedable = Column("feedable", Boolean)
     residue = Column("residue", Boolean)
-    legume_rate = Column("legume_rate", Enum(LegumeType))
+    legume_rate = Column("legume_rate", Enum(LegumeType))  # needs to be removed
     nmin_depth = Column("nmin_depth", Enum(NminType))
     target_demand = Column(
         "target_demand", Float(asdecimal=True, decimal_return_scale=0)
@@ -261,7 +265,7 @@ class Crop(Base):
     neg_yield = Column("neg_yield", Float(asdecimal=True, decimal_return_scale=2))
     target_protein = Column("target_protein", Float(asdecimal=True, decimal_return_scale=2))
     var_protein = Column("var_protein", Float(asdecimal=True, decimal_return_scale=2))
-    n = Column("n", Float(asdecimal=True, decimal_return_scale=2))
+    n = Column("n", Float(asdecimal=True, decimal_return_scale=2))  # needs to be removed
     p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
     k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
     mgo = Column("mgo", Float(asdecimal=True, decimal_return_scale=2))
@@ -329,13 +333,33 @@ class Fertilizer(Base):
     cao = Column("cao", Float(asdecimal=True, decimal_return_scale=2))
     nh4 = Column("nh4", Float(asdecimal=True, decimal_return_scale=2))
 
-    usage = relationship("FertilizerUsage", back_populates="fertilizer")
+    def usage(self, year=None):
+        """
+        Summary of fertilizer consumption in a given year.
+
+        :param year:
+            Year which is summarized, mandatory for mineral fertilizers.
+        :raises ValueError:
+            Fails if no year is specified for mineral fertilizers.
+        """
+        if year is None:
+            if not self.year:
+                raise ValueError("Please specific a year.")
+            year = self.year
+
+        ferts = (
+            Fertilization.query.join(field_fertilization)
+            .join(Field)
+            .join(Fertilizer)
+            .filter(Field.year == year, Fertilizer.id == self.id)
+            .all()
+        )
+        return sum(fert.amount * fert.field[0].area for fert in ferts)
 
     def __repr__(self):
         return (
             f"Fertilizer(id='{self.id}', name='{self.name}', year='{self.year}', "
-            f"class='{self.fert_class.name}', type='{self.fert_type.name}', active='{self.active}', "
-            f"usage={[f'{usage.year}: {usage.amount:.2f}' for usage in self.usage]}')"
+            f"class='{self.fert_class.name}', type='{self.fert_type.name}', active='{self.active}')"
         )
 
 
@@ -348,8 +372,6 @@ class FertilizerUsage(Base):
     name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
     year = Column("year", Integer)
     amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
-
-    fertilizer = relationship("Fertilizer", back_populates="usage")
 
     def __repr__(self):
         return (
