@@ -65,15 +65,11 @@ class Modal {
       } else {
         if (control.tagName === "SELECT") {
           control.addEventListener("change", () => {
-            this.content
-              .querySelector(".btn-success")
-              .removeAttribute("hidden");
+            this.content.querySelector(".btn-success").removeAttribute("hidden");
           });
         } else {
           control.addEventListener("keypress", () => {
-            this.content
-              .querySelector(".btn-success")
-              .removeAttribute("hidden");
+            this.content.querySelector(".btn-success").removeAttribute("hidden");
           });
         }
       }
@@ -94,6 +90,17 @@ class Modal {
           }
         }
         console.log(event);
+      });
+      this.form.addEventListener("keydown", (event) => {
+        if (event.keyCode != 13) {
+          return;
+        }
+        event.preventDefault();
+        if (this.modal_type === "new") {
+          this.newData();
+        } else if (this.modal_type === "edit") {
+          this.editData();
+        }
       });
     } catch (error) {
       console.log(error);
