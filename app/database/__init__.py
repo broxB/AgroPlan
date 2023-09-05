@@ -50,7 +50,10 @@ def confirm_id(id: str, user_id: int, form_type: str, modal_type: str) -> tuple[
 
     try:
         if modal_type == "new":
-            _, model, *join_tables = MODEL_HIERACHIE[form_type]
+            if form_type == "fertilization":
+                _, _, model, *join_tables = MODEL_HIERACHIE[form_type]
+            else:
+                _, model, *join_tables = MODEL_HIERACHIE[form_type]
         else:
             model, *join_tables = MODEL_HIERACHIE[form_type]
     except KeyError as e:
