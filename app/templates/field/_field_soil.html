@@ -18,20 +18,20 @@
       </tr>
     </thead>
     <tbody>
-      {% for sample in db.field.soil_samples %}
+      {% for sample in base_field.soil_samples if sample.year <= db.field.year %}
         {% set soil = Soil(sample, db.field.field_type) %}
         <tr data-id="{{ sample.id }}">
           <th scope="row">{{ sample.year }}</th>
           <td>{{ sample.soil_type.value }}</td>
           <td>{{ sample.humus.value }}</td>
           <td>{{ sample.ph | format_number(".1f") }}</td>
-          <td>{{ soil.class_ph().value }}</td>
+          <td>{{ soil.class_ph() }}</td>
           <td>{{ sample.p2o5 | format_number(".1f") }}</td>
-          <td>{{ soil.class_p2o5().value }}</td>
+          <td>{{ soil.class_p2o5() }}</td>
           <td>{{ sample.k2o | format_number(".1f") }}</td>
-          <td>{{ soil.class_k2o().value }}</td>
+          <td>{{ soil.class_k2o() }}</td>
           <td>{{ sample.mg | format_number(".1f") }}</td>
-          <td>{{ soil.class_mg().value }}</td>
+          <td>{{ soil.class_mg() }}</td>
           <td class="table-action d-print-none">
             <button class="btn btn-link btn-edit"
                     type="button"

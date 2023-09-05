@@ -58,7 +58,9 @@ def create_field(
     if field is None:
         return None
     new_field = Field(field, first_year=first_year)
-    new_field.soil_sample = create_soil_sample(field.soil_samples, field.field_type, year)
+    new_field.soil_sample = create_soil_sample(
+        field.base_field.soil_samples, field.field_type, year
+    )
 
     for cultivation in field.cultivations:
         crop_data = Crop(cultivation.crop)
