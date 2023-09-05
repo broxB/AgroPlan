@@ -683,9 +683,9 @@ class FertilizationForm(FormHelper, FlaskForm):
         cultivation = Cultivation.query.get(self.cultivation_id.data)
         fertilizer = Fertilizer.query.get(self.fertilizer_id.data)
         fertilization = Fertilization(
-            cut_timing=self.cut_timing.data,
+            cut_timing=self.get(self.cut_timing, CutTiming.non_mowable),
             measure=self.measure_type.data,
-            month=self.get(self.month, 0),
+            month=self.get(self.month, None),
             amount=self.amount.data,
         )
         fertilization.cultivation = cultivation
