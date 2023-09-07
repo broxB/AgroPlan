@@ -45,6 +45,20 @@ __all__ = [
 class BaseType(enum.Enum):
     @classmethod
     def from_sub_type(cls, sub_type: enum.Enum):
+        """
+        Checks if enum type is subset of this enum.
+        ```
+        class BaseEnum:
+            A = "A"
+            B = "B"
+
+        SubEnum = Enum("SubEnum", (BaseEnum.A.name, BaseEnum.A.value))
+        assert BaseEnum.from_sub_type(SubEnum.A) == BaseEnum.A
+        ```
+        :param sub_type: Enum type which is a subset of this enum.
+        :raises KeyError: Subset enum type doesn't exist for superset enum.
+        :return: Superset enum type which is equal to subset enum type.
+        """
         try:
             return cls[sub_type.name]
         except KeyError:
@@ -184,8 +198,7 @@ class CutTiming(BaseType):
     second_cut = "2. Schnitt"
     third_cut = "3. Schnitt"
     fourth_cut = "4. Schnitt"
-    non_mowable = "nicht mähbar"
-    # none = None
+    none = None
 
 
 class CropClass(BaseType):
@@ -214,8 +227,7 @@ class ResidueType(BaseType):
     # Hauptfrüchte
     main_stayed = "verbleibt"
     main_removed = "abgefahren"
-    main_no_residues = "keine"
-    # no_residues = "keine"
+    none = None
     # Zwischenfrüchte
     catch_frozen = "abgefroren"
     catch_not_frozen_fall = "nicht abgefroren, eingearbeitet Herbst"
@@ -235,10 +247,8 @@ class ResidueType(BaseType):
                 raise TypeError(f"Invalid CultivationType passed: {cultivation_type}")
 
 
-# "MainCropResidueType", [(e.name, e.value) for e in ResidueType if "main_" in e.name]
 MainCropResidueType: enum.Enum = enum.Enum(
-    "MainCropResidueType",
-    [(e.name, e.value) for e in (ResidueType.main_stayed, ResidueType.main_removed)],
+    "MainCropResidueType", [(e.name, e.value) for e in ResidueType if "main_" in e.name]
 )
 CatchCropResidueType: enum.Enum = enum.Enum(
     "CatchCropResidueType", [(e.name, e.value) for e in ResidueType if "catch_" in e.name]
@@ -328,6 +338,8 @@ class FertType(BaseType):
 
     @classmethod
     def from_measure(cls, measure_type: MeasureType) -> FertType:
+        if not isinstance(measure_type, MeasureType):
+            raise TypeError(f"{measure_type=} isn't a MeasureType.")
         if measure_type.name in NMeasureType._member_names_:
             return NFertType
         elif measure_type.name in BasicMeasureType._member_names_:
@@ -457,7 +469,7 @@ class NminType(BaseType):
     nmin_90 = "90cm"
 
     @classmethod
-    def from_int(nmin: int) -> NminType:
+    def from_int(cls, nmin: int) -> NminType:
         match nmin:
             case 0:
                 return NminType.nmin_0
