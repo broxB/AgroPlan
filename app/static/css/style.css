@@ -94,6 +94,54 @@ main {
 }
 
 /*  */
+/* || form styles */
+/*  */
+
+/* add *-star to required labels */
+.required > label::after {
+  content: "*";
+  color: red;
+}
+
+/* hide spinner buttons in chrome and safari */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* hide spinner buttons in firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* show placeholder value with bs floating label */
+.form-floating > label.has-placeholder {
+  opacity: 0.65;
+  transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+.form-floating > input.form-control.has-placeholder {
+  padding-top: 1.625rem;
+  padding-bottom: 0.625rem;
+}
+
+.form-floating > input.form-control::placeholder {
+  color: var(--bs-gray-500);
+  padding-top: 1.625rem;
+  padding-bottom: 0.625rem;
+}
+
+/* error handling because html5 form validation doesn't work on firefox mobile */
+input:user-invalid {
+  border-color: #dc3545;
+}
+
+input:user-invalid ~ span {
+  display: block !important;
+}
+
+/*  */
 /* || table styles */
 /*  */
 
@@ -420,6 +468,7 @@ tr:hover .btn-edit {
   }
 }
 
+/* tablet size */
 @media (max-width: 992px) {
   #main {
     padding: 0.5em;
@@ -430,6 +479,7 @@ tr:hover .btn-edit {
   }
 }
 
+/* phone size */
 @media (max-width: 575px) {
   .table {
     font-size: 0.8rem;

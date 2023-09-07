@@ -5,7 +5,7 @@ from logging.handlers import RotatingFileHandler, SMTPHandler
 
 from flask import Flask
 
-from app import auth, cli, errors, main
+from app import api, auth, cli, errors, main
 from app.database.model import BaseField, User
 from app.extensions import bootstrap, csrf_protection, db, login, migrate
 from app.model import Soil
@@ -48,6 +48,7 @@ def register_blueprints(app: Flask):
     """Register Flask blueprints."""
     app.register_blueprint(auth.bp, url_prefix="/auth")
     app.register_blueprint(main.bp)
+    app.register_blueprint(api.bp)
 
 
 def register_errorhandlers(app: Flask):

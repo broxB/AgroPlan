@@ -8,7 +8,7 @@
           <b>{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.prefix, suffix=field.suffix, name=field.name) }}</b>
         </summary>
         {% set base_field = field %}
-        {% include "_field.html" %}
+        {% include "_fields_field.html" %}
       </details>
       <br>
     {% endfor %}

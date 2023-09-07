@@ -4,12 +4,11 @@ from flask import flash, g, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from loguru import logger
 
-from app.database.model import BaseField, Field, User
+from app.database import BaseField, User
 from app.extensions import db, login
 from app.main import bp
-from app.main.forms import EditProfileForm, YearForm, create_edit_form
+from app.main.forms import EditProfileForm, YearForm
 from app.model import create_field
-from app.model.forms import create_form
 
 
 @login.user_loader
@@ -89,10 +88,10 @@ def set_year():
     return redirect(request.referrer)
 
 
-@bp.route("/field", methods=["GET", "POST"])
+@bp.route("/fields", methods=["GET"])
 @login_required
-def field_overview():
-    base_fields = current_user.get_fields(year=current_user.year)
+def fields():
+    base_fields = current_user.get_fields()
     return render_template("fields.html", title="Fields", base_fields=base_fields)
 
 
@@ -103,11 +102,12 @@ def field(base_field_id):
         base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
         fields = current_user.get_fields(year=current_user.year)
         field = create_field(current_user.id, base_field_id, current_user.year)
-        field.create_balances()
+        if field is not None:
+            field.create_balances()
         form = YearForm()
         return render_template(
             "field.html",
-            title=field.name,
+            title=base_field.name,
             base_field=base_field,
             fields=fields,
             form=form,
@@ -122,68 +122,6 @@ def field(base_field_id):
 def field_data(base_field_id):
     field = create_field(current_user.id, base_field_id, current_user.year)
     return asdict(field.total_balance())
-
-
-@bp.route("/modal", methods=["GET", "POST", "PUT", "DELETE"])
-@login_required
-def modal():
-    if request.method == "GET":
-        modal_type = request.args.get("modalType")
-        form_type = request.args.get("formType")
-        try:
-            field_id = int(request.args.get("fieldId"))
-        except (TypeError, ValueError):
-            return jsonify("Unvalid request data."), 202
-
-        if modal_type == "edit":
-            try:
-                id = int(request.args.get("id"))
-            except (TypeError, ValueError):
-                return jsonify("Unvalid request data."), 202
-            form = create_edit_form(form_type)(field_id)
-            form.populate(id)
-            modal = render_template(
-                "modal_content.html",
-                form=form,
-                modal_type=(modal_type, form_type),
-                data_id=id,
-                field_id=field_id,
-            )
-        else:
-            form = create_form(form_type)(field_id)
-            form.default_selects()
-            modal = render_template(
-                "modal_content.html",
-                form=form,
-                modal_type=(modal_type, form_type),
-                field_id=field_id,
-            )
-        return jsonify(modal)
-
-    form_type = request.form.get("form_type")
-    try:
-        field_id = int(request.form.get("field_id"))
-    except TypeError or ValueError:
-        return jsonify("Unvalid request data.", 202)
-
-    if request.method == "DELETE":
-        return jsonify("Entry deleted."), 200
-
-    elif request.method == "PUT":
-        form = create_form(form_type)(field_id)
-
-    elif request.method == "POST":
-        try:
-            id = int(request.form.get("data_id"))
-        except TypeError or ValueError:
-            return jsonify("Unvalid request data.", 202)
-        form = create_edit_form(form_type)(field_id)
-        form.get_data(id)
-
-    if form.validate_on_submit():
-        return jsonify("Data saved successfully."), 200
-    else:
-        return jsonify("Unvalid request data."), 200
 
 
 @bp.route("/crop", methods=["GET", "POST"])

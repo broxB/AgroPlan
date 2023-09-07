@@ -1,14 +1,20 @@
 export function manageFields() {
-  document.querySelectorAll(".header").forEach((header) => {
-    header.addEventListener("click", (event) => {
-      event.preventDefault();
-      let span = header.querySelector("tr>th>span");
-      span.textContent = span.textContent == "+" ? "-" : "+";
-      let elems = nextUntil(header, ".header");
-      for (let elem of elems) {
-        elem.classList.toggle("show");
-      }
-    });
+  // document.querySelectorAll(".header").forEach(toggleHeader);
+  if (window.location.hash.length) {
+    const field = document.querySelector(window.location.hash);
+    field.classList.add("show");
+  }
+}
+
+function toggleHeader(header) {
+  header.addEventListener("click", (event) => {
+    event.preventDefault();
+    let span = header.querySelector("tr>th>span");
+    span.textContent = span.textContent == "+" ? "-" : "+";
+    let elems = nextUntil(header, ".header");
+    for (let elem of elems) {
+      elem.classList.toggle("show");
+    }
   });
 }
 

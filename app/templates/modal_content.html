@@ -10,21 +10,27 @@
 </div>
 <div class="modal-body">
   <div class="container-fluid">
-    {{ render_form(form, form_type="floating", id="modalForm", data_id=data_id, type=type, field_id=field_id) }}
+    {{ render_form(form, form_type="floating", id="modalForm", data_id=data_id, modal_type=modal, type=type) }}
   </div>
 </div>
 <div class="modal-footer px-4">
   {%- if modal == "edit" -%}
     <ul class="ps-0">
-      <button class="btn btn-danger" type="submit" for="submit" form="modalForm">Delete</button>
+      <button class="btn btn-danger shadow"
+              type="submit"
+              for="submit"
+              form="modalForm"
+              name="delete"
+              tabindex="-1">Delete</button>
     </ul>
   {%- endif -%}
   <ul class="ms-auto">
-    <button class="btn btn-success"
+    <button class="btn btn-success shadow"
             type="submit"
             for="submit"
             form="modalForm"
-            value="Save">
+            {%- if not refreshed_content %} hidden="" {% endif -%}
+            name="submit">
       {%- if modal == "edit" -%}
         Save
       {%- else -%}
@@ -33,6 +39,9 @@
     </button>
   </ul>
   <ul class="ps-0">
-    <button type="button" class="btn btn-secondary ms-1" data-bs-dismiss="modal">Close</button>
+    <button type="button"
+            class="btn btn-secondary shadow ms-1"
+            data-bs-dismiss="modal"
+            name="cancel">Cancel</button>
   </ul>
 </div>

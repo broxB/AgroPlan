@@ -31,9 +31,8 @@
                     data-bs-toggle="modal"
                     data-bs-target="#modal"
                     data-form="field"
-                    data-modal="edit">
-              {{ render_icon("pencil-square", extra_classes="color-green") }}
-            </button>
+                    data-modal="edit"
+                    data-id="{{ field.id }}">{{ render_icon("pencil-square", extra_classes="color-green") }}</button>
           </td>
         </tr>
       {% endfor %}

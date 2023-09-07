@@ -13,7 +13,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
   {% endif %}
-  <a class="navbar-brand ps-3" href="{{ url_for('main.home') }}">AgroPlan</a>
+  <a class="navbar-brand ps-3" href="{{ url_for("main.home") }}">AgroPlan</a>
   <button class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
@@ -26,7 +26,7 @@
   <div class="navbar-collapse collapse" id="navbarNav">
     <ul class="navbar-nav">
       {% if not current_user.is_anonymous %}
-        {{ render_nav_item("main.field_overview", "Field", _use_li=True)}}
+        {{ render_nav_item("main.fields", "Field", _use_li=True) }}
         {{ render_nav_item("main.crop", "Crop", _use_li=True) }}
         {{ render_nav_item("main.fertilizer", "Fertilizer", _use_li=True) }}
       {% endif %}
@@ -34,36 +34,38 @@
     <ul class="navbar-nav ms-auto">
       <!-- display year form if in index or field !-->
       {% if request.endpoint and request.endpoint == "main.index" or request.endpoint == "main.field" %}
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle position-relative"
-             id="cultivationDropdown"
-             role="button"
-             data-bs-toggle="dropdown"
-             aria-expanded="false">
-            Cultivation <span class="badge bg-green-50 translate-middle position-absolute">{{ "{year:d}".format(year=current_user.year) }}</span>
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="cultivationDropdown">
-            <li>
-              <h6 class="dropdown-header">Select a year:</h6>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-            {% for year in current_user.get_years() %}
+        {% if form %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle position-relative"
+               id="cultivationDropdown"
+               role="button"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+              Cultivation <span class="badge bg-green-50 translate-middle position-absolute">{{ "{year:d}".format(year=current_user.year) }}</span>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="cultivationDropdown">
               <li>
-                <form action="{{ url_for('main.set_year') }}", method="post">
-                  {{ form.csrf_token() }}
-                  {{ form.year(value=year)}}
-                  {% if year == current_user.year %}
-                    {{ form.submit(value=year, class="dropdown-item active") }}
-                  {% else %}
-                    {{ form.submit(value=year, class="dropdown-item") }}
-                  {% endif %}
-                </form>
+                <h6 class="dropdown-header">Select a year:</h6>
               </li>
-            {% endfor %}
-          </ul>
-        </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              {% for year in current_user.get_years() %}
+                <li>
+                  <form action="{{ url_for("main.set_year") }}", method="post">
+                    {{ form.csrf_token() }}
+                    {{ form.year(value=year) }}
+                    {% if year == current_user.year %}
+                      {{ form.submit(value=year, class="dropdown-item active") }}
+                    {% else %}
+                      {{ form.submit(value=year, class="dropdown-item") }}
+                    {% endif %}
+                  </form>
+                </li>
+              {% endfor %}
+            </ul>
+          </li>
+        {% endif %}
       {% endif %}
       {% if current_user.is_anonymous %}
         {{ render_nav_item("auth.register", "Register", _use_li=True) }}
