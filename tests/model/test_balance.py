@@ -26,12 +26,15 @@ def test_is_empty(balance: Balance):
     assert empty_balance.is_empty is True
 
 
-def test_addition(balance: Balance):
-    balance_added = balance + balance
-    balance += balance
-    # inplace method is equal to standard method
-    assert balance_added == balance
+def test_keep_title(balance: Balance):
+    # original balance title is kept
+    balance += Balance("New Name")
+    balance *= Balance("New Name")
     assert balance.title == "test"
+
+
+def test_add(balance: Balance):
+    balance.add(balance)
     assert balance.n == 2
     assert balance.p2o5 == 4
     assert balance.k2o == 6
@@ -39,13 +42,23 @@ def test_addition(balance: Balance):
     assert balance.s == 10
     assert balance.cao == 12
     assert balance.nh4 == 14
-    # original balance title is kept
-    balance += Balance("New Name")
-    assert balance.title == "test"
+    # only balance instances can used with the add method
+    with pytest.raises(AttributeError):
+        balance.add(1)
 
 
-def test_add_constant(balance: Balance):
-    """Add a constant instead of another instance"""
+def test_dunder_add_instance(balance: Balance):
+    balance += balance
+    assert balance.n == 2
+    assert balance.p2o5 == 4
+    assert balance.k2o == 6
+    assert balance.mgo == 8
+    assert balance.s == 10
+    assert balance.cao == 12
+    assert balance.nh4 == 14
+
+
+def test_dunder_add_constant(balance: Balance):
     balance += 1
     assert balance.n == 2
     assert balance.p2o5 == 3
@@ -56,12 +69,24 @@ def test_add_constant(balance: Balance):
     assert balance.nh4 == 8
 
 
+def test_dunder_sub_instance(balance: Balance):
+    balance -= balance
+    assert balance.is_empty
+
+
+def test_dunder_sub_constant(balance: Balance):
+    balance -= 1
+    assert balance.n == 0
+    assert balance.p2o5 == 1
+    assert balance.k2o == 2
+    assert balance.mgo == 3
+    assert balance.s == 4
+    assert balance.cao == 5
+    assert balance.nh4 == 6
+
+
 def test_multiplication(balance: Balance):
-    balance_multiplied = balance * 10
     balance *= 10
-    # inplace method is equal to standard method
-    assert balance_multiplied == balance
-    assert balance.title == "test"
     assert balance.n == 10
     assert balance.p2o5 == 20
     assert balance.k2o == 30
@@ -69,9 +94,6 @@ def test_multiplication(balance: Balance):
     assert balance.s == 50
     assert balance.cao == 60
     assert balance.nh4 == 70
-    # original balance title is kept
-    balance *= Balance("New Name")
-    assert balance.title == "test"
 
 
 @pytest.mark.parametrize(

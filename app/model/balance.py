@@ -89,13 +89,13 @@ class Balance:
         except AttributeError:
             return Balance(
                 self.title,
-                self.n + other,
-                self.p2o5 + other,
-                self.k2o + other,
-                self.mgo + other,
-                self.s + other,
-                self.cao + other,
-                self.nh4 + other,
+                self.n - other,
+                self.p2o5 - other,
+                self.k2o - other,
+                self.mgo - other,
+                self.s - other,
+                self.cao - other,
+                self.nh4 - other,
             )
 
     __rsub__ = __sub__
