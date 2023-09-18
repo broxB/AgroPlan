@@ -364,7 +364,7 @@ def seed_database(data: list[dict]) -> None:
                     )
                     fertilization.cultivation = cultivation
                     fertilization.fertilizer = fertilizer
-                    fertilization.field.append(field)
+                    fertilization.field = field
                     update_session(fertilization)
 
             saldo = Saldo.query.filter(Saldo.field_id == field.id).one_or_none()

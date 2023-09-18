@@ -177,6 +177,7 @@ def fertilization(field, cultivation, fertilizer) -> Fertilization:
         id=1,
         cultivation_id=cultivation.id,
         fertilizer_id=fertilizer.id,
+        field_id=field.id,
         cut_timing=CutTiming.non_mowable,
         amount=Decimal(10),
         measure=MeasureType.org_fall,
@@ -184,8 +185,7 @@ def fertilization(field, cultivation, fertilizer) -> Fertilization:
     )
     fertilization.fertilizer = fertilizer
     fertilization.cultivation = cultivation
-    fertilization.field = []
-    fertilization.field.append(field)
+    fertilization.field = field
     return fertilization
 
 

@@ -8,7 +8,7 @@ MODEL_HIERACHIE = {
     "base_field": (BaseField, User),
     "field": (Field, BaseField, User),
     "cultivation": (Cultivation, Field, BaseField, User),
-    "fertilization": (Fertilization, Cultivation, Field, BaseField, User),
+    "fertilization": (Fertilization, Field, BaseField, User),
     "crop": (Crop, User),
     "fertilizer": (Fertilizer, User),
     "soil": (SoilSample, BaseField, User),
@@ -50,10 +50,7 @@ def confirm_id(id: str, user_id: int, form_type: str, modal_type: str) -> tuple[
 
     try:
         if modal_type == "new":
-            if form_type == "fertilization":
-                _, _, model, *join_tables = MODEL_HIERACHIE[form_type]
-            else:
-                _, model, *join_tables = MODEL_HIERACHIE[form_type]
+            _, model, *join_tables = MODEL_HIERACHIE[form_type]
         else:
             model, *join_tables = MODEL_HIERACHIE[form_type]
     except KeyError as e:

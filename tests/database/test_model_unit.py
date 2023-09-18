@@ -11,7 +11,6 @@ from app.database.model import (
     Saldo,
     SoilSample,
     User,
-    field_fertilization,
     field_soil_sample,
 )
 from app.database.types import (
@@ -56,6 +55,8 @@ def test_base_field(user: User, base_field: BaseField):
 def test_field(field: Field, base_field: BaseField):
     # relationships
     assert field in base_field.fields
+    assert fertilization.field == field
+    assert fertilization in field.fertilizations
     # attributes
     assert field.base_id == base_field.id
     assert field.sub_suffix == 1
@@ -140,10 +141,12 @@ def test_fertilization(
     # relationships
     assert fertilization.cultivation == cultivation
     assert fertilization.fertilizer == fertilizer
+    assert fertilization.field == field
     assert fertilization in field.fertilizations
     # attributes
     assert fertilization.cultivation_id == cultivation.id
     assert fertilization.fertilizer_id == fertilizer.id
+    assert fertilization.field_id == field.id
     assert fertilization.cut_timing == CutTiming.non_mowable
     assert fertilization.amount == Decimal(10)
     assert fertilization.measure == MeasureType.org_fall

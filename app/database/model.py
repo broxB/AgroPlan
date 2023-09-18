@@ -38,7 +38,6 @@ from app.database.types import (
 from app.extensions import db
 
 __all__ = [
-    "field_fertilization",
     "field_soil_sample",
     "BaseField",
     "Field",
@@ -133,13 +132,6 @@ class User(UserMixin, Base):
         return f"<User {self.username}>"
 
 
-field_fertilization = Table(
-    "field_fertilization",
-    db.metadata,
-    Column("field_id", Integer, ForeignKey("field.field_id")),
-    Column("fertilization_id", Integer, ForeignKey("fertilization.fertilization_id")),
-)
-
 field_soil_sample = Table(
     "field_soil_sample",
     db.metadata,
@@ -186,11 +178,7 @@ class Field(Base):
 
     base_field = relationship("BaseField", back_populates="fields")
     cultivations = relationship("Cultivation", back_populates="field")
-    fertilizations = relationship(
-        "Fertilization",
-        secondary=field_fertilization,
-        back_populates="field",
-    )
+    fertilizations = relationship("Fertilization", back_populates="field")
     soil_samples = relationship(
         "SoilSample",
         secondary=field_soil_sample,
@@ -289,6 +277,7 @@ class Fertilization(Base):
     __tablename__ = "fertilization"
 
     id = Column("fertilization_id", Integer, primary_key=True)
+    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     cultivation_id = Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id"))
     fertilizer_id = Column("fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id"))
     cut_timing = Column("cut_timing", Enum(CutTiming))
@@ -296,11 +285,7 @@ class Fertilization(Base):
     measure = Column("measure", Enum(MeasureType))
     month = Column("month", Integer)
 
-    field = relationship(
-        "Field",
-        secondary=field_fertilization,
-        back_populates="fertilizations",
-    )
+    field = relationship("Field", back_populates="fertilizations")
     cultivation = relationship("Cultivation", back_populates="fertilizations")
     fertilizer = relationship("Fertilizer")
 
@@ -308,7 +293,7 @@ class Fertilization(Base):
         return (
             f"Fertilization(id='{self.id}', name='{self.fertilizer.name}', amount='{self.amount:.1f}', "
             f"measure='{self.measure.value}', month='{self.month}', crop='{self.cultivation.crop.name}', "
-            f"field='{[field.base_field.name for field in self.field][0]}')"
+            f"field='{self.field.base_field.name}')"
         )
 
 

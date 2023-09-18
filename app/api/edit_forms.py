@@ -145,7 +145,7 @@ class EditFertilizationForm(FertilizationForm):
     def __init__(self, id):
         self.model_type = Fertilization
         self.get_data(id)
-        field_id = self.model_data.field[0].id
+        field_id = self.model_data.field.id
         super().__init__(field_id)
 
     def populate(self, id: int):
