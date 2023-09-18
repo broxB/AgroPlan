@@ -355,6 +355,18 @@ class SoilSample(Base):
         )
 
 
+class Modifier(Base):
+    __tablename__ = "modifier"
+
+    id = Column("modifier_id", Integer, primary_key=True)
+    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
+    description = Column("description", String)
+    modification = Column("modification", Enum(NutrientType))
+    amount = Column("amount", Integer)
+
+    field = relationship("Field", back_populates="modifiers")
+
+
 class Saldo(Base):
     __tablename__ = "saldo"
 
@@ -368,15 +380,3 @@ class Saldo(Base):
     n_total = Column("nges", Float(asdecimal=True, decimal_return_scale=2))
 
     field = relationship("Field", back_populates="saldo")
-
-
-class Modifier(Base):
-    __tablename__ = "modifier"
-
-    id = Column("modifier_id", Integer, primary_key=True)
-    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
-    description = Column("description", String)
-    modification = Column("modification", Enum(NutrientType))
-    amount = Column("amount", Integer)
-
-    field = relationship("Field", back_populates="modifiers")

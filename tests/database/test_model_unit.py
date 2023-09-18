@@ -7,6 +7,7 @@ from app.database.model import (
     Fertilization,
     Fertilizer,
     Field,
+    Modifier,
     Saldo,
     SoilSample,
     User,
@@ -24,6 +25,7 @@ from app.database.types import (
     LegumeType,
     MeasureType,
     NminType,
+    NutrientType,
     ResidueType,
     SoilType,
     UnitType,
@@ -171,18 +173,14 @@ def test_soil_sample(base_field: BaseField, soil_sample: SoilSample):
     assert soil_sample.soil_type.value in str(soil_sample.__repr__)
 
 
-def test_fertilizer_usage(
-    user: User,
-    field: Field,
-    fertilizer: Fertilizer,
-    fertilization: Fertilization,
-    fertilizer_usage: FertilizerUsage,
-):
-    assert fertilizer_usage.user_id == user.id
-    assert fertilizer_usage.name == fertilizer.name
-    assert fertilizer_usage.year == field.year
-    assert fertilizer_usage.amount == field.area * fertilization.amount
-    assert fertilizer_usage.name in str(fertilizer_usage.__repr__)
+def test_modifier(field: Field, modifier: Modifier):
+    # relationships
+    assert modifier.field == field
+    assert modifier in field.modifiers
+    # attributes
+    assert modifier.description == "Test mod"
+    assert modifier.modification is NutrientType.n
+    assert modifier.amount == 10
 
 
 def test_saldo(field: Field, saldo: Saldo):

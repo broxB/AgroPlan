@@ -11,6 +11,7 @@ from app.database.model import (
     Fertilization,
     Fertilizer,
     Field,
+    Modifier,
     Saldo,
     SoilSample,
     User,
@@ -28,6 +29,7 @@ from app.database.types import (
     LegumeType,
     MeasureType,
     NminType,
+    NutrientType,
     ResidueType,
     SoilType,
     UnitType,
@@ -201,6 +203,15 @@ def soil_sample(base_field) -> SoilSample:
     )
     soil_sample.base_field = base_field
     return soil_sample
+
+
+@pytest.fixture
+def modifier(field: Field) -> Modifier:
+    modifier = Modifier(
+        id=1, field_id=field.id, description="Test mod", modification=NutrientType.n, amount=10
+    )
+    modifier.field = field
+    return modifier
 
 
 @pytest.fixture
