@@ -10,7 +10,6 @@ from app.database.model import (
     Cultivation,
     Fertilization,
     Fertilizer,
-    FertilizerUsage,
     Field,
     Saldo,
     SoilSample,
@@ -207,18 +206,6 @@ def soil_sample(base_field) -> SoilSample:
 
 
 @pytest.fixture
-def fertilizer_usage(user, fertilizer, fertilization, field) -> FertilizerUsage:
-    fertilizer_usage = FertilizerUsage(
-        id=1,
-        user_id=user.id,
-        name=fertilizer.name,
-        year=field.year,
-        amount=field.area * fertilization.amount,
-    )
-    return fertilizer_usage
-
-
-@pytest.fixture
 def saldo(field) -> Saldo:
     saldo = Saldo(
         field_id=field.id,
@@ -244,7 +231,6 @@ def fill_db(
     fertilization,
     fertilizer,
     soil_sample,
-    fertilizer_usage,
     saldo,
 ):
     db.session.add(field)
@@ -256,6 +242,5 @@ def fill_db(
     db.session.add(fertilization)
     db.session.add(fertilizer)
     db.session.add(soil_sample)
-    db.session.add(fertilizer_usage)
     db.session.add(saldo)
     db.session.commit()

@@ -43,7 +43,6 @@ __all__ = [
     "Crop",
     "Fertilization",
     "Fertilizer",
-    "FertilizerUsage",
     "Modifier",
     "SoilSample",
     "Saldo",
@@ -122,9 +121,6 @@ class User(UserMixin, Base):
         if kwargs:
             query = query.filter_by(**kwargs)
         return query.all()
-
-    def get_fertilizer_usage(self):
-        return FertilizerUsage.query.filter_by(user_id=self.id).all()
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -321,34 +317,17 @@ class Fertilizer(Base):
             year = self.year
 
         ferts = (
-            Fertilization.query.join(field_fertilization)
-            .join(Field)
+            Fertilization.query.join(Field)
             .join(Fertilizer)
             .filter(Field.year == year, Fertilizer.id == self.id)
             .all()
         )
-        return sum(fert.amount * fert.field[0].area for fert in ferts)
+        return sum(fert.amount * fert.field.area for fert in ferts)
 
     def __repr__(self):
         return (
             f"Fertilizer(id='{self.id}', name='{self.name}', year='{self.year}', "
             f"class='{self.fert_class.name}', type='{self.fert_type.name}', active='{self.active}')"
-        )
-
-
-class FertilizerUsage(Base):
-    __tablename__ = "fertilizer_usage"
-    __table_args__ = (UniqueConstraint("user_id", "fertilizer_name", "year"),)
-
-    user_id = Column("user_id", Integer, ForeignKey("user.user_id"))
-    id = Column("id", Integer, primary_key=True)
-    name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
-    year = Column("year", Integer)
-    amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
-
-    def __repr__(self):
-        return (
-            f"FertilizerUsage(name='{self.name}', year='{self.year}', amount='{self.amount:.2f}')"
         )
 
 

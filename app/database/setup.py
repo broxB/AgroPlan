@@ -12,7 +12,6 @@ from app.database.model import (
     Cultivation,
     Fertilization,
     Fertilizer,
-    FertilizerUsage,
     Field,
     Saldo,
     SoilSample,
@@ -338,23 +337,6 @@ def seed_database(data: list[dict]) -> None:
                             nh4=fert_dict["NH4"],
                         )
                     update_session(fertilizer)
-
-                    fertilizer_usage = (
-                        FertilizerUsage.query.filter(FertilizerUsage.name == fert.name)
-                        .filter(FertilizerUsage.year == year)
-                        .one_or_none()
-                    )
-                    if fertilizer_usage is None:
-                        fertilizer_usage = FertilizerUsage(
-                            user_id=user.id,
-                            name=fert.name,
-                            year=year,
-                            amount=Decimal(field.area) * Decimal(fert.amount),
-                        )
-                        fertilizer_usage.fertilizer = fertilizer
-                    else:
-                        fertilizer_usage.amount += Decimal(field.area) * Decimal(fert.amount)
-                    update_session(fertilizer_usage)
 
                     fertilization = Fertilization(
                         cut_timing=CutTiming(fert.cut_timing),
