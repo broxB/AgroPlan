@@ -46,17 +46,17 @@ def test_cultivation(cultivation, test_crop) -> Cultivation:
 
 def test_demand(test_cultivation: Cultivation):
     assert test_cultivation.demand(DemandType.demand) == Balance(
-        "Crop demand", -110, -154, -154, -154, -20, -0
+        "Crop needs", -110, -154, -154, -154, -20, -0
     )
     assert test_cultivation.demand(DemandType.removal) == Balance(
-        "Crop demand", -110, -110, -110, -110, -20, -0
+        "Crop needs", -110, -110, -110, -110, -20, -0
     )
     test_cultivation.residues = ResidueType.main_removed
     assert test_cultivation.demand(DemandType.removal) == Balance(
-        "Crop demand", -110, -154, -154, -154, -20, -0
+        "Crop needs", -110, -154, -154, -154, -20, -0
     )
     assert test_cultivation.demand(DemandType.demand, negative_output=False) == Balance(
-        "Crop demand",
+        "Crop needs",
         110,
         154,
         154,
@@ -70,17 +70,58 @@ def test_pre_crop_effect(test_cultivation: Cultivation):
     assert test_cultivation.pre_crop_effect() == 10
 
 
-def test_legume_delivery(test_cultivation: Cultivation):
+def test_legume_delivery_cropland(test_cultivation: Cultivation):
+    test_cultivation.legume_rate = LegumeType.none
     assert test_cultivation.legume_delivery() == 0
+
+
+@pytest.mark.parametrize(
+    "legume_rate, expected",
+    [
+        (LegumeType.grass_less_5, 0),
+        (LegumeType.grass_less_10, 20),
+        (LegumeType.grass_less_20, 40),
+        (LegumeType.grass_greater_20, 60),
+    ],
+)
+def test_legume_delivery_grassland(test_cultivation: Cultivation, legume_rate, expected):
     test_cultivation.crop_type = CropType.permanent_grassland
-    test_cultivation.legume_rate = LegumeType.grass_less_10
-    assert test_cultivation.legume_delivery() == 20
+    test_cultivation.legume_rate = legume_rate
+    assert test_cultivation.legume_delivery() == expected
+
+
+@pytest.mark.parametrize(
+    "legume_rate, expected",
+    [
+        (LegumeType.main_crop_10, 30),
+        (LegumeType.main_crop_30, 90),
+        (LegumeType.main_crop_60, 180),
+        (LegumeType.main_crop_90, 270),
+    ],
+)
+def test_legume_delivery_alfalfa_clover_grass(
+    test_cultivation: Cultivation, legume_rate, expected
+):
+    test_cultivation.legume_rate = legume_rate
     test_cultivation.crop_type = CropType.alfalfa_grass
-    test_cultivation.legume_rate = LegumeType.main_crop_10
-    assert test_cultivation.legume_delivery() == 30
+    assert test_cultivation.legume_delivery() == expected
+    test_cultivation.crop_type = CropType.clover_grass
+    assert test_cultivation.legume_delivery() == expected
+
+
+def test_legume_delivery_alfalfa_clover(test_cultivation: Cultivation):
     test_cultivation.crop_type = CropType.alfalfa
     assert test_cultivation.legume_delivery() == 360
+    test_cultivation.crop_type = CropType.clover
+    assert test_cultivation.legume_delivery() == 360
+
+
+def test_legume_delivery_not_feedable(test_cultivation: Cultivation):
     test_cultivation.crop.feedable = False
+    assert test_cultivation.legume_delivery() == 0
+    test_cultivation.crop.feedable = True
+    test_cultivation.crop_type = CropType.field_grass
+    test_cultivation.legume_rate = LegumeType.main_crop_20
     assert test_cultivation.legume_delivery() == 0
 
 
