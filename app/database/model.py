@@ -194,7 +194,7 @@ class Cultivation(Base):
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     cultivation_type = Column("cultivation_type", Enum(CultivationType))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
-    crop_yield = Column("yield", Float(asdecimal=True, decimal_return_scale=0))  # to Int
+    crop_yield = Column("yield", Integer)
     crop_protein = Column("protein", Float(asdecimal=True, decimal_return_scale=1))
     residues = Column("residues", Enum(ResidueType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
@@ -227,17 +227,13 @@ class Crop(Base):
     kind = Column("kind", String)
     feedable = Column("feedable", Boolean)
     residue = Column("residue", Boolean)
-    legume_rate = Column("legume_rate", Enum(LegumeType))  # needs to be removed
     nmin_depth = Column("nmin_depth", Enum(NminType))
-    target_demand = Column(
-        "target_demand", Float(asdecimal=True, decimal_return_scale=0)
-    )  # to Int
-    target_yield = Column("target_yield", Float(asdecimal=True, decimal_return_scale=0))  # to Int
+    target_demand = Column("target_demand", Integer)
+    target_yield = Column("target_yield", Integer)
     pos_yield = Column("pos_yield", Float(asdecimal=True, decimal_return_scale=2))
     neg_yield = Column("neg_yield", Float(asdecimal=True, decimal_return_scale=2))
     target_protein = Column("target_protein", Float(asdecimal=True, decimal_return_scale=2))
     var_protein = Column("var_protein", Float(asdecimal=True, decimal_return_scale=2))
-    n = Column("n", Float(asdecimal=True, decimal_return_scale=2))  # needs to be removed
     p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
     k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
     mgo = Column("mgo", Float(asdecimal=True, decimal_return_scale=2))

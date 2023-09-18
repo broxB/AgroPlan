@@ -67,7 +67,11 @@ def test_field(field: Field, base_field: BaseField):
     assert str(field.area) in str(field.__repr__)
 
 
-def test_crop(user: User, crop: Crop):
+def test_crop(user: User, crop: Crop, cultivation: Cultivation):
+    # relationships
+    assert cultivation.crop == crop
+    assert cultivation in crop.cultivations
+    # attributes
     assert crop.user_id == user.id
     assert crop.name == "Ackergras 3 Schnitte"
     assert crop.field_type == FieldType.cropland
@@ -76,7 +80,6 @@ def test_crop(user: User, crop: Crop):
     assert crop.kind == "Ackergras"
     assert crop.feedable == True
     assert crop.residue == True
-    assert crop.legume_rate == LegumeType.main_crop_0
     assert crop.nmin_depth == NminType.nmin_0
     assert crop.target_demand == 100
     assert crop.target_yield == 100
@@ -84,7 +87,6 @@ def test_crop(user: User, crop: Crop):
     assert crop.neg_yield == 2
     assert crop.target_protein == Decimal("16")
     assert crop.var_protein == Decimal("1.5")
-    assert crop.n == Decimal(1)
     assert crop.p2o5 == Decimal(1)
     assert crop.k2o == Decimal(1)
     assert crop.mgo == Decimal(1)
