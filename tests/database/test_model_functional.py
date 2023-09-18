@@ -2,7 +2,15 @@ from time import time
 
 from jwt import encode
 
-from app.database.model import BaseField, Crop, Fertilizer, FertilizerUsage, Field, User
+from app.database.model import (
+    BaseField,
+    Crop,
+    Fertilizer,
+    FertilizerUsage,
+    Field,
+    SoilSample,
+    User,
+)
 
 
 def test_user_reset_password(user: User, fill_db, client):
@@ -37,3 +45,11 @@ def test_user_get_fertilizers(user: User, fertilizer: Fertilizer, fill_db, clien
 
 def test_user_get_fertilizer_usage(user: User, fertilizer_usage: FertilizerUsage, fill_db, client):
     assert fertilizer_usage in user.get_fertilizer_usage()
+
+
+def test_field_soil_samples(field: Field, soil_sample: SoilSample, fill_db, client):
+    assert soil_sample in field.soil_samples
+
+
+def test_soilsample_fields(soil_sample: SoilSample, field: Field, fill_db, client):
+    assert field in soil_sample.fields

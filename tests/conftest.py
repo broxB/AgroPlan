@@ -190,7 +190,7 @@ def fertilization(field, cultivation, fertilizer) -> Fertilization:
 
 
 @pytest.fixture
-def soil_sample(base_field, field) -> SoilSample:
+def soil_sample(base_field) -> SoilSample:
     soil_sample = SoilSample(
         id=1,
         base_id=base_field.id,
@@ -202,8 +202,7 @@ def soil_sample(base_field, field) -> SoilSample:
         soil_type=SoilType.sand,
         humus=HumusType.less_8,
     )
-    soil_sample.fields = []
-    soil_sample.fields.append(field)
+    soil_sample.base_field = base_field
     return soil_sample
 
 

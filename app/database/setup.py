@@ -396,8 +396,7 @@ def seed_database(data: list[dict]) -> None:
                     soil_type=get_soil_type(field_dict["Bodenart"]),
                     humus=get_humus_type(field_dict["Humusgehalt"]),
                 )
-                soil_sample.base_id = base_field.id
-            soil_sample.fields.append(field)
+                soil_sample.base_field = base_field
             update_session(soil_sample)
 
     db.session.commit()

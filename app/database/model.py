@@ -11,7 +11,6 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Table,
     UniqueConstraint,
 )
 from sqlalchemy.orm import backref, relationship
@@ -38,7 +37,6 @@ from app.database.types import (
 from app.extensions import db
 
 __all__ = [
-    "field_soil_sample",
     "BaseField",
     "Field",
     "Cultivation",
@@ -132,14 +130,6 @@ class User(UserMixin, Base):
         return f"<User {self.username}>"
 
 
-field_soil_sample = Table(
-    "field_soil_sample",
-    db.metadata,
-    Column("field_id", Integer, ForeignKey("field.field_id")),
-    Column("sample_id", Integer, ForeignKey("soil_sample.sample_id")),
-)
-
-
 class BaseField(Base):
     __tablename__ = "base_field"
     __table_args__ = (UniqueConstraint("user_id", "prefix", "suffix"),)
@@ -179,14 +169,12 @@ class Field(Base):
     base_field = relationship("BaseField", back_populates="fields")
     cultivations = relationship("Cultivation", back_populates="field")
     fertilizations = relationship("Fertilization", back_populates="field")
-    soil_samples = relationship(
-        "SoilSample",
-        secondary=field_soil_sample,
-        back_populates="fields",
-        order_by="desc(SoilSample.year)",
-    )
     saldo = relationship("Saldo", back_populates="field", uselist=False)
     modifiers = relationship("Modifier", back_populates="field")
+
+    @property
+    def soil_samples(self):
+        return self.base_field.soil_samples
 
     @property
     def fertilizers(self):
@@ -378,14 +366,17 @@ class SoilSample(Base):
     soil_type = Column("soil_type", Enum(SoilType))
     humus = Column("humus", Enum(HumusType))
 
-    base_field = relationship("BaseField")
-    fields = relationship("Field", secondary=field_soil_sample, back_populates="soil_samples")
+    base_field = relationship("BaseField", back_populates="soil_samples")
+
+    @property
+    def fields(self):
+        return self.base_field.fields
 
     def __repr__(self):
         return (
             f"SoilSample(id='{self.id}', year='{self.year}', "
             f"soil_type='{self.soil_type.value}', humus='{self.humus.value}', "
-            f"fields={f'{self.base_field.name if self.base_field else None}', [f'{field.year}' for field in self.fields if self.fields]})"
+            f"fields={f'{self.base_field.name}', [f'{field.year}' for field in self.fields if self.fields]})"
         )
 
 

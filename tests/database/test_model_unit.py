@@ -11,7 +11,6 @@ from app.database.model import (
     Saldo,
     SoilSample,
     User,
-    field_soil_sample,
 )
 from app.database.types import (
     CropClass,
@@ -44,6 +43,7 @@ def test_user(user: User):
 def test_base_field(user: User, base_field: BaseField):
     # relationships
     assert base_field in user.fields
+    assert soil_sample in base_field.soil_samples
     # attributes
     assert base_field.user_id == user.id
     assert base_field.prefix == 1
@@ -154,9 +154,10 @@ def test_fertilization(
     assert str(fertilization.amount) in str(fertilization.__repr__)
 
 
-def test_soil_sample(base_field: BaseField, field: Field, soil_sample: SoilSample):
+def test_soil_sample(base_field: BaseField, soil_sample: SoilSample):
     # relationships
-    assert field in soil_sample.fields
+    assert soil_sample.base_field == base_field
+    assert soil_sample in base_field.soil_samples
     # attributes
     assert soil_sample.base_id == base_field.id
     assert soil_sample.year == 1000
