@@ -124,3 +124,5 @@ def test_nmin_type_from_int():
     assert NminType.from_int(90) == NminType.nmin_90
     with pytest.raises(TypeError):
         NminType.from_int("0")
+    with pytest.raises(ValueError):
+        NminType.from_int(100)

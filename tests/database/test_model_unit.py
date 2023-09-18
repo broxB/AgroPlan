@@ -41,9 +41,11 @@ def test_user(user: User):
     assert user.username in str(user.__repr__)
 
 
-def test_base_field(user: User, base_field: BaseField):
+def test_base_field(user: User, base_field: BaseField, field: Field, soil_sample: SoilSample):
     # relationships
+    assert base_field.user == user
     assert base_field in user.fields
+    assert field in base_field.fields
     assert soil_sample in base_field.soil_samples
     # attributes
     assert base_field.user_id == user.id
@@ -53,9 +55,17 @@ def test_base_field(user: User, base_field: BaseField):
     assert base_field.name in str(base_field.__repr__)
 
 
-def test_field(field: Field, base_field: BaseField):
+def test_field(
+    field: Field,
+    base_field: BaseField,
+    cultivation: Cultivation,
+    fertilization: Fertilization,
+):
     # relationships
+    assert field.base_field == base_field
     assert field in base_field.fields
+    assert cultivation.field == field
+    assert cultivation in field.cultivations
     assert fertilization.field == field
     assert fertilization in field.fertilizations
     # attributes
@@ -102,16 +112,16 @@ def test_crop(user: User, crop: Crop, cultivation: Cultivation):
 
 
 def test_cultivation(field: Field, crop: Crop, cultivation: Cultivation):
-    # check relationships
+    # relationships
     assert cultivation.field == field
     assert cultivation.crop == crop
-    # check attributes
+    # attributes
     assert cultivation.field_id == field.id
     assert cultivation.cultivation_type == CultivationType.main_crop
     assert cultivation.crop_id == crop.id
     assert cultivation.crop_yield == 110
     assert cultivation.crop_protein == 0
-    assert cultivation.residues == ResidueType.main_no_residues
+    assert cultivation.residues == ResidueType.none
     assert cultivation.legume_rate == LegumeType.none
     assert cultivation.nmin_30 == 10
     assert cultivation.nmin_60 == 10
@@ -120,6 +130,7 @@ def test_cultivation(field: Field, crop: Crop, cultivation: Cultivation):
 
 
 def test_fertilizer(user: User, fertilizer: Fertilizer):
+    # attributes
     assert fertilizer.user_id == user.id
     assert fertilizer.name == "Testfertilizer"
     assert fertilizer.year == 1000
@@ -150,7 +161,7 @@ def test_fertilization(
     assert fertilization.cultivation_id == cultivation.id
     assert fertilization.fertilizer_id == fertilizer.id
     assert fertilization.field_id == field.id
-    assert fertilization.cut_timing == CutTiming.non_mowable
+    assert fertilization.cut_timing == CutTiming.none
     assert fertilization.amount == Decimal(10)
     assert fertilization.measure == MeasureType.org_fall
     assert fertilization.month == 10

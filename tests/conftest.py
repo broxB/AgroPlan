@@ -80,7 +80,7 @@ def base_field(user) -> BaseField:
 
 
 @pytest.fixture
-def field(base_field) -> BaseField:
+def field(base_field) -> Field:
     field = Field(
         id=1,
         base_id=base_field.id,
@@ -136,7 +136,7 @@ def cultivation(crop, field) -> Cultivation:
         crop_id=crop.id,
         crop_yield=110,
         crop_protein=Decimal(),
-        residues=ResidueType.main_no_residues,
+        residues=ResidueType.none,
         legume_rate=LegumeType.none,
         nmin_30=10,
         nmin_60=10,
@@ -177,7 +177,7 @@ def fertilization(field, cultivation, fertilizer) -> Fertilization:
         cultivation_id=cultivation.id,
         fertilizer_id=fertilizer.id,
         field_id=field.id,
-        cut_timing=CutTiming.non_mowable,
+        cut_timing=CutTiming.none,
         amount=Decimal(10),
         measure=MeasureType.org_fall,
         month=10,
