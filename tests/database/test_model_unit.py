@@ -73,7 +73,7 @@ def test_field(
     assert field.sub_suffix == 1
     assert field.area == Decimal("11.11")
     assert field.year == 1000
-    assert field.red_region == False
+    assert field.red_region is False
     assert field.field_type == FieldType.cropland
     assert field.demand_type == DemandType.demand
     assert str(field.area) in str(field.__repr__)
@@ -90,8 +90,8 @@ def test_crop(user: User, crop: Crop, cultivation: Cultivation):
     assert crop.crop_class == CropClass.main_crop
     assert crop.crop_type == CropType.field_grass
     assert crop.kind == "Ackergras"
-    assert crop.feedable == True
-    assert crop.residue == True
+    assert crop.feedable is True
+    assert crop.residue is True
     assert crop.nmin_depth == NminType.nmin_0
     assert crop.target_demand == 100
     assert crop.target_yield == 100
@@ -136,7 +136,7 @@ def test_fertilizer(user: User, fertilizer: Fertilizer):
     assert fertilizer.year == 1000
     assert fertilizer.fert_class == FertClass.organic
     assert fertilizer.fert_type == FertType.org_digestate
-    assert fertilizer.active == True
+    assert fertilizer.active is True
     assert fertilizer.unit == UnitType.cbm
     assert fertilizer.price == Decimal(100)
     assert fertilizer.n == Decimal(1)
