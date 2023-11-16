@@ -171,6 +171,28 @@ def fertilizer(user) -> Fertilizer:
 
 
 @pytest.fixture
+def mineral_fertilizer(user) -> Fertilizer:
+    fertilizer = Fertilizer(
+        id=2,
+        user_id=user.id,
+        name="mineral fertilizer",
+        fert_class=FertClass.mineral,
+        fert_type=FertType.n,
+        active=True,
+        unit=UnitType.dt,
+        price=Decimal(50),
+        n=Decimal(2),
+        p2o5=Decimal(2),
+        k2o=Decimal(2),
+        mgo=Decimal(2),
+        s=Decimal(2),
+        cao=Decimal(2),
+        nh4=Decimal(2),
+    )
+    return fertilizer
+
+
+@pytest.fixture
 def fertilization(field, cultivation, fertilizer) -> Fertilization:
     fertilization = Fertilization(
         id=1,

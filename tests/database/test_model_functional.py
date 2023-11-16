@@ -1,5 +1,6 @@
 from time import time
 
+import pytest
 from jwt import encode
 
 from app.database.model import (
@@ -52,9 +53,16 @@ def test_field_soil_samples(field: Field, soil_sample: SoilSample, fill_db, clie
 
 
 def test_fertilizer_usage(
-    fertilizer: Fertilizer, field: Field, fertilization: Fertilization, fill_db, client
+    fertilizer: Fertilizer,
+    mineral_fertilizer: Fertilizer,
+    field: Field,
+    fertilization: Fertilization,
+    fill_db,
+    client,
 ):
     assert fertilizer.usage(field.year) == field.area * fertilization.amount
+    with pytest.raises(ValueError):
+        mineral_fertilizer.usage()
 
 
 def test_soilsample_fields(soil_sample: SoilSample, field: Field, fill_db, client):
