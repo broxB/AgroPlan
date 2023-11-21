@@ -97,6 +97,7 @@ def test_legume_delivery_grassland(test_cultivation: Cultivation, legume_rate, e
         (LegumeType.main_crop_30, 90),
         (LegumeType.main_crop_60, 180),
         (LegumeType.main_crop_90, 270),
+        (LegumeType.none, 0),
     ],
 )
 def test_legume_delivery_alfalfa_clover_grass(
