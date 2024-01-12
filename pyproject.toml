@@ -12,7 +12,7 @@ Flask = "2.3.2"
 Flask-SQLAlchemy = "3.0.5"
 Flask-Login = "0.6.2"
 Flask-Migrate = "4.0.4"
-Flask-WTF = {extras = ["email"], version = "1.1.1"}
+Flask-WTF = { extras = ["email"], version = "1.1.1" }
 Bootstrap-Flask = "2.2.0"
 PyJWT = "2.7.0"
 python-dotenv = "1.0.0"
@@ -22,8 +22,7 @@ flask-mailman = "0.3.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.0"
 pytest-cov = "4.0.0"
-black = "23.3.0"
-isort = "5.12.0"
+ruff = "^0.1.6"
 pre-commit = "3.3.3"
 djlint = "1.31.1"
 
@@ -31,29 +30,14 @@ djlint = "1.31.1"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 99 # override black's default line-length
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.mypy_cache
-  | \.tox
-  | \venv
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | app/model_tester.py
-  | ^migrations/
-  | \.flaskenv
-)/
-'''
+[tool.ruff]
+line-length = 99
+extend-exclude = ["migrations/env.py"]
+ignore-init-module-imports = true
+# force-exclude = true
 
-[tool.isort]
-profile = "black"
-skip_glob = "*/migrations/*.py"
+[tool.ruff.format]
+exclude = ["migrations/env.py"]
 
 [tool.pytest.ini_options]
 log_cli = false
@@ -61,29 +45,30 @@ log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
-[tool.coverage]
-  [tool.coverage.run]
-  source = ['app']
-  omit = [
-    # omit anything in a .local directory anywhere
-    '*/.local/*',
-    '__init__.py',
-    'tests/*',
-    '*/tests/*',
-    # omit example and pre-testing files
-    '*/sample.py',
-    '*/tester.py',
-    # omit anything in a .venv directory anywhere
-    '.venv/*'
-  ]
-  [tool.coverage.report]
-    skip_empty = true
-    skip_covered = true
-    # show_missing = true
+[tool.coverage.run]
+branch = true
+source = ['app']
+omit = [
+  # omit anything in a .local directory anywhere
+  '*/.local/*',
+  '__init__.py',
+  'tests/*',
+  '*/tests/*',
+  # omit example and pre-testing files
+  '*/sample.py',
+  '*/tester.py',
+  # omit anything in a .venv directory anywhere
+  '.venv/*',
+]
+
+[tool.coverage.report]
+skip_empty = true
+skip_covered = true
+# show_missing = true
 
 [tool.djlint]
-  indent_size=2
-  ignore = 'H017,T028'
-  profile = "jinja"
-  use_gitignore = true
-  preserve_blank_lines = true
+indent_size = 2
+ignore = 'H017,T028'
+profile = "jinja"
+use_gitignore = true
+preserve_blank_lines = true

@@ -1,30 +1,26 @@
 repos:
--   repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-    -   id: black
-        exclude: ^(app/model_tester.py|migrations/|\.flaskenv)
-
--   repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-    -   id: isort
-        args: [--filter-files]
-        files: \.py$
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.1.6
+  hooks:
+  - id: ruff
+    args: [--line-length=99, --ignore=F401]
+  - id: ruff-format
+    args: []
+    exclude: migrations/env.py
 
 - repo: https://github.com/pre-commit/mirrors-prettier
   rev: v3.0.3
   hooks:
-    -   id: prettier
-        args: [--end-of-line=crlf, --print-width=100]
-        files: \.js$
+  - id: prettier
+    args: [--end-of-line=crlf, --print-width=100]
+    files: \.js$
 
--   repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.31.1
-    hooks:
-    -   id: djlint-jinja
-        args: [--indent=2]
-        files: \.html$
-    -   id: djlint-reformat-jinja
-        args: [--indent=2]
-        files: \.html$
+- repo: https://github.com/Riverside-Healthcare/djLint
+  rev: v1.31.1
+  hooks:
+  - id: djlint-jinja
+    args: [--indent=2]
+    files: \.html$
+  - id: djlint-reformat-jinja
+    args: [--indent=2]
+    files: \.html$
