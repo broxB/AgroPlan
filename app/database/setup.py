@@ -1,6 +1,4 @@
 from collections import namedtuple
-from decimal import Decimal
-from pathlib import Path
 
 from flask import current_app
 from loguru import logger
@@ -80,9 +78,9 @@ def seed_database(data: list[dict]) -> None:
         match crop_name:
             case "Silomais 32%":
                 return CropType.corn
-            case ("So.-Gerste" | "W.-Gerste" | "W.-Roggen" | "W.-Weizen" | "Hafer"):
+            case "So.-Gerste" | "W.-Gerste" | "W.-Roggen" | "W.-Weizen" | "Hafer":
                 return CropType.grain
-            case ("Ackergras 3 Schnitte" | "Ackergras 1 Schnitt" | "Grassamen"):
+            case "Ackergras 3 Schnitte" | "Ackergras 1 Schnitt" | "Grassamen":
                 return CropType.field_grass
             case "Kleegras 1 Schnitt":
                 return CropType.clover_grass
@@ -95,11 +93,11 @@ def seed_database(data: list[dict]) -> None:
                 | "Mähweide mittle 40%"
             ):
                 return CropType.permanent_grassland
-            case ("Nichtleguminosen" | "Senf (GP)"):
+            case "Nichtleguminosen" | "Senf (GP)":
                 return CropType.catch_non_legume
             case "Blühfläche":
                 return CropType.rotating_fallow_with_legume
-            case ("AL-Stilllegung" | "GL-Stilllegung"):
+            case "AL-Stilllegung" | "GL-Stilllegung":
                 return CropType.rotating_fallow
             case _:
                 raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
@@ -118,7 +116,7 @@ def seed_database(data: list[dict]) -> None:
         try:
             return ResidueType(remains)
         except ValueError:
-            return ResidueType.main_no_residues
+            return ResidueType.none
 
     def get_legume_type(legume: str) -> LegumeType:
         try:
@@ -202,7 +200,7 @@ def seed_database(data: list[dict]) -> None:
                 if str(fert).endswith("Schnitt"):
                     fert_timing = CutTiming(fert)
                 else:
-                    fert_timing = CutTiming.non_mowable
+                    fert_timing = CutTiming.none
                 fert_crop = fert_data[i]
                 fert_measure = fert_data[i + 1]
                 fert_name = fert_data[i + 2]
@@ -274,7 +272,6 @@ def seed_database(data: list[dict]) -> None:
                         kind=crop_dict.get("Art", None),
                         feedable=crop_dict.get("Feldfutter", None),
                         residue=crop_dict.get("Erntereste", None),
-                        legume_rate=get_legume_type(crop_dict.get("Leguminosenanteil", None)),
                         nmin_depth=NminType.from_int(crop_dict.get("Nmin_Tiefe", 0)),
                         target_demand=crop_dict.get("Richtbedarf", None),
                         target_yield=crop_dict.get("Richtertrag", None),
@@ -282,7 +279,6 @@ def seed_database(data: list[dict]) -> None:
                         neg_yield=crop_dict.get("Differenz_Ertrag", None)[0],
                         target_protein=crop_dict.get("Richt_RP", None),
                         var_protein=crop_dict.get("Differenz_RP", None),
-                        n=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[0],
                         p2o5=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[1],
                         k2o=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[2],
                         mgo=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[3],

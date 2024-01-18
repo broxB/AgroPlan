@@ -496,7 +496,7 @@ class CultivationForm(FormHelper, FlaskForm):
             cultivation_type=self.cultivation_type.data,
             crop_yield=self.crop_yield.data,
             crop_protein=self.get(self.crop_protein, None),
-            residues=self.get(self.residues, ResidueType.main_no_residues),
+            residues=self.get(self.residues, ResidueType.none),
             legume_rate=self.get(self.legume_rate, LegumeType.none),
             nmin_30=self.get(self.nmin_30, 0),
             nmin_60=self.get(self.nmin_60, 0),
@@ -621,7 +621,7 @@ class FertilizationForm(FormHelper, FlaskForm):
                 .first()
             )
             if fertilization is not None:
-                self.measure_type.errors.append(f"Measure already exists for cultivation.")
+                self.measure_type.errors.append("Measure already exists for cultivation.")
                 return False
 
     def validate_amount(self, amount, edit_value=False) -> bool:
@@ -639,7 +639,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         try:
             fertilizer = current_user.get_fertilizers(id=self.fertilizer_id.data)[0]
         except IndexError:
-            self.fertilizer_id.errors.append(f"Invalid fertilizer selected.")
+            self.fertilizer_id.errors.append("Invalid fertilizer selected.")
             return False
         cultivation = Cultivation.query.get(self.cultivation_id.data)
         field = cultivation.field
@@ -683,7 +683,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         cultivation = Cultivation.query.get(self.cultivation_id.data)
         fertilizer = Fertilizer.query.get(self.fertilizer_id.data)
         fertilization = Fertilization(
-            cut_timing=self.get(self.cut_timing, CutTiming.non_mowable),
+            cut_timing=self.get(self.cut_timing, CutTiming.none),
             measure=self.measure_type.data,
             month=self.get(self.month, None),
             amount=self.amount.data,
@@ -906,7 +906,6 @@ class CropForm(FormHelper, FlaskForm):
             kind=self.kind.data,
             feedable=self.get(self.feedable, False),
             residue=self.get(self.residue, False),
-            legume_rate=None,  # needs to be removed
             nmin_depth=self.get(self.nmin_depth, NminType.nmin_0),
             target_demand=self.get(self.target_demand, 0),
             target_yield=self.get(self.target_yield, 0),
@@ -914,7 +913,6 @@ class CropForm(FormHelper, FlaskForm):
             neg_yield=self.get(self.neg_yield, 0),
             target_protein=self.get(self.target_protein, 0),
             var_protein=self.get(self.var_protein, 0),
-            n=0,  # needs to be removed
             p2o5=self.get(self.p2o5, 0),
             k2o=self.get(self.k2o, 0),
             mgo=self.get(self.mgo, 0),
@@ -989,7 +987,7 @@ class ModifierForm(FormHelper, FlaskForm):
 
     def validate_amount(self, amount):
         if abs(amount.data) > 1000:
-            self.amount.errors.append(f"Only values up to 1000 kg/ha are allowed.")
+            self.amount.errors.append("Only values up to 1000 kg/ha are allowed.")
             return False
 
     def save(self):

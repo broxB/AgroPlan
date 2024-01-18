@@ -45,7 +45,7 @@ def index():
         title="Home",
         fields=fields,
         active_page="home",
-        form=form
+        form=form,
         # next_url=next_url,
         # prev_url=prev_url,
     )
@@ -135,10 +135,7 @@ def crop():
 @login_required
 def fertilizer():
     fertilizers = sorted(current_user.get_fertilizers(), key=lambda x: (x.year), reverse=True)
-    usage = current_user.get_fertilizer_usage()
-    return render_template(
-        "fertilizers.html", title="Fertilizers", fertilizers=fertilizers, usage=usage
-    )
+    return render_template("fertilizers.html", title="Fertilizers", fertilizers=fertilizers)
 
 
 @bp.route("/crop/<crop_class>", methods=["GET"])
