@@ -326,7 +326,8 @@ class FieldForm(FormHelper, FlaskForm):
         field = Field(
             base_id=self.base_id,
             sub_suffix=self.sub_suffix.data,
-            area=self.year.data,
+            year=self.year.data,
+            area=self.area.data,
             red_region=self.red_region.data,
             field_type=self.field_type.data,
             demand_type=self.demand_type.data,

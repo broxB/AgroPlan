@@ -102,7 +102,8 @@ class EditFieldForm(FieldForm):
 
     def save(self):
         self.model_data.sub_suffix = self.sub_suffix.data
-        self.model_data.area = self.year.data
+        self.model_data.year = self.year.data
+        self.model_data.area = self.area.data
         self.model_data.red_region = self.red_region.data
         self.model_data.field_type = self.field_type.data
         self.model_data.demand_type = self.demand_type.data
