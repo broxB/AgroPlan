@@ -68,7 +68,7 @@ class Modal {
             this.content.querySelector(".btn-success").removeAttribute("hidden");
           });
         } else {
-          control.addEventListener("keypress", () => {
+          control.addEventListener("keydown", () => {
             this.content.querySelector(".btn-success").removeAttribute("hidden");
           });
         }

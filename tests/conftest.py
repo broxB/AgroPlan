@@ -10,8 +10,8 @@ from app.database.model import (
     Cultivation,
     Fertilization,
     Fertilizer,
-    FertilizerUsage,
     Field,
+    Modifier,
     Saldo,
     SoilSample,
     User,
@@ -29,6 +29,7 @@ from app.database.types import (
     LegumeType,
     MeasureType,
     NminType,
+    NutrientType,
     ResidueType,
     SoilType,
     UnitType,
@@ -79,7 +80,7 @@ def base_field(user) -> BaseField:
 
 
 @pytest.fixture
-def field(base_field) -> BaseField:
+def field(base_field) -> Field:
     field = Field(
         id=1,
         base_id=base_field.id,
@@ -106,15 +107,13 @@ def crop(user) -> Crop:
         kind="Ackergras",
         feedable=True,
         residue=True,
-        legume_rate=LegumeType.main_crop_0,
         nmin_depth=NminType.nmin_0,
-        target_demand=Decimal(100),
-        target_yield=Decimal(100),
+        target_demand=100,
+        target_yield=100,
         pos_yield=Decimal(1),
         neg_yield=Decimal(2),
         target_protein=Decimal("16"),
         var_protein=Decimal("1.5"),
-        n=Decimal(1),
         p2o5=Decimal(1),
         k2o=Decimal(1),
         mgo=Decimal(1),
@@ -135,9 +134,9 @@ def cultivation(crop, field) -> Cultivation:
         field_id=field.id,
         cultivation_type=CultivationType.main_crop,
         crop_id=crop.id,
-        crop_yield=Decimal(110),
+        crop_yield=110,
         crop_protein=Decimal(),
-        residues=ResidueType.main_no_residues,
+        residues=ResidueType.none,
         legume_rate=LegumeType.none,
         nmin_30=10,
         nmin_60=10,
@@ -172,25 +171,47 @@ def fertilizer(user) -> Fertilizer:
 
 
 @pytest.fixture
+def mineral_fertilizer(user) -> Fertilizer:
+    fertilizer = Fertilizer(
+        id=2,
+        user_id=user.id,
+        name="mineral fertilizer",
+        fert_class=FertClass.mineral,
+        fert_type=FertType.n,
+        active=True,
+        unit=UnitType.dt,
+        price=Decimal(50),
+        n=Decimal(2),
+        p2o5=Decimal(2),
+        k2o=Decimal(2),
+        mgo=Decimal(2),
+        s=Decimal(2),
+        cao=Decimal(2),
+        nh4=Decimal(2),
+    )
+    return fertilizer
+
+
+@pytest.fixture
 def fertilization(field, cultivation, fertilizer) -> Fertilization:
     fertilization = Fertilization(
         id=1,
         cultivation_id=cultivation.id,
         fertilizer_id=fertilizer.id,
-        cut_timing=CutTiming.non_mowable,
+        field_id=field.id,
+        cut_timing=CutTiming.none,
         amount=Decimal(10),
         measure=MeasureType.org_fall,
         month=10,
     )
     fertilization.fertilizer = fertilizer
     fertilization.cultivation = cultivation
-    fertilization.field = []
-    fertilization.field.append(field)
+    fertilization.field = field
     return fertilization
 
 
 @pytest.fixture
-def soil_sample(base_field, field) -> SoilSample:
+def soil_sample(base_field) -> SoilSample:
     soil_sample = SoilSample(
         id=1,
         base_id=base_field.id,
@@ -202,21 +223,17 @@ def soil_sample(base_field, field) -> SoilSample:
         soil_type=SoilType.sand,
         humus=HumusType.less_8,
     )
-    soil_sample.fields = []
-    soil_sample.fields.append(field)
+    soil_sample.base_field = base_field
     return soil_sample
 
 
 @pytest.fixture
-def fertilizer_usage(user, fertilizer, fertilization, field) -> FertilizerUsage:
-    fertilizer_usage = FertilizerUsage(
-        id=1,
-        user_id=user.id,
-        name=fertilizer.name,
-        year=field.year,
-        amount=field.area * fertilization.amount,
+def modifier(field: Field) -> Modifier:
+    modifier = Modifier(
+        id=1, field_id=field.id, description="Test mod", modification=NutrientType.n, amount=10
     )
-    return fertilizer_usage
+    modifier.field = field
+    return modifier
 
 
 @pytest.fixture
@@ -245,7 +262,6 @@ def fill_db(
     fertilization,
     fertilizer,
     soil_sample,
-    fertilizer_usage,
     saldo,
 ):
     db.session.add(field)
@@ -257,6 +273,5 @@ def fill_db(
     db.session.add(fertilization)
     db.session.add(fertilizer)
     db.session.add(soil_sample)
-    db.session.add(fertilizer_usage)
     db.session.add(saldo)
     db.session.commit()

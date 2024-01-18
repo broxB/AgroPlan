@@ -10,7 +10,7 @@ from app.database.model import (
     Modifier,
     SoilSample,
 )
-from app.database.types import CutTiming, LegumeType, MeasureType, NminType, ResidueType
+from app.database.types import CutTiming, FertClass, LegumeType, NminType, ResidueType
 from app.extensions import db
 
 from .forms import (
@@ -133,7 +133,7 @@ class EditCultivationForm(CultivationForm):
         self.model_data.cultivation_type = self.cultivation_type.data
         self.model_data.crop_yield = self.crop_yield.data
         self.model_data.crop_protein = self.get(self.crop_protein, None)
-        self.model_data.residues = self.get(self.residues, ResidueType.main_no_residues)
+        self.model_data.residues = self.get(self.residues, ResidueType.none)
         self.model_data.legume_rate = self.get(self.legume_rate, LegumeType.none)
         self.model_data.nmin_30 = self.get(self.nmin_30, 0)
         self.model_data.nmin_60 = self.get(self.nmin_60, 0)
@@ -145,7 +145,7 @@ class EditFertilizationForm(FertilizationForm):
     def __init__(self, id):
         self.model_type = Fertilization
         self.get_data(id)
-        field_id = self.model_data.field[0].id
+        field_id = self.model_data.field.id
         super().__init__(field_id)
 
     def populate(self, id: int):
@@ -174,7 +174,7 @@ class EditFertilizationForm(FertilizationForm):
         fertilizer = Fertilizer.query.get(self.fertilizer_id.data)
         self.model_data.measure = self.measure_type.data
         self.model_data.amount = self.amount.data
-        self.model_data.cut_timing = self.get(self.cut_timing, CutTiming.non_mowable)
+        self.model_data.cut_timing = self.get(self.cut_timing, CutTiming.none)
         self.model_data.month = self.get(self.month, None)
         self.model_data.cultivation = cultivation
         self.model_data.fertilizer = fertilizer
@@ -194,7 +194,11 @@ class EditFertilizerForm(FertilizerForm):
         self.unit_type.data = self.model_data.unit.name
 
     def validate(self, **kwargs):
-        if self.name.data != self.model_data.name or self.year.data != self.model_data.year:
+        if (
+            self.name.data != self.model_data.name
+            or self.fert_class.data == FertClass.organic
+            and self.year.data != self.model_data.year
+        ):
             return super().validate()
         return True
 
@@ -241,7 +245,6 @@ class EditCropForm(CropForm):
         self.model_data.kind = self.kind.data
         self.model_data.feedable = self.get(self.feedable, False)
         self.model_data.residue = self.get(self.residue, False)
-        self.model_data.legume_rate = None  # needs to be remove
         self.model_data.nmin_depth = self.get(self.nmin_depth, NminType.nmin_0)
         self.model_data.target_demand = self.get(self.target_demand, 0)
         self.model_data.target_yield = self.get(self.target_yield, 0)
@@ -249,7 +252,6 @@ class EditCropForm(CropForm):
         self.model_data.neg_yield = self.get(self.neg_yield, 0)
         self.model_data.target_protein = self.get(self.target_protein, 0)
         self.model_data.var_protein = self.get(self.var_protein, 0)
-        self.model_data.n = 0  # needs to be remove
         self.model_data.p2o5 = self.get(self.p2o5, 0)
         self.model_data.k2o = self.get(self.k2o, 0)
         self.model_data.mgo = self.get(self.mgo, 0)

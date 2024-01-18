@@ -1,8 +1,17 @@
 from time import time
 
+import pytest
 from jwt import encode
 
-from app.database.model import BaseField, Crop, Fertilizer, FertilizerUsage, Field, User
+from app.database.model import (
+    BaseField,
+    Crop,
+    Fertilization,
+    Fertilizer,
+    Field,
+    SoilSample,
+    User,
+)
 
 
 def test_user_reset_password(user: User, fill_db, client):
@@ -35,5 +44,26 @@ def test_user_get_fertilizers(user: User, fertilizer: Fertilizer, fill_db, clien
     assert fertilizer in user.get_fertilizers(year=fertilizer.year)
 
 
-def test_user_get_fertilizer_usage(user: User, fertilizer_usage: FertilizerUsage, fill_db, client):
-    assert fertilizer_usage in user.get_fertilizer_usage()
+def test_field_fertilizers(field: Field, fertilizer: Fertilizer, fill_db, client):
+    assert fertilizer in field.fertilizers
+
+
+def test_field_soil_samples(field: Field, soil_sample: SoilSample, fill_db, client):
+    assert soil_sample in field.soil_samples
+
+
+def test_fertilizer_usage(
+    fertilizer: Fertilizer,
+    mineral_fertilizer: Fertilizer,
+    field: Field,
+    fertilization: Fertilization,
+    fill_db,
+    client,
+):
+    assert fertilizer.usage(field.year) == field.area * fertilization.amount
+    with pytest.raises(ValueError):
+        mineral_fertilizer.usage()
+
+
+def test_soilsample_fields(soil_sample: SoilSample, field: Field, fill_db, client):
+    assert field in soil_sample.fields

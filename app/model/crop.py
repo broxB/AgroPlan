@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 import app.database.model as db
-from app.database.types import CropClass, CropType
+from app.database.types import CropType, NminType
 
 from . import guidelines
 from .balance import Balance
@@ -10,25 +10,20 @@ from .balance import Balance
 class Crop:
     def __init__(self, Crop: db.Crop, guidelines: guidelines = guidelines):
         self.name: str = Crop.name  # W.-Gerste
-        self.kind: str = Crop.kind  # Wintergerste
-        self.crop_class: CropClass = Crop.crop_class  # Hauptfrucht
         self.crop_type: CropType = Crop.crop_type  # Getreide
         self.feedable: bool = Crop.feedable  # Feldfutter
-        self.residue: bool = Crop.residue  # Hat Erntereste?
-        self.nmin_depth: int = Crop.nmin_depth
-        self.target_demand: Decimal = Crop.target_demand
-        self.target_yield: Decimal = Crop.target_yield
+        # self.residue: bool = Crop.residue  # Hat Erntereste?
+        self.nmin_depth: NminType = Crop.nmin_depth
+        self.target_demand: int = Crop.target_demand
+        self.target_yield: int = Crop.target_yield
         self.pos_yield: Decimal = Crop.pos_yield
         self.neg_yield: Decimal = Crop.neg_yield
         self.target_protein: Decimal = Crop.target_protein
-        self.var_protein: list[Decimal] = Crop.var_protein
-        # self.n: Decimal = Crop.n
+        self.var_protein: Decimal = Crop.var_protein
         self.p2o5: Decimal = Crop.p2o5
         self.k2o: Decimal = Crop.k2o
         self.mgo: Decimal = Crop.mgo
-        # self.byproduct: str = Crop.byproduct
         self.byp_ratio: Decimal = Crop.byp_ratio
-        # self.byp_n: Decimal = Crop.byp_n
         self.byp_p2o5: Decimal = Crop.byp_p2o5
         self.byp_k2o: Decimal = Crop.byp_k2o
         self.byp_mgo: Decimal = Crop.byp_mgo

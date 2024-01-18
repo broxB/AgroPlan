@@ -11,7 +11,6 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Table,
     UniqueConstraint,
 )
 from sqlalchemy.orm import backref, relationship
@@ -38,15 +37,12 @@ from app.database.types import (
 from app.extensions import db
 
 __all__ = [
-    "field_fertilization",
-    "field_soil_sample",
     "BaseField",
     "Field",
     "Cultivation",
     "Crop",
     "Fertilization",
     "Fertilizer",
-    "FertilizerUsage",
     "Modifier",
     "SoilSample",
     "Saldo",
@@ -126,26 +122,8 @@ class User(UserMixin, Base):
             query = query.filter_by(**kwargs)
         return query.all()
 
-    def get_fertilizer_usage(self):
-        return FertilizerUsage.query.filter_by(user_id=self.id).all()
-
     def __repr__(self):
         return f"<User {self.username}>"
-
-
-field_fertilization = Table(
-    "field_fertilization",
-    db.metadata,
-    Column("field_id", Integer, ForeignKey("field.field_id")),
-    Column("fertilization_id", Integer, ForeignKey("fertilization.fertilization_id")),
-)
-
-field_soil_sample = Table(
-    "field_soil_sample",
-    db.metadata,
-    Column("field_id", Integer, ForeignKey("field.field_id")),
-    Column("sample_id", Integer, ForeignKey("soil_sample.sample_id")),
-)
 
 
 class BaseField(Base):
@@ -186,19 +164,13 @@ class Field(Base):
 
     base_field = relationship("BaseField", back_populates="fields")
     cultivations = relationship("Cultivation", back_populates="field")
-    fertilizations = relationship(
-        "Fertilization",
-        secondary=field_fertilization,
-        back_populates="field",
-    )
-    soil_samples = relationship(
-        "SoilSample",
-        secondary=field_soil_sample,
-        back_populates="fields",
-        order_by="desc(SoilSample.year)",
-    )
+    fertilizations = relationship("Fertilization", back_populates="field")
     saldo = relationship("Saldo", back_populates="field", uselist=False)
     modifiers = relationship("Modifier", back_populates="field")
+
+    @property
+    def soil_samples(self):
+        return self.base_field.soil_samples
 
     @property
     def fertilizers(self):
@@ -222,7 +194,7 @@ class Cultivation(Base):
     field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     cultivation_type = Column("cultivation_type", Enum(CultivationType))
     crop_id = Column("crop_id", Integer, ForeignKey("crop.crop_id"))
-    crop_yield = Column("yield", Float(asdecimal=True, decimal_return_scale=0))  # to Int
+    crop_yield = Column("yield", Integer)
     crop_protein = Column("protein", Float(asdecimal=True, decimal_return_scale=1))
     residues = Column("residues", Enum(ResidueType))
     legume_rate = Column("legume_rate", Enum(LegumeType))
@@ -255,17 +227,13 @@ class Crop(Base):
     kind = Column("kind", String)
     feedable = Column("feedable", Boolean)
     residue = Column("residue", Boolean)
-    legume_rate = Column("legume_rate", Enum(LegumeType))  # needs to be removed
     nmin_depth = Column("nmin_depth", Enum(NminType))
-    target_demand = Column(
-        "target_demand", Float(asdecimal=True, decimal_return_scale=0)
-    )  # to Int
-    target_yield = Column("target_yield", Float(asdecimal=True, decimal_return_scale=0))  # to Int
+    target_demand = Column("target_demand", Integer)
+    target_yield = Column("target_yield", Integer)
     pos_yield = Column("pos_yield", Float(asdecimal=True, decimal_return_scale=2))
     neg_yield = Column("neg_yield", Float(asdecimal=True, decimal_return_scale=2))
     target_protein = Column("target_protein", Float(asdecimal=True, decimal_return_scale=2))
     var_protein = Column("var_protein", Float(asdecimal=True, decimal_return_scale=2))
-    n = Column("n", Float(asdecimal=True, decimal_return_scale=2))  # needs to be removed
     p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
     k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
     mgo = Column("mgo", Float(asdecimal=True, decimal_return_scale=2))
@@ -289,6 +257,7 @@ class Fertilization(Base):
     __tablename__ = "fertilization"
 
     id = Column("fertilization_id", Integer, primary_key=True)
+    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
     cultivation_id = Column("cultivation_id", Integer, ForeignKey("cultivation.cultivation_id"))
     fertilizer_id = Column("fertilizer_id", Integer, ForeignKey("fertilizer.fertilizer_id"))
     cut_timing = Column("cut_timing", Enum(CutTiming))
@@ -296,11 +265,7 @@ class Fertilization(Base):
     measure = Column("measure", Enum(MeasureType))
     month = Column("month", Integer)
 
-    field = relationship(
-        "Field",
-        secondary=field_fertilization,
-        back_populates="fertilizations",
-    )
+    field = relationship("Field", back_populates="fertilizations")
     cultivation = relationship("Cultivation", back_populates="fertilizations")
     fertilizer = relationship("Fertilizer")
 
@@ -308,7 +273,7 @@ class Fertilization(Base):
         return (
             f"Fertilization(id='{self.id}', name='{self.fertilizer.name}', amount='{self.amount:.1f}', "
             f"measure='{self.measure.value}', month='{self.month}', crop='{self.cultivation.crop.name}', "
-            f"field='{[field.base_field.name for field in self.field][0]}')"
+            f"field='{self.field.base_field.name}')"
         )
 
 
@@ -348,34 +313,17 @@ class Fertilizer(Base):
             year = self.year
 
         ferts = (
-            Fertilization.query.join(field_fertilization)
-            .join(Field)
+            Fertilization.query.join(Field)
             .join(Fertilizer)
             .filter(Field.year == year, Fertilizer.id == self.id)
             .all()
         )
-        return sum(fert.amount * fert.field[0].area for fert in ferts)
+        return sum(fert.amount * fert.field.area for fert in ferts)
 
     def __repr__(self):
         return (
             f"Fertilizer(id='{self.id}', name='{self.name}', year='{self.year}', "
             f"class='{self.fert_class.name}', type='{self.fert_type.name}', active='{self.active}')"
-        )
-
-
-class FertilizerUsage(Base):
-    __tablename__ = "fertilizer_usage"
-    __table_args__ = (UniqueConstraint("user_id", "fertilizer_name", "year"),)
-
-    user_id = Column("user_id", Integer, ForeignKey("user.user_id"))
-    id = Column("id", Integer, primary_key=True)
-    name = Column("fertilizer_name", String, ForeignKey("fertilizer.name"))
-    year = Column("year", Integer)
-    amount = Column("amount", Float(asdecimal=True, decimal_return_scale=2))
-
-    def __repr__(self):
-        return (
-            f"FertilizerUsage(name='{self.name}', year='{self.year}', amount='{self.amount:.2f}')"
         )
 
 
@@ -393,15 +341,30 @@ class SoilSample(Base):
     soil_type = Column("soil_type", Enum(SoilType))
     humus = Column("humus", Enum(HumusType))
 
-    base_field = relationship("BaseField")
-    fields = relationship("Field", secondary=field_soil_sample, back_populates="soil_samples")
+    base_field = relationship("BaseField", back_populates="soil_samples")
+
+    @property
+    def fields(self):
+        return self.base_field.fields
 
     def __repr__(self):
         return (
             f"SoilSample(id='{self.id}', year='{self.year}', "
             f"soil_type='{self.soil_type.value}', humus='{self.humus.value}', "
-            f"fields={f'{self.base_field.name if self.base_field else None}', [f'{field.year}' for field in self.fields if self.fields]})"
+            f"fields={f'{self.base_field.name}', [f'{field.year}' for field in self.fields if self.fields]})"
         )
+
+
+class Modifier(Base):
+    __tablename__ = "modifier"
+
+    id = Column("modifier_id", Integer, primary_key=True)
+    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
+    description = Column("description", String)
+    modification = Column("modification", Enum(NutrientType))
+    amount = Column("amount", Integer)
+
+    field = relationship("Field", back_populates="modifiers")
 
 
 class Saldo(Base):
@@ -417,15 +380,3 @@ class Saldo(Base):
     n_total = Column("nges", Float(asdecimal=True, decimal_return_scale=2))
 
     field = relationship("Field", back_populates="saldo")
-
-
-class Modifier(Base):
-    __tablename__ = "modifier"
-
-    id = Column("modifier_id", Integer, primary_key=True)
-    field_id = Column("field_id", Integer, ForeignKey("field.field_id"))
-    description = Column("description", String)
-    modification = Column("modification", Enum(NutrientType))
-    amount = Column("amount", Integer)
-
-    field = relationship("Field", back_populates="modifiers")
