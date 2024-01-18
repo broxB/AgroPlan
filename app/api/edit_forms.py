@@ -10,7 +10,7 @@ from app.database.model import (
     Modifier,
     SoilSample,
 )
-from app.database.types import CutTiming, LegumeType, MeasureType, NminType, ResidueType
+from app.database.types import CutTiming, FertClass, LegumeType, NminType, ResidueType
 from app.extensions import db
 
 from .forms import (
@@ -194,7 +194,11 @@ class EditFertilizerForm(FertilizerForm):
         self.unit_type.data = self.model_data.unit.name
 
     def validate(self, **kwargs):
-        if self.name.data != self.model_data.name or self.year.data != self.model_data.year:
+        if (
+            self.name.data != self.model_data.name
+            or self.fert_class.data == FertClass.organic
+            and self.year.data != self.model_data.year
+        ):
             return super().validate()
         return True
 
