@@ -13,14 +13,10 @@
       <caption>List of organic fertilizers</caption>
       <thead class="no-border-top">
         <tr class="text-center">
-          <th scope="col">ID</th>
-          <th scope="col">Name</th>
+          <th class="text-start" scope="col">Name</th>
           <th scope="col">Year</th>
-          {# <th scope="col">Class</th> #}
           <th scope="col">Type</th>
-          {# <th scope="col">Active</th> #}
           <th scope="col">Unit</th>
-          {# <th scope="col">Price</th> #}
           <th scope="col">N</th>
           <th scope="col">
             P<sub>2</sub>O<sub>5</sub>
@@ -34,20 +30,17 @@
           <th scope="col">
             NH<sub>4</sub>
           </th>
-          <th scope="col">Usage</th>
+          <th colspan="2" scope="col">Usage</th>
+          <th scope="col"></th>
         </tr>
       </thead>
       <tbody>
         {% for fert in fertilizers if fert.fert_class.name == "organic" %}
           <tr data-id="{{ fert.id }}">
-            <th class="text-center" scope="row">{{ loop.index }}</th>
-            <td>{{ fert.name }}</td>
+            <th scope="row">{{ fert.name }}</th>
             <td class="text-center">{{ fert.year }}</td>
-            {# <td>{{ fert.fert_class.value }}</td> #}
             <td>{{ fert.fert_type.value }}</td>
-            {# <td>{{ fert.active }}</td> #}
             <td class="text-center">{{ fert.unit.value }}</td>
-            {# <td>{{ fert.price }}</td> #}
             <td class="text-end">{{ fert.n }}</td>
             <td class="text-end">{{ fert.p2o5 }}</td>
             <td class="text-end">{{ fert.k2o }}</td>
@@ -75,10 +68,7 @@
       <caption>List of mineral fertilizers</caption>
       <thead class="no-border-top">
         <tr class="text-center">
-          <th scope="col">ID</th>
-          <th scope="col">Name</th>
-          {# <th scope="col">Year</th> #}
-          {# <th scope="col">Class</th> #}
+          <th class="text-start" scope="col">Name</th>
           <th scope="col">Type</th>
           <th scope="col">Active</th>
           <th scope="col">Unit</th>
@@ -96,18 +86,22 @@
           <th scope="col">
             NH<sub>4</sub>
           </th>
-          <th scope="col">Usage</th>
+          <th class="text-start" colspan="2" scope="col">Usage {{ current_user.year }}</th>
+          <th scope="col"></th>
         </tr>
       </thead>
       <tbody>
         {% for fert in fertilizers if fert.fert_class.name == "mineral" %}
           <tr data-id="{{ fert.id }}">
-            <th class="text-center" scope="row">{{ loop.index }}</th>
-            <td>{{ fert.name }}</td>
-            {# <td>{{ fert.year }}</td> #}
-            {# <td>{{ fert.fert_class.value }}</td> #}
+            <th scope="row">{{ fert.name }}</th>
             <td>{{ fert.fert_type.value }}</td>
-            <td class="text-center">{{ fert.active }}</td>
+            <td class="text-center">
+              {% if fert.active %}
+                {{ render_icon("check-circle", extra_classes="color-green") }}
+              {% else %}
+                {{ render_icon("x-circle", extra_classes="text-danger") }}
+              {% endif %}
+            </td>
             <td class="text-center">{{ fert.unit.value }}</td>
             <td class="text-end">{{ fert.price }}</td>
             <td class="text-end">{{ fert.n }}</td>

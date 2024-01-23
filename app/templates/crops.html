@@ -13,7 +13,6 @@
     <caption>List of crops</caption>
     <thead class="no-border-top">
       <tr>
-        <th scope="col">ID</th>
         <th scope="col">Name</th>
         <th scope="col">Class</th>
         <th scope="col">Type</th>
@@ -49,8 +48,7 @@
     <tbody>
       {% for crop in crops %}
         <tr data-id="{{ crop.id }}">
-          <th scope="row">{{ loop.index }}</th>
-          <td>{{ crop.name }}</td>
+          <th scope="row">{{ crop.name }}</th>
           <td>{{ crop.crop_class.value }}</td>
           <td>{{ crop.crop_type.value }}</td>
           <td>{{ crop.kind }}</td>
