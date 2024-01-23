@@ -7,7 +7,6 @@
         <th scope="col">Year</th>
         <th scope="col">Area</th>
         <th scope="col">Type</th>
-        <th scope="col">Demand</th>
         <th scope="col" colspan="2">Red region</th>
       </tr>
     </thead>
@@ -17,7 +16,6 @@
           <th scope="row" data-field-id="{{ field.id }}">{{ field.year }}</th>
           <td>{{ field.area }}</td>
           <td>{{ field.field_type.value }}</td>
-          <td>{{ field.demand_type.value }}</td>
           <td>
             {% if field.red_region %}
               {{ render_icon("check-circle", extra_classes="color-green") }}

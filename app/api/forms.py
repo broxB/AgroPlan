@@ -289,11 +289,6 @@ class FieldForm(FormHelper, FlaskForm):
         choices=[(enum.name, enum.value) for enum in FieldType],
         validators=[InputRequired()],
     )
-    demand_type = SelectField(
-        "Select demand type:",
-        choices=[(enum.name, enum.value) for enum in DemandType],
-        validators=[InputRequired()],
-    )
 
     def __init__(self, base_field_id):
         super().__init__()
@@ -330,7 +325,6 @@ class FieldForm(FormHelper, FlaskForm):
             area=self.area.data,
             red_region=self.red_region.data,
             field_type=self.field_type.data,
-            demand_type=self.demand_type.data,
         )
         base_field = BaseField.query.get(self.base_id)
         field.base_field = base_field
