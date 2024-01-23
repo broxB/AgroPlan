@@ -44,26 +44,47 @@ def test_cultivation(cultivation, test_crop) -> Cultivation:
     return Cultivation(cultivation, test_crop)
 
 
-def test_demand(test_cultivation: Cultivation):
-    assert test_cultivation.demand(DemandType.demand) == Balance(
-        "Crop needs", -110, -154, -154, -154, -20, -0
-    )
-    assert test_cultivation.demand(DemandType.removal) == Balance(
-        "Crop needs", -110, -110, -110, -110, -20, -0
-    )
+@pytest.mark.parametrize(
+    "option_p205, option_k2o, option_mgo, expected",
+    [
+        (
+            DemandType.demand,
+            DemandType.demand,
+            DemandType.demand,
+            Balance("Crop needs", -110, -154, -154, -154, -20, -0),
+        ),
+        (
+            DemandType.removal,
+            DemandType.demand,
+            DemandType.demand,
+            Balance("Crop needs", -110, -110, -154, -154, -20, -0),
+        ),
+        (
+            DemandType.removal,
+            DemandType.removal,
+            DemandType.demand,
+            Balance("Crop needs", -110, -110, -110, -154, -20, -0),
+        ),
+        (
+            DemandType.removal,
+            DemandType.removal,
+            DemandType.removal,
+            Balance("Crop needs", -110, -110, -110, -110, -20, -0),
+        ),
+    ],
+)
+def test_demand(test_cultivation: Cultivation, option_p205, option_k2o, option_mgo, expected):
+    assert test_cultivation.demand(option_p205, option_k2o, option_mgo) == expected
+
+
+def test_demand_no_residue(test_cultivation: Cultivation):
     test_cultivation.residues = ResidueType.main_removed
-    assert test_cultivation.demand(DemandType.removal) == Balance(
-        "Crop needs", -110, -154, -154, -154, -20, -0
-    )
-    assert test_cultivation.demand(DemandType.demand, negative_output=False) == Balance(
-        "Crop needs",
-        110,
-        154,
-        154,
-        154,
-        20,
-        0,
-    )
+    assert test_cultivation.demand(
+        DemandType.demand, DemandType.demand, DemandType.demand
+    ) == Balance("Crop needs", -110, -154, -154, -154, -20, -0)
+    assert test_cultivation.demand(
+        DemandType.removal, DemandType.removal, DemandType.removal
+    ) == Balance("Crop needs", -110, -110, -110, -110, -20, -0)
 
 
 def test_pre_crop_effect(test_cultivation: Cultivation):

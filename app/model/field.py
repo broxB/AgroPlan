@@ -14,6 +14,7 @@ from app.database.types import (
     FertClass,
     FieldType,
     MeasureType,
+    ResidueType,
     SoilClass,
 )
 
@@ -96,7 +97,9 @@ class Field:
         self.year: int = Field.year
         self.field_type: FieldType = Field.field_type
         self.red_region: bool = Field.red_region
-        self.demand_option: DemandType = Field.demand_type
+        self.option_p2o5: DemandType = Field.demand_p2o5
+        self.option_k2o: DemandType = Field.demand_k2o
+        self.option_mgo: DemandType = Field.demand_mgo
         self.saldo: db.Saldo = Field.saldo
         self.first_year: bool = first_year
         self.soil_sample: Soil = None
@@ -140,13 +143,16 @@ class Field:
             tuple[list[Balance], Balance]: Returns a tuple with a list of all crop related balances and a resulting crop needs balance.
         """
         cult_balances = []
-        cult_balances.append(cultivation.demand(self.demand_option))
+        cult_balances.append(
+            cultivation.demand(self.option_p2o5, self.option_k2o, self.option_mgo)
+        )
         if cultivation is not self.catch_crop:
             cult_balances.append(Balance("Nmin", n=cultivation.reduction()))
             cult_balances.append(Balance("Pre-crop effect", n=self._pre_crop_effect(cultivation)))
         if cultivation is self.main_crop:
             cult_balances.append(self.soil_reductions())
             cult_balances.append(self.fertilization_redelivery())
+            cult_balances.append(self.crop_residues_redelivery())
             cult_balances.append(Balance("Lime balance", cao=self._cao_saldo()))
             for modifier in self.modifiers:
                 cult_balances.append(modifier)
@@ -201,7 +207,9 @@ class Field:
         for cultivation in self.cultivations:
             if cultivation.cultivation_type is not CultivationType.catch_crop:
                 demands += cultivation.demand(
-                    demand_option=self.demand_option,
+                    option_p2o5=self.option_p2o5,
+                    option_k2o=self.option_k2o,
+                    option_mgo=self.option_mgo,
                     negative_output=negative_output,
                 )
         return demands
@@ -228,10 +236,15 @@ class Field:
         if not (self.soil_sample and self.field_type in (FieldType.cropland, FieldType.grassland)):
             return reductions
         reductions.n += self.soil_sample.reduction_n()
-        if self.demand_option is DemandType.demand:
-            reductions.p2o5 += self.soil_sample.reduction_p2o5()
-            reductions.k2o += self.soil_sample.reduction_k2o()
-            reductions.mgo += self.soil_sample.reduction_mg()
+        reductions.p2o5 += (
+            self.soil_sample.reduction_p2o5() if self.option_p2o5 is DemandType.demand else 0
+        )
+        reductions.k2o += (
+            self.soil_sample.reduction_k2o() if self.option_k2o is DemandType.demand else 0
+        )
+        reductions.mgo += (
+            self.soil_sample.reduction_mg() if self.option_mgo is DemandType.demand else 0
+        )
         if self.main_crop:
             reductions.s += self.soil_sample.reduction_s(
                 n_total=self.n_total(cultivation_type=CultivationType.main_crop),
@@ -255,6 +268,7 @@ class Field:
         reductions = Balance("Redelivery")
         reductions.cao += self._cao_saldo()
         reductions += self.fertilization_redelivery()
+        reductions += self.crop_residues_redelivery()
         return reductions
 
     def fertilization_redelivery(self) -> Balance:
@@ -272,6 +286,41 @@ class Field:
                 redelivery += fertilization.nutrients(self.field_type)
         redelivery.n = (fall_n_total + prev_spring_n_total) * Decimal("0.1")
         redelivery.nh4 = 0
+        return redelivery
+
+    def crop_residues_redelivery(self) -> Balance:
+        """
+        If in the previous year the a demand option was `demand` and
+        the crop residues were not removed from the field,
+        they are redelivered for that nutrient type.
+
+        :return: Balance
+        """
+        redelivery = Balance("Residue redelivery")
+        try:
+            if any(
+                option is DemandType.demand
+                for option in [
+                    self.field_prev_year.option_p2o5,
+                    self.field_prev_year.option_k2o,
+                    self.field_prev_year.option_mgo,
+                ]
+            ):
+                redelivery += sum(
+                    [
+                        cultivation.crop.demand_byproduct(cultivation.crop_yield)
+                        for cultivation in self.field_prev_year.cultivations
+                        if cultivation.residues is ResidueType.main_stayed
+                    ]
+                )
+                if self.field_prev_year.option_p2o5 is DemandType.removal:
+                    redelivery.p2o5 = 0
+                if self.field_prev_year.option_k2o is DemandType.removal:
+                    redelivery.k2o = 0
+                if self.field_prev_year.option_mgo is DemandType.removal:
+                    redelivery.mgo = 0
+        except AttributeError as e:
+            logger.warning(e)
         return redelivery
 
     def n_total(
@@ -312,12 +361,18 @@ class Field:
 
     def _adjust_to_demand_option(self, balance: Balance) -> Balance:
         """Reduce nutritional needs to zero if demand option is `demand` and soil class is E."""
-        if self.soil_sample and self.demand_option is DemandType.demand:
-            if self.soil_sample.class_p2o5() is SoilClass.E:
+        if self.soil_sample:
+            if (
+                self.soil_sample.class_p2o5() is SoilClass.E
+                and self.option_p2o5 is DemandType.demand
+            ):
                 balance.p2o5 = 0
-            if self.soil_sample.class_k2o() is SoilClass.E:
+            if (
+                self.soil_sample.class_k2o() is SoilClass.E
+                and self.option_k2o is DemandType.demand
+            ):
                 balance.k2o = 0
-            if self.soil_sample.class_mg() is SoilClass.E:
+            if self.soil_sample.class_mg() is SoilClass.E and self.option_mgo is DemandType.demand:
                 balance.mgo = 0
 
     def _pre_crop_effect(self, cultivation: Cultivation) -> Decimal:

@@ -49,13 +49,28 @@ class Cultivation:
         self.residues: ResidueType = Cultivation.residues
         self.guidelines = guidelines
 
-    def demand(self, demand_option, negative_output: bool = True) -> Balance:
+    def demand(
+        self,
+        option_p2o5: DemandType,
+        option_k2o: DemandType,
+        option_mgo: DemandType,
+        negative_output: bool = True,
+    ) -> Balance:
         crop_demand = self.crop.demand_crop(
             crop_yield=self.crop_yield,
             crop_protein=self.crop_protein,
         )
-        if demand_option is DemandType.demand or self.residues is ResidueType.main_removed:
+        if (
+            any(option is DemandType.demand for option in [option_p2o5, option_k2o, option_mgo])
+            or self.residues is ResidueType.main_removed
+        ):
             byp_demand = self.crop.demand_byproduct(self.crop_yield)
+            if option_p2o5 is DemandType.removal:
+                byp_demand.p2o5 = 0
+            if option_k2o is DemandType.removal:
+                byp_demand.k2o = 0
+            if option_mgo is DemandType.removal:
+                byp_demand.mgo = 0
         else:
             byp_demand = Balance()
         demand = Balance("Crop needs")
