@@ -489,7 +489,7 @@ class CultivationForm(FormHelper, FlaskForm):
         crop = Crop.query.get(self.crop_id.data)
         cultivation = Cultivation(
             cultivation_type=self.cultivation_type.data,
-            crop_yield=self.crop_yield.data,
+            crop_yield=self.get(self.crop_yield, 0),
             crop_protein=self.get(self.crop_protein, None),
             residues=self.get(self.residues, ResidueType.none),
             legume_rate=self.get(self.legume_rate, LegumeType.none),
@@ -685,7 +685,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         )
         fertilization.cultivation = cultivation
         fertilization.fertilizer = fertilizer
-        fertilization.field.append(field)
+        field.fertilizations.append(fertilization)
         db.session.add(fertilization)
         db.session.commit()
 
