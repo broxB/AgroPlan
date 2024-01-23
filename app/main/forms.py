@@ -3,7 +3,9 @@ from flask_wtf import FlaskForm
 from wtforms import HiddenField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, ValidationError
 
-from app.database.model import User
+from app.database import Field, User, confirm_id
+from app.database.types import DemandType, NutrientType
+from app.extensions import db
 
 __all__ = [
     "EditProfileForm",
@@ -51,3 +53,43 @@ class YearForm(FlaskForm):
         if year != current_user.year:
             if year not in current_user.get_years():
                 raise ValidationError("Invalid year selected.")
+
+
+class DemandForm(FlaskForm):
+    field_id = HiddenField("Field ID")
+    demand_option = HiddenField("Demand Option")
+    nutrient = HiddenField("Nutrient")
+    submit = SubmitField("Submit")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(prefix="demand_option", *args, **kwargs)
+
+    def validate_field_id(self, field_id):
+        id = confirm_id(field_id.data, current_user.id, "field", "edit")
+        if not id:
+            raise ValidationError("Invalid form inputs.")
+
+    def validate_demand_option(self, demand_option):
+        try:
+            demand_option.data = DemandType(demand_option.data)
+        except KeyError:
+            try:
+                demand_option.data = DemandType[demand_option.data.lower()]
+            except ValueError:
+                raise ValidationError("Invalid demand option.")
+
+    def validate_nutrient(self, nutrient):
+        try:
+            nutrient.data = NutrientType[nutrient.data]
+        except KeyError:
+            raise ValidationError("Invalid nutrient input.")
+
+    def save(self):
+        field = Field.query.get(self.field_id.data)
+        if self.nutrient.data is NutrientType.p2o5:
+            field.demand_p2o5 = self.demand_option.data
+        elif self.nutrient.data is NutrientType.k2o:
+            field.demand_k2o = self.demand_option.data
+        elif self.nutrient.data is NutrientType.mgo:
+            field.demand_mgo = self.demand_option.data
+        db.session.commit()
