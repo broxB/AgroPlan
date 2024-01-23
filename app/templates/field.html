@@ -38,6 +38,13 @@
                 data-bs-toggle="modal"
                 data-bs-target="#modal"
                 data-form="field"
+                data-modal="new"
+                data-id="{{ base_field.id }}">{{ render_icon("plus-square", extra_classes="color-green") }}</button>
+        <button class="btn btn-link d-print-none"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#modal"
+                data-form="field"
                 data-modal="edit"
                 data-id="{{ db.field.id }}">{{ render_icon("pencil-square", extra_classes="color-green") }}</button>
         <button class="btn btn-link d-print-none"
