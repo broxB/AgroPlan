@@ -160,7 +160,9 @@ class Field(Base):
     year = Column("year", Integer)
     red_region = Column("red_region", Boolean)
     field_type = Column("field_type", Enum(FieldType))
-    demand_type = Column("demand_type", Enum(DemandType))
+    demand_p2o5 = Column("demand_p2o5", Enum(DemandType), server_default="demand")
+    demand_k2o = Column("demand_k2o", Enum(DemandType), server_default="demand")
+    demand_mgo = Column("demand_mgo", Enum(DemandType), server_default="demand")
 
     base_field = relationship("BaseField", back_populates="fields")
     cultivations = relationship("Cultivation", back_populates="field")
