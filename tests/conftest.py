@@ -89,7 +89,9 @@ def field(base_field) -> Field:
         year=1000,
         red_region=False,
         field_type=FieldType.cropland,
-        demand_type=DemandType.demand,
+        demand_p2o5=DemandType.demand,
+        demand_k2o=DemandType.demand,
+        demand_mgo=DemandType.demand,
     )
     field.base_field = base_field
     return field

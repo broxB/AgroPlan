@@ -75,7 +75,9 @@ def test_field(
     assert field.year == 1000
     assert field.red_region is False
     assert field.field_type == FieldType.cropland
-    assert field.demand_type == DemandType.demand
+    assert field.demand_p2o5 == DemandType.demand
+    assert field.demand_k2o == DemandType.demand
+    assert field.demand_mgo == DemandType.demand
     assert str(field.area) in str(field.__repr__)
 
 

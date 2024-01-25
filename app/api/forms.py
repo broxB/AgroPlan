@@ -289,11 +289,6 @@ class FieldForm(FormHelper, FlaskForm):
         choices=[(enum.name, enum.value) for enum in FieldType],
         validators=[InputRequired()],
     )
-    demand_type = SelectField(
-        "Select demand type:",
-        choices=[(enum.name, enum.value) for enum in DemandType],
-        validators=[InputRequired()],
-    )
 
     def __init__(self, base_field_id):
         super().__init__()
@@ -326,10 +321,10 @@ class FieldForm(FormHelper, FlaskForm):
         field = Field(
             base_id=self.base_id,
             sub_suffix=self.sub_suffix.data,
-            area=self.year.data,
+            year=self.year.data,
+            area=self.area.data,
             red_region=self.red_region.data,
             field_type=self.field_type.data,
-            demand_type=self.demand_type.data,
         )
         base_field = BaseField.query.get(self.base_id)
         field.base_field = base_field
@@ -494,7 +489,7 @@ class CultivationForm(FormHelper, FlaskForm):
         crop = Crop.query.get(self.crop_id.data)
         cultivation = Cultivation(
             cultivation_type=self.cultivation_type.data,
-            crop_yield=self.crop_yield.data,
+            crop_yield=self.get(self.crop_yield, 0),
             crop_protein=self.get(self.crop_protein, None),
             residues=self.get(self.residues, ResidueType.none),
             legume_rate=self.get(self.legume_rate, LegumeType.none),
@@ -690,7 +685,7 @@ class FertilizationForm(FormHelper, FlaskForm):
         )
         fertilization.cultivation = cultivation
         fertilization.fertilizer = fertilizer
-        fertilization.field.append(field)
+        field.fertilizations.append(fertilization)
         db.session.add(fertilization)
         db.session.commit()
 

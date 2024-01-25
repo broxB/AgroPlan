@@ -87,15 +87,15 @@
          id="cultivation"
          role="tabpanel"
          aria-labelledby="cultivation-tab">
-      <div class="col-6 my-2">
+      <div class="col my-2">
         {% if (db.field.cultivations | length) > 0 and (db.field.field_type.name == "cropland" or db.field.field_type.name == "grassland") %}
-        <button class="btn btn-success fw-bolder d-print-none"
-                type="button"
-                data-bs-toggle="modal"
-                data-bs-target="#modal"
-                data-form="fertilization"
-                data-modal="new"
-                data-id="{{ db.field.id }}">Add fertilization</button>
+          <button class="btn btn-success fw-bolder d-print-none"
+                  type="button"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modal"
+                  data-form="fertilization"
+                  data-modal="new"
+                  data-id="{{ db.field.id }}">Add fertilization</button>
         {% endif %}
         {% if (db.field.cultivations | length) < 3 and db.field.field_type.name == "cropland" or (db.field.cultivations | length) == 0 and db.field.field_type.name != "cropland" %}
           <button class="btn btn-success fw-bolder d-print-none"
@@ -106,6 +106,73 @@
                   data-modal="new"
                   data-id="{{ db.field.id }}">Add cultivation</button>
         {% endif %}
+        <button class="btn btn-warning fw-bolder dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          P<sub>2</sub>O<sub>5</sub> nach: {{ db.field.demand_p2o5.value }}
+        </button>
+        <ul class="dropdown-menu">
+          {% for demand_option in ("Bedarf", "Abfuhr") %}
+            <li>
+              <form action="{{ url_for("main.set_demand") }}", method="post">
+                {{ demand_form.csrf_token() }}
+                {{ demand_form.field_id(value=db.field.id) }}
+                {{ demand_form.nutrient(value="p2o5") }}
+                {{ demand_form.demand_option(value=demand_option) }}
+                {% if db.field.demand_p2o5.value == demand_option %}
+                  {{ demand_form.submit(value=demand_option, class="dropdown-item active") }}
+                {% else %}
+                  {{ demand_form.submit(value=demand_option, class="dropdown-item") }}
+                {% endif %}
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+        <button class="btn btn-warning fw-bolder dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          K<sub>2</sub>O nach: {{ db.field.demand_k2o.value }}
+        </button>
+        <ul class="dropdown-menu">
+          {% for demand_option in ("Bedarf", "Abfuhr") %}
+            <li>
+              <form action="{{ url_for("main.set_demand") }}", method="post">
+                {{ demand_form.csrf_token() }}
+                {{ demand_form.field_id(value=db.field.id) }}
+                {{ demand_form.nutrient(value="k2o") }}
+                {{ demand_form.demand_option(value=demand_option) }}
+                {% if db.field.demand_k2o.value == demand_option %}
+                  {{ demand_form.submit(value=demand_option, class="dropdown-item active") }}
+                {% else %}
+                  {{ demand_form.submit(value=demand_option, class="dropdown-item") }}
+                {% endif %}
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+        <button class="btn btn-warning fw-bolder dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">MgO nach: {{ db.field.demand_mgo.value }}</button>
+        <ul class="dropdown-menu">
+          {% for demand_option in ("Bedarf", "Abfuhr") %}
+            <li>
+              <form action="{{ url_for("main.set_demand") }}", method="post">
+                {{ demand_form.csrf_token() }}
+                {{ demand_form.field_id(value=db.field.id) }}
+                {{ demand_form.nutrient(value="mgo") }}
+                {{ demand_form.demand_option(value=demand_option) }}
+                {% if db.field.demand_mgo.value == demand_option %}
+                  {{ demand_form.submit(value=demand_option, class="dropdown-item active") }}
+                {% else %}
+                  {{ demand_form.submit(value=demand_option, class="dropdown-item") }}
+                {% endif %}
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
       </div>
       {% set count = namespace(c = 0) %}
       {% for cult in db.field.cultivations %}

@@ -7,7 +7,7 @@ from loguru import logger
 from app.database import BaseField, User
 from app.extensions import db, login
 from app.main import bp
-from app.main.forms import EditProfileForm, YearForm
+from app.main.forms import DemandForm, EditProfileForm, YearForm
 from app.model import create_field
 
 
@@ -84,7 +84,19 @@ def set_year():
         db.session.commit()
         flash(f"Cultivation year has been set to {year}.")
     else:
-        flash(f"Invalid year selected.")
+        flash("Invalid year selected.")
+    return redirect(request.referrer)
+
+
+@bp.route("/set_demand", methods=["POST"])
+@login_required
+def set_demand():
+    form = DemandForm()
+    if form.validate_on_submit():
+        form.save()
+        flash(f"Demand option for {form.nutrient.data} has been set to {form.demand_option.data}.")
+    else:
+        flash("Invalid option selected.")
     return redirect(request.referrer)
 
 
@@ -105,12 +117,14 @@ def field(base_field_id):
         if field is not None:
             field.create_balances()
         form = YearForm()
+        demand_form = DemandForm()
         return render_template(
             "field.html",
             title=base_field.name,
             base_field=base_field,
             fields=fields,
             form=form,
+            demand_form=demand_form,
             field=field,
         )
     else:
