@@ -31,6 +31,14 @@ class Fertilization:
         return Decimal()
 
     def nutrients(self, field_type: FieldType) -> Balance:
+        """
+        Returns the nutriential quantities of the fertilization,
+        factoring in the available nitrogen and the lime starvation
+        of the fertilizer.
+
+        :param field_type:
+            `FieldType` of the field it's used on.
+        """
         return Balance(
             title=self.fertilizer.name,
             n=self.amount * self.n_verf(field_type),
@@ -38,7 +46,7 @@ class Fertilization:
             k2o=self.amount * self.fertilizer.k2o,
             mgo=self.amount * self.fertilizer.mgo,
             s=self.amount * self.fertilizer.s,
-            cao=self.amount * self.fertilizer.cao,
+            cao=self.amount * (self.fertilizer.cao + self.fertilizer.lime_starvation(field_type)),
             nh4=self.amount * self.fertilizer.nh4,
         )
 

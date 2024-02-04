@@ -43,6 +43,29 @@ class Fertilizer:
     def is_lime(self) -> bool:
         return self.fert_type is FertType.lime
 
+    def lime_starvation(self, field_type: FieldType) -> Decimal:
+        """
+        Returns the lime starvation of the fertilizer
+        in relation to the field_type it is used on.
+
+        `E = 1 x CaO + 1.4 x MgO + 0.6 x K2O + 0.9 x Na2O - 0.4 x P2O5 - 0.7 x SO3 - 0.8 Cl - n x N`
+
+        Sluijsmans, C.M.J. (1969). Der Einfluss von Düngemitteln auf den Kalkzustand des Bodens.
+        Zeitschrift für Pflanzenernährung und Bodenkunde, 126. Band Heft 2 (1970), S. 97-103
+
+        :param field_type:
+            `FieldType` of the field it is used on.
+        """
+        n = {FieldType.cropland: 1, FieldType.grassland: Decimal("0.8")}
+        return (
+            self.cao
+            + Decimal("1.4") * self.mgo
+            + Decimal("0.6") * self.k2o
+            - Decimal("0.4") * self.p2o5
+            - Decimal("0.7") * self.s * Decimal("0.400")  # Conversion from SO3
+            - n.get(field_type, 1) * self.n
+        )
+
 
 class Organic(Fertilizer):
     def __init__(self, *args, **kwargs):
