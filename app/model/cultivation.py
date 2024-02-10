@@ -31,6 +31,10 @@ def create_cultivation(
 
 
 class Cultivation:
+    """
+    Class to represent a cultivation containing a crop.
+    """
+
     def __init__(
         self, Cultivation: db.Cultivation, crop: Crop, guidelines: guidelines = guidelines
     ):
@@ -47,7 +51,7 @@ class Cultivation:
         self.nmin_90: int = Cultivation.nmin_90
         self.legume_rate: LegumeType = Cultivation.legume_rate
         self.residues: ResidueType = Cultivation.residues
-        self.guidelines = guidelines
+        self._guidelines = guidelines
 
     def demand(
         self,
@@ -56,6 +60,20 @@ class Cultivation:
         option_mgo: DemandType,
         negative_output: bool = True,
     ) -> Balance:
+        """
+        Calculate the nutrient demand of the cultivated crop.
+
+        :param option_p2o5:
+            `DemandType` for P2O5
+        :param option_k2o:
+            `DemandType` for K2O
+        :param option_mgo:
+            `DemandType` for MgO
+        :param negative_output:
+            If demand should be output in negative numbers, defaults to `True`
+        :return:
+            `Balance` containing all the nutrient values.
+        """
         crop_demand = self.crop.demand_crop(
             crop_yield=self.crop_yield,
             crop_protein=self.crop_protein,
@@ -81,13 +99,19 @@ class Cultivation:
         return demand
 
     def pre_crop_effect(self) -> Decimal:
-        pre_crop_effect: dict = self.guidelines.pre_crop_effect()
+        """
+        Delayed nitrogen supply of the previous crop through degradation.
+        """
+        pre_crop_effect: dict = self._guidelines.pre_crop_effect()
         return Decimal(pre_crop_effect[self.crop_type.value])
 
     def legume_delivery(self) -> Decimal:
+        """
+        Provided nitrogen through legume nitrogen fixation.
+        """
         if not self.crop.feedable:
             return Decimal()
-        legume_delivery: dict = self.guidelines.legume_delivery()
+        legume_delivery: dict = self._guidelines.legume_delivery()
         if self.crop_type is CropType.permanent_grassland:
             return Decimal(legume_delivery["Grünland"][self.legume_rate.value])
         elif self.crop_type is CropType.alfalfa_grass or self.crop_type is CropType.clover_grass:
@@ -110,6 +134,9 @@ class Cultivation:
 
 class MainCrop(Cultivation):
     def reduction_nmin(self) -> Decimal:
+        """
+        Available mineral nitrogen in the soil.
+        """
         if self.crop.feedable:
             return Decimal()
         match self.nmin_depth:
@@ -144,7 +171,7 @@ class CatchCrop(Cultivation):
         return Balance("Crop demand", n=Decimal(60))
 
     def pre_crop_effect(self) -> Decimal:
-        pre_crop_effect: dict = self.guidelines.pre_crop_effect()
+        pre_crop_effect: dict = self._guidelines.pre_crop_effect()
         return Decimal(pre_crop_effect[self.crop_type.value][self.residues.value])
 
     def __repr__(self) -> str:

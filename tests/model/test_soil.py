@@ -3,25 +3,29 @@ from decimal import Decimal
 import pytest
 
 from app.database.model import Field, SoilSample
-from app.database.types import FieldType
+from app.database.types import FieldType, HumusType, SoilType
 from app.model.soil import Soil, create_soil_sample
 
 
-def test_create_soil_sample(field: Field, soil_sample: SoilSample):
-    soil = create_soil_sample(field.soil_samples, field.field_type, field.year)
+def test_create_soil_sample(field_first_year: Field, soil_sample: SoilSample, fill_db):
+    soil = create_soil_sample(
+        field_first_year.soil_samples, field_first_year.field_type, field_first_year.year
+    )
     assert isinstance(soil, Soil)
-    soil = create_soil_sample(list(), field.field_type, field.year)
+    soil = create_soil_sample(list(), field_first_year.field_type, field_first_year.year)
     assert soil is None
 
 
 @pytest.fixture
-def soil(soil_sample: SoilSample, field: Field) -> Soil:
-    return Soil(soil_sample, field.field_type)
+def soil(soil_sample: SoilSample, field_first_year: Field, guidelines) -> Soil:
+    soil_sample.humus = HumusType.less_4
+    soil_sample.soil_type = SoilType.sand
+    return Soil(soil_sample, field_first_year.field_type, guidelines=guidelines())
 
 
 @pytest.mark.parametrize(
     "field_type, expected",
-    [(FieldType.cropland, 20), (FieldType.grassland, 10)],
+    [(FieldType.cropland, 0), (FieldType.grassland, 10)],
 )
 def test_reduction_n(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -72,7 +76,7 @@ def test_reduction_mg_without_parametrize(soil: Soil):
 
 @pytest.mark.parametrize(
     "field_type, expected",
-    [(FieldType.cropland, -1250), (FieldType.grassland, -750)],
+    [(FieldType.cropland, -1125), (FieldType.grassland, -750)],
 )
 def test_reduction_cao(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -80,7 +84,7 @@ def test_reduction_cao(soil: Soil, field_type, expected):
 
 
 def test_reduction_cao_without_parametrize(soil: Soil):
-    assert soil.reduction_cao(preservation=True) == -125
+    assert soil.reduction_cao(preservation=True) == -150
     soil.ph = None
     assert soil.reduction_cao() == Decimal()
     soil.ph = Decimal(10)
@@ -149,7 +153,7 @@ def test_class_ph_without_parametrize(soil: Soil):
 
 @pytest.mark.parametrize(
     "field_type, expected",
-    [(FieldType.cropland, Decimal("5")), (FieldType.grassland, Decimal("4.7"))],
+    [(FieldType.cropland, Decimal("5.4")), (FieldType.grassland, Decimal("4.7"))],
 )
 def test_optimal_ph(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -161,4 +165,4 @@ def test_optimal_ph(soil: Soil, field_type, expected):
     [([0.1, 0.2], [Decimal("0.1"), Decimal("0.2")]), ([0], [Decimal()]), ([], [])],
 )
 def test_to_decimal(soil: Soil, values, expected):
-    assert soil.to_decimal(values) == expected
+    assert soil._to_decimal(values) == expected

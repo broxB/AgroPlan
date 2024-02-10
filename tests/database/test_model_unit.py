@@ -32,7 +32,10 @@ from app.database.types import (
 )
 
 
-def test_user(user: User):
+def test_user(user: User, base_field: BaseField, fill_db):
+    # relationships
+    assert base_field in user.fields
+    # attributes
     assert user.username == "Test"
     assert user.email == "test@test.test"
     assert user.password_hash != "ValidPassword"
@@ -41,11 +44,13 @@ def test_user(user: User):
     assert user.username in str(user.__repr__)
 
 
-def test_base_field(user: User, base_field: BaseField, field: Field, soil_sample: SoilSample):
+def test_base_field(
+    user: User, base_field: BaseField, field_first_year: Field, soil_sample: SoilSample, fill_db
+):
     # relationships
     assert base_field.user == user
     assert base_field in user.fields
-    assert field in base_field.fields
+    assert field_first_year in base_field.fields
     assert soil_sample in base_field.soil_samples
     # attributes
     assert base_field.user_id == user.id
@@ -56,121 +61,132 @@ def test_base_field(user: User, base_field: BaseField, field: Field, soil_sample
 
 
 def test_field(
-    field: Field,
+    field_first_year: Field,
     base_field: BaseField,
-    cultivation: Cultivation,
-    fertilization: Fertilization,
+    cultivation_field_grass: Cultivation,
+    organic_fertilization: Fertilization,
+    fill_db,
 ):
     # relationships
-    assert field.base_field == base_field
-    assert field in base_field.fields
-    assert cultivation.field == field
-    assert cultivation in field.cultivations
-    assert fertilization.field == field
-    assert fertilization in field.fertilizations
+    assert field_first_year.base_field == base_field
+    assert field_first_year in base_field.fields
+    assert cultivation_field_grass.field == field_first_year
+    assert cultivation_field_grass in field_first_year.cultivations
+    assert organic_fertilization.field == field_first_year
+    assert organic_fertilization in field_first_year.fertilizations
     # attributes
-    assert field.base_id == base_field.id
-    assert field.sub_suffix == 1
-    assert field.area == Decimal("11.11")
-    assert field.year == 1000
-    assert field.red_region is False
-    assert field.field_type == FieldType.cropland
-    assert field.demand_p2o5 == DemandType.demand
-    assert field.demand_k2o == DemandType.demand
-    assert field.demand_mgo == DemandType.demand
-    assert str(field.area) in str(field.__repr__)
+    assert field_first_year.base_id == base_field.id
+    assert field_first_year.sub_suffix == 1
+    assert field_first_year.area == Decimal("11.11")
+    assert field_first_year.year == 1000
+    assert field_first_year.red_region is False
+    assert field_first_year.field_type == FieldType.cropland
+    assert field_first_year.demand_p2o5 == DemandType.demand
+    assert field_first_year.demand_k2o == DemandType.demand
+    assert field_first_year.demand_mgo == DemandType.demand
+    assert str(field_first_year.area) in str(field_first_year.__repr__)
 
 
-def test_crop(user: User, crop: Crop, cultivation: Cultivation):
+def test_crop(user: User, main_crop: Crop, cultivation_field_grass: Cultivation, fill_db):
     # relationships
-    assert cultivation.crop == crop
-    assert cultivation in crop.cultivations
+    assert cultivation_field_grass.crop == main_crop
+    assert cultivation_field_grass in main_crop.cultivations
     # attributes
-    assert crop.user_id == user.id
-    assert crop.name == "Ackergras 3 Schnitte"
-    assert crop.field_type == FieldType.cropland
-    assert crop.crop_class == CropClass.main_crop
-    assert crop.crop_type == CropType.field_grass
-    assert crop.kind == "Ackergras"
-    assert crop.feedable is True
-    assert crop.residue is True
-    assert crop.nmin_depth == NminType.nmin_0
-    assert crop.target_demand == 100
-    assert crop.target_yield == 100
-    assert crop.pos_yield == 1
-    assert crop.neg_yield == 2
-    assert crop.target_protein == Decimal("16")
-    assert crop.var_protein == Decimal("1.5")
-    assert crop.p2o5 == Decimal(1)
-    assert crop.k2o == Decimal(1)
-    assert crop.mgo == Decimal(1)
-    assert crop.byproduct == "Heu"
-    assert crop.byp_ratio == Decimal("0.8")
-    assert crop.byp_n == Decimal("0.5")
-    assert crop.byp_p2o5 == Decimal("0.5")
-    assert crop.byp_k2o == Decimal("0.5")
-    assert crop.byp_mgo == Decimal("0.5")
-    assert crop.name in str(crop.__repr__)
+    assert main_crop.user_id == user.id
+    assert main_crop.name == "Ackergras 3 Schnitte"
+    assert main_crop.field_type == FieldType.cropland
+    assert main_crop.crop_class == CropClass.main_crop
+    assert main_crop.crop_type == CropType.field_grass
+    assert main_crop.kind == "Ackergras"
+    assert main_crop.feedable is True
+    assert main_crop.residue is True
+    assert main_crop.nmin_depth == NminType.nmin_0
+    assert main_crop.target_demand == 100
+    assert main_crop.target_yield == 100
+    assert main_crop.pos_yield == 1
+    assert main_crop.neg_yield == 2
+    assert main_crop.target_protein == Decimal("16")
+    assert main_crop.var_protein == Decimal("1.5")
+    assert main_crop.p2o5 == Decimal(1)
+    assert main_crop.k2o == Decimal(1)
+    assert main_crop.mgo == Decimal(1)
+    assert main_crop.byproduct == "Heu"
+    assert main_crop.byp_ratio == Decimal("0.8")
+    assert main_crop.byp_n == Decimal("0.5")
+    assert main_crop.byp_p2o5 == Decimal("0.5")
+    assert main_crop.byp_k2o == Decimal("0.5")
+    assert main_crop.byp_mgo == Decimal("0.5")
+    assert main_crop.name in str(main_crop.__repr__)
 
 
-def test_cultivation(field: Field, crop: Crop, cultivation: Cultivation):
+def test_cultivation(
+    field_first_year: Field, main_crop: Crop, cultivation_field_grass: Cultivation, fill_db
+):
     # relationships
-    assert cultivation.field == field
-    assert cultivation.crop == crop
+    assert cultivation_field_grass.field == field_first_year
+    assert cultivation_field_grass.crop == main_crop
     # attributes
-    assert cultivation.field_id == field.id
-    assert cultivation.cultivation_type == CultivationType.main_crop
-    assert cultivation.crop_id == crop.id
-    assert cultivation.crop_yield == 110
-    assert cultivation.crop_protein == 0
-    assert cultivation.residues == ResidueType.none
-    assert cultivation.legume_rate == LegumeType.none
-    assert cultivation.nmin_30 == 10
-    assert cultivation.nmin_60 == 10
-    assert cultivation.nmin_90 == 10
-    assert str(cultivation.id) in str(cultivation.__repr__)
+    assert cultivation_field_grass.field_id == field_first_year.id
+    assert cultivation_field_grass.cultivation_type == CultivationType.main_crop
+    assert cultivation_field_grass.crop_id == main_crop.id
+    assert cultivation_field_grass.crop_yield == 110
+    assert cultivation_field_grass.crop_protein == 0
+    assert cultivation_field_grass.residues == ResidueType.none
+    assert cultivation_field_grass.legume_rate == LegumeType.none
+    assert cultivation_field_grass.nmin_30 == 10
+    assert cultivation_field_grass.nmin_60 == 10
+    assert cultivation_field_grass.nmin_90 == 10
+    assert str(cultivation_field_grass.id) in str(cultivation_field_grass.__repr__)
 
 
-def test_fertilizer(user: User, fertilizer: Fertilizer):
+def test_fertilizer(
+    user: User, organic_fertilizer: Fertilizer, organic_fertilization: Fertilization, fill_db
+):
+    # relationships
+    assert organic_fertilization.fertilizer == organic_fertilizer
     # attributes
-    assert fertilizer.user_id == user.id
-    assert fertilizer.name == "Testfertilizer"
-    assert fertilizer.year == 1000
-    assert fertilizer.fert_class == FertClass.organic
-    assert fertilizer.fert_type == FertType.org_digestate
-    assert fertilizer.active is True
-    assert fertilizer.unit == UnitType.cbm
-    assert fertilizer.price == Decimal(100)
-    assert fertilizer.n == Decimal(1)
-    assert fertilizer.p2o5 == Decimal(1)
-    assert fertilizer.k2o == Decimal(1)
-    assert fertilizer.mgo == Decimal(1)
-    assert fertilizer.s == Decimal(1)
-    assert fertilizer.cao == Decimal(1)
-    assert fertilizer.nh4 == Decimal(1)
-    assert fertilizer.name in str(fertilizer.__repr__)
+    assert organic_fertilizer.user_id == user.id
+    assert organic_fertilizer.name == "Organic Fertilizer"
+    assert organic_fertilizer.year == 1000
+    assert organic_fertilizer.fert_class == FertClass.organic
+    assert organic_fertilizer.fert_type == FertType.org_digestate
+    assert organic_fertilizer.active is True
+    assert organic_fertilizer.unit == UnitType.cbm
+    assert organic_fertilizer.price == Decimal(100)
+    assert organic_fertilizer.n == Decimal(1)
+    assert organic_fertilizer.p2o5 == Decimal(1)
+    assert organic_fertilizer.k2o == Decimal(1)
+    assert organic_fertilizer.mgo == Decimal(1)
+    assert organic_fertilizer.s == Decimal(1)
+    assert organic_fertilizer.cao == Decimal(1)
+    assert organic_fertilizer.nh4 == Decimal(1)
+    assert organic_fertilizer.name in str(organic_fertilizer.__repr__)
 
 
 def test_fertilization(
-    field: Field, cultivation: Cultivation, fertilizer: Fertilizer, fertilization: Fertilization
+    field_first_year: Field,
+    cultivation_field_grass: Cultivation,
+    organic_fertilizer: Fertilizer,
+    organic_fertilization: Fertilization,
+    fill_db,
 ):
     # relationships
-    assert fertilization.cultivation == cultivation
-    assert fertilization.fertilizer == fertilizer
-    assert fertilization.field == field
-    assert fertilization in field.fertilizations
+    assert organic_fertilization.cultivation == cultivation_field_grass
+    assert organic_fertilization.fertilizer == organic_fertilizer
+    assert organic_fertilization.field == field_first_year
+    assert organic_fertilization in field_first_year.fertilizations
     # attributes
-    assert fertilization.cultivation_id == cultivation.id
-    assert fertilization.fertilizer_id == fertilizer.id
-    assert fertilization.field_id == field.id
-    assert fertilization.cut_timing == CutTiming.none
-    assert fertilization.amount == Decimal(10)
-    assert fertilization.measure == MeasureType.org_fall
-    assert fertilization.month == 10
-    assert str(fertilization.amount) in str(fertilization.__repr__)
+    assert organic_fertilization.cultivation_id == cultivation_field_grass.id
+    assert organic_fertilization.fertilizer_id == organic_fertilizer.id
+    assert organic_fertilization.field_id == field_first_year.id
+    assert organic_fertilization.cut_timing == CutTiming.none
+    assert organic_fertilization.amount == Decimal(10)
+    assert organic_fertilization.measure == MeasureType.org_fall
+    assert organic_fertilization.month == 10
+    assert str(organic_fertilization.amount) in str(organic_fertilization.__repr__)
 
 
-def test_soil_sample(base_field: BaseField, soil_sample: SoilSample):
+def test_soil_sample(base_field: BaseField, soil_sample: SoilSample, fill_db):
     # relationships
     assert soil_sample.base_field == base_field
     assert soil_sample in base_field.soil_samples
@@ -186,18 +202,21 @@ def test_soil_sample(base_field: BaseField, soil_sample: SoilSample):
     assert soil_sample.soil_type.value in str(soil_sample.__repr__)
 
 
-def test_modifier(field: Field, modifier: Modifier):
+def test_modifier(field_first_year: Field, modifier: Modifier, fill_db):
     # relationships
-    assert modifier.field == field
-    assert modifier in field.modifiers
+    assert modifier.field == field_first_year
+    assert modifier in field_first_year.modifiers
     # attributes
     assert modifier.description == "Test mod"
     assert modifier.modification is NutrientType.n
     assert modifier.amount == 10
 
 
-def test_saldo(field: Field, saldo: Saldo):
-    assert saldo.field_id == field.id
+def test_saldo(field_first_year: Field, saldo: Saldo, fill_db):
+    # relationships
+    assert saldo == field_first_year.saldo
+    # attributes
+    assert saldo.field_id == field_first_year.id
     assert saldo.n == Decimal(1)
     assert saldo.p2o5 == Decimal(1)
     assert saldo.k2o == Decimal(1)

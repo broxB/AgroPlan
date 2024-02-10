@@ -2,12 +2,13 @@ from decimal import Decimal
 
 import pytest
 
+import app.database.model as db
 from app.model import Balance, Crop
 
 
 @pytest.fixture
-def crop(crop) -> Crop:
-    return Crop(crop)
+def crop(main_crop: db.Crop, guidelines) -> Crop:
+    return Crop(main_crop, guidelines=guidelines())
 
 
 @pytest.mark.parametrize(
@@ -38,6 +39,8 @@ def test_demand_byproduct(crop: Crop, crop_yield, expected):
 
 def test_s_demand(crop: Crop):
     assert crop.s_demand == 20
+    crop.name = "Unsinn"
+    assert crop.s_demand == 0
 
 
 @pytest.mark.parametrize(

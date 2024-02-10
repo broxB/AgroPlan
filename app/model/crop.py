@@ -8,11 +8,14 @@ from .balance import Balance
 
 
 class Crop:
+    """
+    Class for crop functionality and attributes.
+    """
+
     def __init__(self, Crop: db.Crop, guidelines: guidelines = guidelines):
         self.name: str = Crop.name  # W.-Gerste
         self.crop_type: CropType = Crop.crop_type  # Getreide
         self.feedable: bool = Crop.feedable  # Feldfutter
-        # self.residue: bool = Crop.residue  # Hat Erntereste?
         self.nmin_depth: NminType = Crop.nmin_depth
         self.target_demand: int = Crop.target_demand
         self.target_yield: int = Crop.target_yield
@@ -27,13 +30,23 @@ class Crop:
         self.byp_p2o5: Decimal = Crop.byp_p2o5
         self.byp_k2o: Decimal = Crop.byp_k2o
         self.byp_mgo: Decimal = Crop.byp_mgo
-        self.guidelines = guidelines
+        self._guidelines = guidelines
 
     def demand_crop(
         self,
         crop_yield: Decimal,
         crop_protein: Decimal,
     ) -> Balance:
+        """
+        Nutrient demand of the crop.
+
+        :param crop_yield:
+            Yield of the crop.
+        :param crop_protein:
+            Protein content of the crop.
+        :return:
+            `Balance` containing all the nutrient values.
+        """
         demands = Balance()
         demands.n = self._n_demand(crop_yield, crop_protein)
         demands.p2o5 = self._nutrient(crop_yield, self.p2o5)
@@ -43,6 +56,14 @@ class Crop:
         return demands
 
     def demand_byproduct(self, crop_yield: Decimal) -> Balance:
+        """
+        Nutrient demand of the crop byproduct, e.g. straw.
+
+        :param crop_yield:
+            Yield of the crop.
+        :return:
+            `Balance` containing all the nutrient values.
+        """
         demands = Balance()
         demands.p2o5 = self._nutrient_byproduct(crop_yield, self.byp_p2o5)
         demands.k2o = self._nutrient_byproduct(crop_yield, self.byp_k2o)
@@ -51,10 +72,17 @@ class Crop:
 
     @property
     def s_demand(self) -> Decimal:
-        sulfur_needs: dict = self.guidelines.sulfur_needs()
+        """
+        Sulphur demand of the crop.
+        """
+        sulfur_needs: dict = self._guidelines.sulfur_needs()
         return Decimal(str(sulfur_needs.get(self.name, 0)))
 
     def _n_demand(self, crop_yield: Decimal, crop_protein: Decimal) -> Decimal:
+        """
+        Calculate the nitrogen demand of the crop taking into account
+        the crop yield and crop protein values versus their expected values.
+        """
         var_yield = self.pos_yield if self.target_yield < crop_yield else self.neg_yield
         return (
             self.target_demand
