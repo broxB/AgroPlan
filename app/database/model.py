@@ -95,10 +95,13 @@ class User(UserMixin, Base):
             return None
         return User.query.get(user_id)
 
-    def get_fields(self, year: int = None):
-        if year is None:
-            return BaseField.query.filter(BaseField.user_id == self.id)
-        return BaseField.query.join(Field).filter(BaseField.user_id == self.id, Field.year == year)
+    def get_fields(self, year: int = None, **kwargs):
+        query = BaseField.query.filter_by(user_id=self.id)
+        if kwargs:
+            query = query.filter_by(**kwargs)
+        if year is not None:
+            query = query.join(Field).filter(Field.year == year)
+        return query
 
     def get_years(self):
         fields = (
@@ -145,7 +148,7 @@ class BaseField(Base):
     def __repr__(self):
         return (
             f"BaseField(id='{self.id}', name='{self.prefix:02d}-{self.suffix} {self.name}', "
-            f"fields='{[f'{field.year}: {field.field_type.value}, {field.area:.2f}ha' for field in self.fields]}'"
+            f"years={', '.join([f'{field.year}: {field.field_type.value} - {field.area:.2f}ha' for field in self.fields])})"
         )
 
 
