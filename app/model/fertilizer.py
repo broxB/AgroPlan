@@ -9,6 +9,14 @@ from . import guidelines
 
 
 def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
+    """
+    Facotry to create fertilizers based on their FertClasses.
+
+    :param fertilizer:
+        Fertilizer database object
+    :return:
+        Fertilizer service object.
+    """
     if fertilizer.fert_class is FertClass.organic:
         return Organic(fertilizer)
     elif fertilizer.fert_class is FertClass.mineral:
@@ -16,6 +24,10 @@ def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
 
 
 class Fertilizer:
+    """
+    Class that contains fertilizer specific functions and attributes.
+    """
+
     def __init__(self, Fertilizer: db.Fertilizer):
         self.name: str = Fertilizer.name
         self.fert_class: FertClass = Fertilizer.fert_class
@@ -29,6 +41,12 @@ class Fertilizer:
         self.nh4: Decimal = Fertilizer.nh4
 
     def is_class(self, fert_class: FertClass) -> bool:
+        """
+        Check if `Fertilizer` has a certain `FertClass`.
+
+        :param fert_class:
+            `FertClass` the fertilizer is compared to.
+        """
         return self.fert_class is fert_class if fert_class else True
 
     @property
@@ -68,33 +86,69 @@ class Fertilizer:
 
 
 class Organic(Fertilizer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    """
+    Subclass for organic fertilizers.
+    """
+
+    def __init__(self, fertilizer, *, guidelines=guidelines):
+        super().__init__(fertilizer)
         self._org_factor: dict = guidelines.org_factor()
 
-    def factor(self, field_type: FieldType) -> Decimal:
-        return Decimal(str(self._org_factor[self.fert_type.value][field_type.value]))
+    def n_total(self, netto: bool = False) -> Decimal:
+        """
+        Calculates the total nitrogen content.
 
-    def storage_loss(self) -> Decimal:
+        :param netto:
+            Factor in storage losses.
+        """
+        return self.n * self._storage_loss() if netto else self.n
+
+    def _storage_loss(self) -> Decimal:
         return Decimal(str(self._org_factor[self.fert_type.value]["Lagerverluste"]))
 
-    def n_total(self, netto: bool = False) -> Decimal:
-        if netto:
-            return self.n * self.storage_loss()
-        return self.n
-
     def n_verf(self, field_type: FieldType) -> Decimal:
-        return max(self.n * self.factor(field_type), self.nh4)
+        """
+        Calculates the available nitrogen content based on `FieldType`.
+
+        :param field_type:
+            `FieldType` the fertilizer is used on.
+        """
+        try:
+            return max(self.n * self._factor(field_type), self.nh4)
+        except KeyError:
+            return Decimal()
+
+    def _factor(self, field_type: FieldType) -> Decimal:
+        """
+        Return nitrogen multiplicator for given `FieldType`.
+
+        :raises KeyError:
+            Raise `KeyError` when there is no multi for a field type, e.g. fallow land.
+        """
+        try:
+            return Decimal(str(self._org_factor[self.fert_type.value][field_type.value]))
+        except KeyError:
+            raise KeyError
 
     def __repr__(self) -> str:
         return f"<Org fertilizer: {self.name}>"
 
 
 class Mineral(Fertilizer):
+    """
+    Subclass for mineral fertilizers.
+    """
+
     def n_total(self, *arg, **kwargs) -> Decimal:
+        """
+        Calculates the total nitrogen content.
+        """
         return self.n
 
     def n_verf(self, *arg, **kwargs) -> Decimal:
+        """
+        Calculates the available nitrogen content.
+        """
         return max(self.n, self.nh4)
 
     def __repr__(self) -> str:
