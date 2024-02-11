@@ -4,29 +4,43 @@ import app.database.model as db
 from app.database.types import CultivationType, FieldType, MeasureType
 
 from .balance import Balance
-from .crop import Crop
 from .fertilizer import Fertilizer
 
 
 class Fertilization:
+    """
+    Class that contains functions and attributes that illustrate fertilizations.
+    """
+
     def __init__(
         self,
-        Fertilization: db.Fertilization,
+        fertilization: db.Fertilization,
         fertilizer: Fertilizer,
-        crop: Crop,
+        crop_feedable: bool,
         cultivation_type: CultivationType,
     ):
-        self.fertilizer = fertilizer
-        self.crop = crop
+        self.fertilizer: Fertilizer = fertilizer
+        self.amount: Decimal = fertilization.amount
+        self.measure: MeasureType = fertilization.measure
         self.cultivation_type = cultivation_type
-        self.amount: Decimal = Fertilization.amount
-        self.measure: MeasureType = Fertilization.measure
+        self._crop_feedable = crop_feedable
 
     def n_total(
         self, measure_type: MeasureType, cultivation_type: CultivationType, netto: bool
     ) -> Decimal:
+        """
+        Calculate the total nitrogen content for organic fertilizers,
+        if they fit into the `MeasureType` and `CultivationType`.
+
+        :param measure_type:
+            `MeasureType` which should be checked.
+        :param cultivation_type:
+            `CultivationType` which should be checked.
+        :param netto:
+            If storage losses should be deducted.
+        """
         if self.fertilizer.is_organic:
-            if self.is_measure(measure_type) and self.cultivation_type is cultivation_type:
+            if self._is_measure(measure_type) and self.cultivation_type is cultivation_type:
                 return self.amount * self.fertilizer.n_total(netto)
         return Decimal()
 
@@ -41,7 +55,7 @@ class Fertilization:
         """
         return Balance(
             title=self.fertilizer.name,
-            n=self.amount * self.n_verf(field_type),
+            n=self.amount * self._n_verf(field_type),
             p2o5=self.amount * self.fertilizer.p2o5,
             k2o=self.amount * self.fertilizer.k2o,
             mgo=self.amount * self.fertilizer.mgo,
@@ -50,12 +64,12 @@ class Fertilization:
             nh4=self.amount * self.fertilizer.nh4,
         )
 
-    def n_verf(self, field_type: FieldType) -> Decimal:
-        if self.crop.feedable:
+    def _n_verf(self, field_type: FieldType) -> Decimal:
+        if self._crop_feedable:
             return self.fertilizer.n_verf(FieldType.grassland)
         return self.fertilizer.n_verf(field_type)
 
-    def is_measure(self, measure_type: MeasureType) -> bool:
+    def _is_measure(self, measure_type: MeasureType) -> bool:
         return self.measure is measure_type if measure_type else True
 
     def __repr__(self) -> str:

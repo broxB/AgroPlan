@@ -72,7 +72,10 @@ def create_field(
         fertilizer_data = create_fertilizer(fertilization.fertilizer)
         crop_data = Crop(fertilization.cultivation.crop)
         fertilization_data = Fertilization(
-            fertilization, fertilizer_data, crop_data, fertilization.cultivation.cultivation_type
+            fertilization,
+            fertilizer_data,
+            crop_data.feedable,
+            fertilization.cultivation.cultivation_type,
         )
         new_field.fertilizations.append(fertilization_data)
 
