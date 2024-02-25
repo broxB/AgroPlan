@@ -99,12 +99,12 @@ def test_mineral(mineral_fertilizer: db.Fertilizer) -> Mineral:
     return Mineral(mineral_fertilizer)
 
 
-def test_mineral__n_verf(test_mineral: Fertilizer):
+def test_mineral__n_verf(test_mineral: Mineral):
     test_mineral.n = 123
     test_mineral.nh4 = 321
     assert test_mineral.n_verf() == 321
 
 
-def test_mineral_n_total(test_mineral: Fertilizer):
+def test_mineral_n_total(test_mineral: Mineral):
     test_mineral.n = 123
     assert test_mineral.n_total() == 123

@@ -61,6 +61,16 @@ class Fertilizer:
     def is_lime(self) -> bool:
         return self.fert_type is FertType.lime
 
+    def n_total(self, *arg, **kwargs) -> Decimal:
+        """
+        Calculates the total nitrogen content.
+        """
+
+    def n_verf(self, *arg, **kwargs) -> Decimal:
+        """
+        Calculates the available nitrogen content.
+        """
+
     def lime_starvation(self, field_type: FieldType) -> Decimal:
         """
         Returns the lime starvation of the fertilizer
