@@ -148,6 +148,22 @@ class Organic(Fertilizer):
         except KeyError:
             raise KeyError
 
+    def lime_starvation(self, field_type: FieldType) -> Decimal:
+        """Returns the lime starvation of the fertilizer"""
+        if (factor := self._factor(field_type)) >= 0.5:
+            n = {FieldType.cropland: 1, FieldType.grassland: Decimal("0.8")}.get(field_type, 1)
+        else:
+            n = (1 - factor) * 2 + Decimal("0.14") * factor * 2
+
+        return (
+            self.cao
+            + Decimal("1.4") * self.mgo
+            + Decimal("0.6") * self.k2o
+            - Decimal("0.4") * self.p2o5
+            - Decimal("0.7") * self.s * Decimal("0.400")  # Conversion from SO3
+            - n * self.n
+        )
+
     def __repr__(self) -> str:
         return f"<Org fertilizer: {self.name}>"
 

@@ -96,6 +96,19 @@ def test_organic_n_verf(test_organic: Organic):
     assert test_organic.n_verf(FieldType.exchanged_land) == 0
 
 
+def test_organic_lime_starvation(test_organic: Organic):
+    test_organic.cao = 1
+    test_organic.mgo = 1
+    test_organic.k2o = 1
+    test_organic.p2o5 = 1
+    test_organic.s = 1
+    test_organic.n = 1
+    assert test_organic.lime_starvation(FieldType.cropland) == Decimal("1.32")
+    assert test_organic.lime_starvation(FieldType.grassland) == Decimal("1.52")
+    test_organic.fert_type = FertType.org_manure
+    assert test_organic.lime_starvation(FieldType.grassland) == Decimal("0.75")
+
+
 @pytest.fixture
 def test_mineral(mineral_fertilizer: db.Fertilizer) -> Mineral:
     return Mineral(mineral_fertilizer)

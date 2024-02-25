@@ -845,7 +845,12 @@ def guidelines() -> object:
                     "Lagerverluste": 0.5,
                     FieldType.cropland.value: 0.6,
                     FieldType.grassland.value: 0.5,
-                }
+                },
+                FertType.org_manure.value: {
+                    "Lagerverluste": 0.7,
+                    FieldType.cropland.value: 0.25,
+                    FieldType.grassland.value: 0.25,
+                },
             }
 
         @staticmethod
