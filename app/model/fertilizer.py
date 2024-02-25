@@ -94,7 +94,7 @@ class Fertilizer:
             + Decimal("1.4") * self.mgo
             + Decimal("0.6") * self.k2o
             - Decimal("0.4") * self.p2o5
-            - Decimal("0.7") * self.s / Decimal("0.4")  # Conversion from SO3
+            - Decimal("0.7") * self.s / Decimal("0.400")  # Conversion from SO3
             - n.get(field_type, 1) * self.n
         )
 
@@ -160,7 +160,7 @@ class Organic(Fertilizer):
             + Decimal("1.4") * self.mgo
             + Decimal("0.6") * self.k2o
             - Decimal("0.4") * self.p2o5
-            - Decimal("0.7") * self.s * Decimal("0.400")  # Conversion from SO3
+            - Decimal("0.7") * self.s / Decimal("0.400")  # Conversion from SO3
             - n * self.n
         )
 
