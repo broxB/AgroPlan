@@ -2,12 +2,9 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from flask_login import current_user
 from loguru import logger
 
 import app.database.model as db
-from app.database.model import BaseField as BaseFieldModel
-from app.database.model import Field as FieldModel
 from app.database.types import (
     CultivationType,
     DemandType,
@@ -47,11 +44,11 @@ def create_field(
     """
 
     field = (
-        FieldModel.query.join(BaseFieldModel)
+        db.Field.query.join(db.BaseField)
         .filter(
-            BaseFieldModel.id == base_field_id,
-            BaseFieldModel.user_id == user_id,
-            FieldModel.year == year,
+            db.BaseField.id == base_field_id,
+            db.BaseField.user_id == user_id,
+            db.Field.year == year,
         )
         .one_or_none()
     )
@@ -110,6 +107,9 @@ class Field:
         self.fertilizations: list[Fertilization] = []
         self.modifiers: list[Balance] = []
         self.field_prev_year: Field = self._field_prev_year()
+
+    def __eq__(self, other):
+        return self.base_id == other.base_id and self.year == other.year
 
     def total_balance(self) -> Balance:
         """Summarize the balances of all crop needs, soil reductions, fertilizations and modifiers."""
