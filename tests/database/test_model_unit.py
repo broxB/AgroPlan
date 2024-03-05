@@ -87,48 +87,48 @@ def test_field(
     assert str(field_first_year.area) in str(field_first_year.__repr__)
 
 
-def test_crop(user: User, main_crop: Crop, cultivation_field_grass: Cultivation, fill_db):
+def test_crop(user: User, field_grass: Crop, cultivation_field_grass: Cultivation, fill_db):
     # relationships
-    assert cultivation_field_grass.crop == main_crop
-    assert cultivation_field_grass in main_crop.cultivations
+    assert cultivation_field_grass.crop == field_grass
+    assert cultivation_field_grass in field_grass.cultivations
     # attributes
-    assert main_crop.user_id == user.id
-    assert main_crop.name == "Ackergras 3 Schnitte"
-    assert main_crop.field_type == FieldType.cropland
-    assert main_crop.crop_class == CropClass.main_crop
-    assert main_crop.crop_type == CropType.field_grass
-    assert main_crop.kind == "Ackergras"
-    assert main_crop.feedable is True
-    assert main_crop.residue is True
-    assert main_crop.nmin_depth == NminType.nmin_0
-    assert main_crop.target_demand == 100
-    assert main_crop.target_yield == 100
-    assert main_crop.pos_yield == 1
-    assert main_crop.neg_yield == 2
-    assert main_crop.target_protein == Decimal("16")
-    assert main_crop.var_protein == Decimal("1.5")
-    assert main_crop.p2o5 == Decimal(1)
-    assert main_crop.k2o == Decimal(1)
-    assert main_crop.mgo == Decimal(1)
-    assert main_crop.byproduct == "Heu"
-    assert main_crop.byp_ratio == Decimal("0.8")
-    assert main_crop.byp_n == Decimal("0.5")
-    assert main_crop.byp_p2o5 == Decimal("0.5")
-    assert main_crop.byp_k2o == Decimal("0.5")
-    assert main_crop.byp_mgo == Decimal("0.5")
-    assert main_crop.name in str(main_crop.__repr__)
+    assert field_grass.user_id == user.id
+    assert field_grass.name == "Ackergras 3 Schnitte"
+    assert field_grass.field_type == FieldType.cropland
+    assert field_grass.crop_class == CropClass.main_crop
+    assert field_grass.crop_type == CropType.field_grass
+    assert field_grass.kind == "Ackergras"
+    assert field_grass.feedable is True
+    assert field_grass.residue is True
+    assert field_grass.nmin_depth == NminType.nmin_0
+    assert field_grass.target_demand == 100
+    assert field_grass.target_yield == 100
+    assert field_grass.pos_yield == 1
+    assert field_grass.neg_yield == 2
+    assert field_grass.target_protein == Decimal("16")
+    assert field_grass.var_protein == Decimal("1.5")
+    assert field_grass.p2o5 == Decimal(1)
+    assert field_grass.k2o == Decimal(1)
+    assert field_grass.mgo == Decimal(1)
+    assert field_grass.byproduct == "Heu"
+    assert field_grass.byp_ratio == Decimal("0.8")
+    assert field_grass.byp_n == Decimal("0.5")
+    assert field_grass.byp_p2o5 == Decimal("0.5")
+    assert field_grass.byp_k2o == Decimal("0.5")
+    assert field_grass.byp_mgo == Decimal("0.5")
+    assert field_grass.name in str(field_grass.__repr__)
 
 
 def test_cultivation(
-    field_first_year: Field, main_crop: Crop, cultivation_field_grass: Cultivation, fill_db
+    field_first_year: Field, field_grass: Crop, cultivation_field_grass: Cultivation, fill_db
 ):
     # relationships
     assert cultivation_field_grass.field == field_first_year
-    assert cultivation_field_grass.crop == main_crop
+    assert cultivation_field_grass.crop == field_grass
     # attributes
     assert cultivation_field_grass.field_id == field_first_year.id
     assert cultivation_field_grass.cultivation_type == CultivationType.main_crop
-    assert cultivation_field_grass.crop_id == main_crop.id
+    assert cultivation_field_grass.crop_id == field_grass.id
     assert cultivation_field_grass.crop_yield == 110
     assert cultivation_field_grass.crop_protein == 0
     assert cultivation_field_grass.residues == ResidueType.none

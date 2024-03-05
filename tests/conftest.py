@@ -113,7 +113,7 @@ def field_second_year(base_field) -> Field:
 
 
 @pytest.fixture
-def main_crop(user) -> Crop:
+def field_grass(user) -> Crop:
     crop = Crop(
         id=1,
         user_id=user.id,
@@ -145,8 +145,8 @@ def main_crop(user) -> Crop:
 
 
 @pytest.fixture
-def second_crop(user) -> Crop:
-    second_crop = Crop(
+def corn(user) -> Crop:
+    corn = Crop(
         id=2,
         user_id=user.id,
         name="Silomais 32%",
@@ -165,7 +165,31 @@ def second_crop(user) -> Crop:
         k2o=Decimal(1),
         mgo=Decimal(1),
     )
-    return second_crop
+    return corn
+
+
+@pytest.fixture
+def mustard(user) -> Crop:
+    mustard = Crop(
+        id=4,
+        user_id=user.id,
+        name="Senf (GP)",
+        field_type=FieldType.cropland,
+        crop_class=CropClass.second_crop,
+        crop_type=CropType.legume_grain,
+        kind="Gelbsenf",
+        feedable=False,
+        residue=False,
+        nmin_depth=NminType.nmin_60,
+        target_demand=130,
+        target_yield=200,
+        pos_yield=Decimal(1),
+        neg_yield=Decimal("1.5"),
+        p2o5=Decimal("2.36"),
+        k2o=Decimal("4.69"),
+        mgo=Decimal("0.51"),
+    )
+    return mustard
 
 
 @pytest.fixture
@@ -190,10 +214,10 @@ def catch_crop(user) -> Crop:
 
 
 @pytest.fixture
-def cultivation_field_grass(main_crop) -> Cultivation:
+def cultivation_field_grass(field_grass) -> Cultivation:
     cultivation = Cultivation(
         cultivation_type=CultivationType.main_crop,
-        crop_id=main_crop.id,
+        crop_id=field_grass.id,
         crop_yield=110,
         crop_protein=Decimal(),
         residues=ResidueType.none,
@@ -206,10 +230,24 @@ def cultivation_field_grass(main_crop) -> Cultivation:
 
 
 @pytest.fixture
-def cultivation_corn(second_crop) -> Cultivation:
+def cultivation_mustard(mustard) -> Cultivation:
+    cultivation = Cultivation(
+        cultivation_type=CultivationType.second_crop,
+        crop_id=mustard.id,
+        crop_yield=180,
+        residues=ResidueType.none,
+        nmin_30=10,
+        nmin_60=10,
+        nmin_90=10,
+    )
+    return cultivation
+
+
+@pytest.fixture
+def cultivation_corn(corn) -> Cultivation:
     cultivation = Cultivation(
         cultivation_type=CultivationType.main_crop,
-        crop_id=second_crop.id,
+        crop_id=corn.id,
         crop_yield=300,
         residues=ResidueType.none,
         nmin_30=10,
@@ -383,14 +421,16 @@ def fill_db(
     base_field,
     field_first_year,
     field_second_year,
-    main_crop,
-    second_crop,
+    field_grass,
+    corn,
+    mustard,
     catch_crop,
     organic_fertilizer,
     organic_fertilizer_second_year,
     mineral_fertilizer,
     cultivation_field_grass,
     cultivation_corn,
+    cultivation_mustard,
     cultivation_catch,
     organic_fertilization,
     organic_fertilization_second_year,
@@ -402,8 +442,9 @@ def fill_db(
     db.session.add(user)
     db.session.add(base_field)
     db.session.add(soil_sample)
-    db.session.add(main_crop)
-    db.session.add(second_crop)
+    db.session.add(field_grass)
+    db.session.add(corn)
+    db.session.add(mustard)
     db.session.add(catch_crop)
     db.session.add(organic_fertilizer)
     db.session.add(organic_fertilizer_second_year)
@@ -425,20 +466,23 @@ def fill_db(
     # second year
     db.session.add(field_second_year)
 
-    # 1. cultivation
+    # catch cultivation
     cultivation_catch.field = field_second_year
     db.session.add(cultivation_catch)
     # 1. fertilization
     organic_fertilization_second_year.field = field_second_year
     organic_fertilization_second_year.cultivation = cultivation_catch
     db.session.add(organic_fertilization_second_year)
-    # 2. cultivation
+    # main cultivation
     cultivation_corn.field = field_second_year
     db.session.add(cultivation_corn)
     # 2. fertilization
     mineral_fertilization.field = field_second_year
     mineral_fertilization.cultivation = cultivation_corn
     db.session.add(mineral_fertilization)
+    # second cultivation
+    cultivation_mustard.field = field_second_year
+    db.session.add(cultivation_mustard)
 
     db.session.add(modifier)
 

@@ -33,10 +33,10 @@ def test_user_get_years(user: User, field_first_year: Field, fill_db):
     assert field_first_year.year in user.get_years()
 
 
-def test_user_get_crops(user: User, main_crop: Crop, fill_db):
-    assert main_crop in user.get_crops()
-    assert main_crop in user.get_crops(crop_class=main_crop.crop_class)
-    assert main_crop in user.get_crops(field_type=main_crop.field_type)
+def test_user_get_crops(user: User, field_grass: Crop, fill_db):
+    assert field_grass in user.get_crops()
+    assert field_grass in user.get_crops(crop_class=field_grass.crop_class)
+    assert field_grass in user.get_crops(field_type=field_grass.field_type)
 
 
 def test_user_get_fertilizers(

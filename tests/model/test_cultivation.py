@@ -20,8 +20,8 @@ from app.model.cultivation import (
 
 
 @pytest.fixture
-def test_crop(main_crop: db.Crop) -> Crop:
-    return Crop(main_crop)
+def test_crop(field_grass: db.Crop) -> Crop:
+    return Crop(field_grass)
 
 
 def test_create_cultivation(cultivation_field_grass: db.Cultivation, test_crop: Crop):

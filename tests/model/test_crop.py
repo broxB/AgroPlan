@@ -7,8 +7,8 @@ from app.model import Balance, Crop
 
 
 @pytest.fixture
-def crop(main_crop: db.Crop, guidelines) -> Crop:
-    return Crop(main_crop, guidelines=guidelines())
+def crop(field_grass: db.Crop, guidelines) -> Crop:
+    return Crop(field_grass, guidelines=guidelines())
 
 
 @pytest.mark.parametrize(
