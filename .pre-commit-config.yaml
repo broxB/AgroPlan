@@ -3,10 +3,7 @@ repos:
   rev: v0.1.6
   hooks:
   - id: ruff
-    args: [--line-length=99, --ignore=F401]
   - id: ruff-format
-    args: []
-    exclude: migrations/env.py
 
 - repo: https://github.com/pre-commit/mirrors-prettier
   rev: v3.0.3

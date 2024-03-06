@@ -38,6 +38,7 @@ ignore-init-module-imports = true
 
 [tool.ruff.format]
 exclude = ["migrations/env.py"]
+skip-magic-trailing-comma = true
 
 [tool.pytest.ini_options]
 log_cli = false
