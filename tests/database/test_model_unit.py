@@ -99,23 +99,23 @@ def test_crop(user: User, field_grass: Crop, cultivation_field_grass: Cultivatio
     assert field_grass.crop_type == CropType.field_grass
     assert field_grass.kind == "Ackergras"
     assert field_grass.feedable is True
-    assert field_grass.residue is True
+    assert field_grass.residue is False
     assert field_grass.nmin_depth == NminType.nmin_0
-    assert field_grass.target_demand == 100
-    assert field_grass.target_yield == 100
+    assert field_grass.target_demand == 1
+    assert field_grass.target_yield == 1
     assert field_grass.pos_yield == 1
-    assert field_grass.neg_yield == 2
-    assert field_grass.target_protein == Decimal("16")
-    assert field_grass.var_protein == Decimal("1.5")
-    assert field_grass.p2o5 == Decimal(1)
-    assert field_grass.k2o == Decimal(1)
-    assert field_grass.mgo == Decimal(1)
+    assert field_grass.neg_yield == 1
+    assert field_grass.target_protein == 1
+    assert field_grass.var_protein == 1
+    assert field_grass.p2o5 == 1
+    assert field_grass.k2o == 1
+    assert field_grass.mgo == 1
     assert field_grass.byproduct == "Heu"
-    assert field_grass.byp_ratio == Decimal("0.8")
-    assert field_grass.byp_n == Decimal("0.5")
-    assert field_grass.byp_p2o5 == Decimal("0.5")
-    assert field_grass.byp_k2o == Decimal("0.5")
-    assert field_grass.byp_mgo == Decimal("0.5")
+    assert field_grass.byp_ratio == 1
+    assert field_grass.byp_n == 1
+    assert field_grass.byp_p2o5 == 1
+    assert field_grass.byp_k2o == 1
+    assert field_grass.byp_mgo == 1
     assert field_grass.name in str(field_grass.__repr__)
 
 
@@ -129,13 +129,13 @@ def test_cultivation(
     assert cultivation_field_grass.field_id == field_first_year.id
     assert cultivation_field_grass.cultivation_type == CultivationType.main_crop
     assert cultivation_field_grass.crop_id == field_grass.id
-    assert cultivation_field_grass.crop_yield == 110
-    assert cultivation_field_grass.crop_protein == 0
+    assert cultivation_field_grass.crop_yield == 1
+    assert cultivation_field_grass.crop_protein == 1
     assert cultivation_field_grass.residues == ResidueType.none
     assert cultivation_field_grass.legume_rate == LegumeType.none
-    assert cultivation_field_grass.nmin_30 == 10
-    assert cultivation_field_grass.nmin_60 == 10
-    assert cultivation_field_grass.nmin_90 == 10
+    assert cultivation_field_grass.nmin_30 == 1
+    assert cultivation_field_grass.nmin_60 == 1
+    assert cultivation_field_grass.nmin_90 == 2
     assert str(cultivation_field_grass.id) in str(cultivation_field_grass.__repr__)
 
 
@@ -146,7 +146,7 @@ def test_fertilizer(
     assert organic_fertilization.fertilizer == organic_fertilizer
     # attributes
     assert organic_fertilizer.user_id == user.id
-    assert organic_fertilizer.name == "Organic Fertilizer"
+    assert organic_fertilizer.name == "Gärrest 1000"
     assert organic_fertilizer.year == 1000
     assert organic_fertilizer.fert_class == FertClass.organic
     assert organic_fertilizer.fert_type == FertType.org_digestate

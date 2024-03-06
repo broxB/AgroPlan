@@ -123,23 +123,23 @@ def field_grass(user) -> Crop:
         crop_type=CropType.field_grass,
         kind="Ackergras",
         feedable=True,
-        residue=True,
+        residue=False,
         nmin_depth=NminType.nmin_0,
-        target_demand=100,
-        target_yield=100,
-        pos_yield=Decimal(1),
-        neg_yield=Decimal(2),
-        target_protein=Decimal("16"),
-        var_protein=Decimal("1.5"),
-        p2o5=Decimal(1),
-        k2o=Decimal(1),
-        mgo=Decimal(1),
+        target_demand=1,
+        target_yield=1,
+        pos_yield=1,
+        neg_yield=1,
+        target_protein=1,
+        var_protein=1,
+        p2o5=1,
+        k2o=1,
+        mgo=1,
         byproduct="Heu",
-        byp_ratio=Decimal("0.8"),
-        byp_n=Decimal("0.5"),
-        byp_p2o5=Decimal("0.5"),
-        byp_k2o=Decimal("0.5"),
-        byp_mgo=Decimal("0.5"),
+        byp_ratio=1,
+        byp_n=1,
+        byp_p2o5=1,
+        byp_k2o=1,
+        byp_mgo=1,
     )
     return crop
 
@@ -218,13 +218,13 @@ def cultivation_field_grass(field_grass) -> Cultivation:
     cultivation = Cultivation(
         cultivation_type=CultivationType.main_crop,
         crop_id=field_grass.id,
-        crop_yield=110,
-        crop_protein=Decimal(),
+        crop_yield=1,
+        crop_protein=1,
         residues=ResidueType.none,
         legume_rate=LegumeType.none,
-        nmin_30=10,
-        nmin_60=10,
-        nmin_90=10,
+        nmin_30=1,
+        nmin_60=1,
+        nmin_90=2,
     )
     return cultivation
 
@@ -273,7 +273,7 @@ def organic_fertilizer(user) -> Fertilizer:
     fertilizer = Fertilizer(
         id=1,
         user_id=user.id,
-        name="Organic Fertilizer",
+        name="Gärrest 1000",
         year=1000,
         fert_class=FertClass.organic,
         fert_type=FertType.org_digestate,
@@ -318,7 +318,7 @@ def organic_fertilizer_second_year(user) -> Fertilizer:
     fertilizer = Fertilizer(
         id=3,
         user_id=user.id,
-        name="Organic Fertilizer 2nd Year",
+        name="Gärrest 1001",
         year=1001,
         fert_class=FertClass.organic,
         fert_type=FertType.org_digestate,
@@ -564,9 +564,7 @@ def guidelines() -> object:
         def sulfur_reductions():
             return {
                 "Grenzwerte": {"Bedarf": [0, 20, 30, 40], "Nges": [0, 100, 201]},
-                "Humusgehalt": {
-                    HumusType.less_4.value: [0, 0, 0, 0],
-                },
+                "Humusgehalt": {HumusType.less_4.value: [0, 0, 0, 0]},
                 "Nges": {"0": [0, 0, 0, 0], "100": [0, 10, 10, 10], "201": [0, 20, 20, 20]},
             }
 

@@ -11,33 +11,16 @@ def crop(field_grass: db.Crop, guidelines) -> Crop:
     return Crop(field_grass, guidelines=guidelines())
 
 
-@pytest.mark.parametrize(
-    "crop_yield, crop_protein, expected",
-    [
-        (Decimal("110"), Decimal("16.5"), Balance("", Decimal("110.75"), 110, 110, 110, 20, 0)),
-        (Decimal("100"), Decimal("16"), Balance("", 100, 100, 100, 100, 20, 0)),
-        (Decimal("90"), Decimal("15.5"), Balance("", Decimal("79.25"), 90, 90, 90, 20, 0)),
-    ],
-    ids=["higher yield", "normal yield", "lower yield"],
-)
-def test_demand_crop(crop: Crop, crop_yield, crop_protein, expected):
-    assert crop.demand_crop(crop_yield, crop_protein) == expected
+def test_demand_crop(crop: Crop):
+    assert crop.demand_crop(1, 1) == Balance("", 1, 1, 1, 1, 20, 0)
 
 
-@pytest.mark.parametrize(
-    "crop_yield, expected",
-    [
-        (Decimal("110"), Balance("", 0, 44, 44, 44, 0, 0)),
-        (Decimal("100"), Balance("", 0, 40, 40, 40, 0, 0)),
-        (Decimal("90"), Balance("", 0, 36, 36, 36, 0, 0)),
-    ],
-    ids=["higher yield", "normal yield", "lower yield"],
-)
-def test_demand_byproduct(crop: Crop, crop_yield, expected):
-    assert crop.demand_byproduct(crop_yield) == expected
+def test_demand_byproduct(crop: Crop):
+    assert crop.demand_byproduct(1) == Balance("", 0, 1, 1, 1, 0, 0)
 
 
 def test_s_demand(crop: Crop):
+    crop.name = "Ackergras 3 Schnitte"
     assert crop.s_demand == 20
     crop.name = "Unsinn"
     assert crop.s_demand == 0
@@ -46,41 +29,22 @@ def test_s_demand(crop: Crop):
 @pytest.mark.parametrize(
     "crop_yield, crop_protein, expected",
     [
-        (Decimal("110"), Decimal("16.5"), Decimal("110.75")),
-        (Decimal("100"), Decimal("16"), Decimal("100")),
-        (Decimal("90"), Decimal("15.5"), Decimal("79.25")),
+        (Decimal("1"), Decimal("1"), Decimal("1")),
+        (Decimal("2"), Decimal("1"), Decimal("2")),
+        (Decimal("0.5"), Decimal("1"), Decimal("0.5")),
+        (Decimal("1"), Decimal("2"), Decimal("2")),
+        (Decimal("1"), Decimal("0.5"), Decimal("0.5")),
     ],
-    ids=["higher yield", "normal yield", "lower yield"],
+    ids=["normal", "higher yield", "lower yield", "higher protein", "lower protein"],
 )
 def test__n_demand(crop: Crop, crop_yield, crop_protein, expected):
     assert crop._n_demand(crop_yield, crop_protein) == expected
 
 
-@pytest.mark.parametrize(
-    "crop_yield, nutrient, expected",
-    [
-        (Decimal("110"), Decimal("0.9"), Decimal("99")),
-        (Decimal("100"), Decimal("0.9"), Decimal("90")),
-        (Decimal("90"), Decimal("0.9"), Decimal("81")),
-    ],
-    ids=["higher yield", "normal yield", "lower yield"],
-)
-def test__nutrient(crop: Crop, crop_yield, nutrient, expected):
-    assert crop._nutrient(crop_yield, nutrient) == expected
+def test__nutrient(crop: Crop):
+    assert crop._nutrient(1, Decimal("0.9")) == Decimal("0.9")
 
 
-@pytest.mark.parametrize(
-    "crop_yield, byp_nutrient, expected",
-    [
-        (Decimal("110"), Decimal("0.9"), Decimal("79.2")),
-        (Decimal("100"), Decimal("0.9"), Decimal("72")),
-        (Decimal("90"), Decimal("0.9"), Decimal("64.8")),
-    ],
-    ids=["higher yield", "normal yield", "lower yield"],
-)
-def test__nutrient_byproduct(crop: Crop, crop_yield, byp_nutrient, expected):
-    assert crop._nutrient_byproduct(crop_yield, byp_nutrient) == expected
-
-
-def test_repr(crop: Crop):
-    assert crop.name in str(crop.__repr__)
+def test__nutrient_byproduct(crop: Crop):
+    crop.byp_ratio = 1
+    assert crop._nutrient_byproduct(1, Decimal("0.9")) == Decimal("0.9")

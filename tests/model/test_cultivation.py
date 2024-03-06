@@ -10,13 +10,7 @@ from app.database.types import (
     ResidueType,
 )
 from app.model import Balance, Crop
-from app.model.cultivation import (
-    CatchCrop,
-    Cultivation,
-    MainCrop,
-    SecondCrop,
-    create_cultivation,
-)
+from app.model.cultivation import CatchCrop, Cultivation, MainCrop, SecondCrop, create_cultivation
 
 
 @pytest.fixture
@@ -51,25 +45,25 @@ def test_cultivation(cultivation_field_grass, test_crop, guidelines) -> Cultivat
             DemandType.demand,
             DemandType.demand,
             DemandType.demand,
-            Balance("Crop needs", -110, -154, -154, -154, -20, -0),
+            Balance("Crop needs", -1, -2, -2, -2, -20, -0),
         ),
         (
             DemandType.removal,
             DemandType.demand,
             DemandType.demand,
-            Balance("Crop needs", -110, -110, -154, -154, -20, -0),
+            Balance("Crop needs", -1, -1, -2, -2, -20, -0),
         ),
         (
-            DemandType.removal,
+            DemandType.demand,
             DemandType.removal,
             DemandType.demand,
-            Balance("Crop needs", -110, -110, -110, -154, -20, -0),
+            Balance("Crop needs", -1, -2, -1, -2, -20, -0),
         ),
         (
+            DemandType.demand,
+            DemandType.demand,
             DemandType.removal,
-            DemandType.removal,
-            DemandType.removal,
-            Balance("Crop needs", -110, -110, -110, -110, -20, -0),
+            Balance("Crop needs", -1, -2, -2, -1, -20, -0),
         ),
     ],
 )
@@ -85,10 +79,10 @@ def test_demand_no_residue(test_cultivation: Cultivation):
     test_cultivation.residues = ResidueType.main_removed
     assert test_cultivation.demand(
         DemandType.demand, DemandType.demand, DemandType.demand
-    ) == Balance("Crop needs", -110, -154, -154, -154, -20, -0)
+    ) == Balance("Crop needs", -1, -2, -2, -2, -20, -0)
     assert test_cultivation.demand(
         DemandType.removal, DemandType.removal, DemandType.removal
-    ) == Balance("Crop needs", -110, -110, -110, -110, -20, -0)
+    ) == Balance("Crop needs", -1, -1, -1, -1, -20, -0)
 
 
 def test_pre_crop_effect(test_cultivation: Cultivation):
@@ -144,7 +138,7 @@ def test_main_crop(cultivation_field_grass, test_crop) -> MainCrop:
 
 @pytest.mark.parametrize(
     "nmin_depth, expected",
-    [(NminType.nmin_0, 0), (NminType.nmin_30, 10), (NminType.nmin_60, 20), (NminType.nmin_90, 25)],
+    [(NminType.nmin_0, 0), (NminType.nmin_30, 1), (NminType.nmin_60, 2), (NminType.nmin_90, 3)],
 )
 def test_main_crop_reduction_nmin(test_main_crop: MainCrop, nmin_depth, expected):
     test_main_crop.crop.feedable = False
