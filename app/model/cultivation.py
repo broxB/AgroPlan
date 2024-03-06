@@ -75,8 +75,7 @@ class Cultivation:
             `Balance` containing all the nutrient values.
         """
         crop_demand = self.crop.demand_crop(
-            crop_yield=self.crop_yield,
-            crop_protein=self.crop_protein,
+            crop_yield=self.crop_yield, crop_protein=self.crop_protein
         )
         if (
             any(option is DemandType.demand for option in [option_p2o5, option_k2o, option_mgo])
@@ -103,7 +102,7 @@ class Cultivation:
         Delayed nitrogen supply of the previous crop through degradation.
         """
         pre_crop_effect: dict = self._guidelines.pre_crop_effect()
-        return Decimal(pre_crop_effect[self.crop_type.value])
+        return Decimal(pre_crop_effect.get(self.crop_type.value, 0))
 
     def legume_delivery(self) -> Decimal:
         """
@@ -172,7 +171,10 @@ class CatchCrop(Cultivation):
 
     def pre_crop_effect(self) -> Decimal:
         pre_crop_effect: dict = self._guidelines.pre_crop_effect()
-        return Decimal(pre_crop_effect[self.crop_type.value][self.residues.value])
+        try:
+            return Decimal(pre_crop_effect[self.crop_type.value][self.residues.value])
+        except AttributeError:
+            return Decimal()
 
     def __repr__(self) -> str:
         return f"<Catch crop: {self.crop.name}>"
