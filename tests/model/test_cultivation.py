@@ -14,21 +14,21 @@ from app.model.cultivation import CatchCrop, Cultivation, MainCrop, SecondCrop, 
 
 
 @pytest.fixture
-def test_crop(field_grass: db.Crop) -> Crop:
-    return Crop(field_grass)
+def test_crop(field_grass: db.Crop, guidelines) -> Crop:
+    return Crop(field_grass, guidelines=guidelines)
 
 
-def test_create_cultivation(cultivation_field_grass: db.Cultivation, test_crop: Crop):
+def test_create_cultivation(cultivation_field_grass: db.Cultivation, test_crop: Crop, guidelines):
     cultivation_field_grass.cultivation_type = CultivationType.main_crop
-    main_cult = create_cultivation(cultivation_field_grass, test_crop)
+    main_cult = create_cultivation(cultivation_field_grass, test_crop, guidelines=guidelines)
     assert isinstance(main_cult, MainCrop)
     assert "Main crop" in str(main_cult.__repr__)
     cultivation_field_grass.cultivation_type = CultivationType.catch_crop
-    catch_cult = create_cultivation(cultivation_field_grass, test_crop)
+    catch_cult = create_cultivation(cultivation_field_grass, test_crop, guidelines=guidelines)
     assert isinstance(catch_cult, CatchCrop)
     assert "Catch crop" in str(catch_cult.__repr__)
     cultivation_field_grass.cultivation_type = CultivationType.second_crop
-    second_cult = create_cultivation(cultivation_field_grass, test_crop)
+    second_cult = create_cultivation(cultivation_field_grass, test_crop, guidelines=guidelines)
     assert isinstance(second_cult, SecondCrop)
     assert "Second crop" in str(second_cult.__repr__)
 
@@ -152,9 +152,9 @@ def test_main_crop_reduction_nmin_feedable(test_main_crop: MainCrop):
 
 
 @pytest.fixture
-def catch_crop(cultivation_field_grass, test_crop) -> CatchCrop:
+def catch_crop(cultivation_field_grass, test_crop, guidelines) -> CatchCrop:
     cultivation_field_grass.cultivation_type = CultivationType.catch_crop
-    return CatchCrop(cultivation_field_grass, test_crop)
+    return CatchCrop(cultivation_field_grass, test_crop, guidelines=guidelines)
 
 
 def test_catch_crop_demand(catch_crop: CatchCrop):

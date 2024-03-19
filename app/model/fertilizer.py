@@ -8,7 +8,9 @@ from app.database.types import FertClass, FertType, FieldType
 from . import guidelines
 
 
-def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
+def create_fertilizer(
+    fertilizer: db.Fertilizer, *, guidelines: guidelines = guidelines
+) -> Organic | Mineral:
     """
     Facotry to create fertilizers based on their FertClasses.
 
@@ -18,7 +20,7 @@ def create_fertilizer(fertilizer: db.Fertilizer) -> Organic | Mineral:
         Fertilizer service object.
     """
     if fertilizer.fert_class is FertClass.organic:
-        return Organic(fertilizer)
+        return Organic(fertilizer, guidelines=guidelines)
     elif fertilizer.fert_class is FertClass.mineral:
         return Mineral(fertilizer)
 
@@ -100,7 +102,7 @@ class Organic(Fertilizer):
     Subclass for organic fertilizers.
     """
 
-    def __init__(self, fertilizer, *, guidelines=guidelines):
+    def __init__(self, fertilizer, *, guidelines: guidelines = guidelines):
         super().__init__(fertilizer)
         self._org_factor: dict = guidelines.org_factor()
 

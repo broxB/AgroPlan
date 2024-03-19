@@ -20,14 +20,14 @@ from .crop import Crop
 
 
 def create_cultivation(
-    cultivation: db.Cultivation, crop: Crop
+    cultivation: db.Cultivation, crop: Crop, *, guidelines: guidelines = guidelines
 ) -> MainCrop | SecondCrop | CatchCrop:
     if cultivation.cultivation_type is CultivationType.catch_crop:
-        return CatchCrop(cultivation, crop)
+        return CatchCrop(cultivation, crop, guidelines)
     elif cultivation.cultivation_type is CultivationType.main_crop:
-        return MainCrop(cultivation, crop)
+        return MainCrop(cultivation, crop, guidelines)
     else:
-        return SecondCrop(cultivation, crop)
+        return SecondCrop(cultivation, crop, guidelines)
 
 
 class Cultivation:

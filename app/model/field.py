@@ -15,22 +15,22 @@ from app.database.types import (
     SoilClass,
 )
 
+from . import guidelines
 from .balance import Balance, create_modifier
 from .crop import Crop
-from .cultivation import (
-    CatchCrop,
-    Cultivation,
-    MainCrop,
-    SecondCrop,
-    create_cultivation,
-)
+from .cultivation import CatchCrop, Cultivation, MainCrop, SecondCrop, create_cultivation
 from .fertilization import Fertilization
 from .fertilizer import create_fertilizer
 from .soil import Soil, create_soil_sample
 
 
 def create_field(
-    user_id: int, base_field_id: int, year: int, first_year: bool = True
+    user_id: int,
+    base_field_id: int,
+    year: int,
+    first_year: bool = True,
+    *,
+    guidelines: guidelines = guidelines,
 ) -> Field | None:
     """Class Factory to create `field` from sqlalchemy database queries.
 
@@ -55,19 +55,19 @@ def create_field(
 
     if field is None:
         return None
-    new_field = Field(field, first_year=first_year)
+    new_field = Field(field, first_year=first_year, guidelines=guidelines)
     new_field.soil_sample = create_soil_sample(
-        field.base_field.soil_samples, field.field_type, year
+        field.base_field.soil_samples, field.field_type, year, guidelines=guidelines
     )
 
     for cultivation in field.cultivations:
-        crop_data = Crop(cultivation.crop)
-        cultivation_data = create_cultivation(cultivation, crop_data)
+        crop_data = Crop(cultivation.crop, guidelines=guidelines)
+        cultivation_data = create_cultivation(cultivation, crop_data, guidelines=guidelines)
         new_field.cultivations.append(cultivation_data)
 
     for fertilization in field.fertilizations:
-        fertilizer_data = create_fertilizer(fertilization.fertilizer)
-        crop_data = Crop(fertilization.cultivation.crop)
+        fertilizer_data = create_fertilizer(fertilization.fertilizer, guidelines=guidelines)
+        crop_data = Crop(fertilization.cultivation.crop, guidelines=guidelines)
         fertilization_data = Fertilization(
             fertilization,
             fertilizer_data,
@@ -89,7 +89,9 @@ class Field:
     Field class contains all `cultivations` and `fertilizations` that happen on a basefield for a specific year.
     """
 
-    def __init__(self, Field: db.Field, first_year: bool = False):
+    def __init__(
+        self, Field: db.Field, first_year: bool = False, *, guidelines: guidelines = guidelines
+    ):
         self.user_id: int = Field.base_field.user_id
         self.base_id: int = Field.base_id
         self.name: str = Field.base_field.name
@@ -106,7 +108,7 @@ class Field:
         self.cultivations: list[Cultivation] = []
         self.fertilizations: list[Fertilization] = []
         self.modifiers: list[Balance] = []
-        self.field_prev_year: Field = self._field_prev_year()
+        self.field_prev_year: Field = self._field_prev_year(first_year, guidelines=guidelines)
 
     def __eq__(self, other):
         return self.base_id == other.base_id and self.year == other.year

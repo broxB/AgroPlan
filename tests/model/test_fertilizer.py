@@ -7,13 +7,15 @@ from app.database.types import FertClass, FertType, FieldType
 from app.model.fertilizer import Fertilizer, Mineral, Organic, create_fertilizer
 
 
-def test_create_fertilizer(organic_fertilizer: db.Fertilizer, mineral_fertilizer: db.Fertilizer):
-    org_fertilizer = create_fertilizer(organic_fertilizer)
+def test_create_fertilizer(
+    organic_fertilizer: db.Fertilizer, mineral_fertilizer: db.Fertilizer, guidelines
+):
+    org_fertilizer = create_fertilizer(organic_fertilizer, guidelines=guidelines)
     assert isinstance(org_fertilizer, Fertilizer)
     assert isinstance(org_fertilizer, Organic)
     assert "Org" in str(org_fertilizer.__repr__)
     assert org_fertilizer.fert_class is FertClass.organic
-    min_fertilizer = create_fertilizer(mineral_fertilizer)
+    min_fertilizer = create_fertilizer(mineral_fertilizer, guidelines=guidelines)
     assert isinstance(min_fertilizer, Mineral)
     assert "Min" in str(min_fertilizer.__repr__)
     assert min_fertilizer.fert_class is FertClass.mineral

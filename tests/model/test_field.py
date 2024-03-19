@@ -5,21 +5,25 @@ from app.model.field import Field, create_field
 
 
 def test_create_field(
-    field_first_year: db.Field, base_field: db.BaseField, user: db.User, fill_db
+    field_first_year: db.Field, base_field: db.BaseField, user: db.User, guidelines, fill_db
 ):
-    test_field = create_field(user.id, base_field.id, user.year)
+    test_field = create_field(user.id, base_field.id, user.year, guidelines=guidelines)
     assert isinstance(test_field, Field)
     assert test_field.base_id == base_field.id
     assert test_field.year == user.year
     assert test_field.area == field_first_year.area
     assert test_field.field_type == field_first_year.field_type
-    test_field2 = create_field(user.id, base_field.id, user.year + 1)
-    assert test_field2.field_prev_year == test_field
 
 
 @pytest.fixture
-def test_field(base_field, user) -> Field:
-    field = create_field(user.id, base_field.id, user.year + 1)
+def test_field(base_field, user, guidelines, fill_db) -> Field:
+    field = create_field(user.id, base_field.id, user.year + 1, guidelines=guidelines)
+    return field
+
+
+@pytest.fixture
+def test_prev_field(base_field, user, guidelines, fill_db) -> Field:
+    field = create_field(user.id, base_field.id, user.year, guidelines=guidelines)
     return field
 
 
