@@ -66,7 +66,7 @@ class Fertilization:
             k2o=self.amount * self.fertilizer.k2o,
             mgo=self.amount * self.fertilizer.mgo,
             s=self.amount * self.fertilizer.s,
-            cao=self.amount * (self.fertilizer.cao + self.fertilizer.lime_starvation(field_type)),
+            cao=self.amount * self.fertilizer.lime_starvation(field_type),
             nh4=self.amount * self.fertilizer.nh4,
         )
 

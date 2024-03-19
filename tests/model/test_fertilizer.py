@@ -58,8 +58,8 @@ def test_lime_starvation(test_fertilizer: Fertilizer):
     test_fertilizer.p2o5 = 1
     test_fertilizer.s = 1
     test_fertilizer.n = 1
-    assert test_fertilizer.lime_starvation(FieldType.cropland) == Decimal("1.32")
-    assert test_fertilizer.lime_starvation(FieldType.grassland) == Decimal("1.52")
+    assert test_fertilizer.lime_starvation(FieldType.cropland) == Decimal("-0.15")
+    assert test_fertilizer.lime_starvation(FieldType.grassland) == Decimal("0.05")
 
 
 @pytest.fixture
