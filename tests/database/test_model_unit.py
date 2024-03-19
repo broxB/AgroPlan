@@ -198,7 +198,7 @@ def test_soil_sample(base_field: BaseField, soil_sample: SoilSample, fill_db):
     assert soil_sample.k2o == Decimal(1)
     assert soil_sample.mg == Decimal(1)
     assert soil_sample.soil_type == SoilType.sand
-    assert soil_sample.humus == HumusType.less_8
+    assert soil_sample.humus == HumusType.less_4
     assert soil_sample.soil_type.value in str(soil_sample.__repr__)
 
 

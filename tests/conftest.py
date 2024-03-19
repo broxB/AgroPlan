@@ -157,13 +157,13 @@ def corn(user) -> Crop:
         feedable=False,
         residue=False,
         nmin_depth=NminType.nmin_90,
-        target_demand=250,
+        target_demand=200,
         target_yield=450,
         pos_yield=Decimal(1),
         neg_yield=Decimal("1.5"),
-        p2o5=Decimal(1),
-        k2o=Decimal(1),
-        mgo=Decimal(1),
+        p2o5=Decimal("0.15"),
+        k2o=Decimal("0.51"),
+        mgo=Decimal("0.13"),
     )
     return corn
 
@@ -185,9 +185,37 @@ def mustard(user) -> Crop:
         target_yield=200,
         pos_yield=Decimal(1),
         neg_yield=Decimal("1.5"),
-        p2o5=Decimal("2.36"),
-        k2o=Decimal("4.69"),
-        mgo=Decimal("0.51"),
+        p2o5=Decimal("0.14"),
+        k2o=Decimal("0.47"),
+        mgo=Decimal("0.05"),
+    )
+    return mustard
+
+
+@pytest.fixture
+def barley(user) -> Crop:
+    mustard = Crop(
+        id=5,
+        user_id=user.id,
+        name="W.-Gerste",
+        field_type=FieldType.cropland,
+        crop_class=CropClass.main_crop,
+        crop_type=CropType.grain,
+        kind="Gerste",
+        feedable=False,
+        residue=True,
+        nmin_depth=NminType.nmin_60,
+        target_demand=100,
+        target_yield=100,
+        pos_yield=Decimal(1),
+        neg_yield=Decimal(1),
+        p2o5=Decimal(1),
+        k2o=Decimal(1),
+        mgo=Decimal(1),
+        byp_ratio=1,
+        byp_p2o5=1,
+        byp_k2o=1,
+        byp_mgo=1,
     )
     return mustard
 
@@ -225,6 +253,20 @@ def cultivation_field_grass(field_grass) -> Cultivation:
         nmin_30=1,
         nmin_60=1,
         nmin_90=2,
+    )
+    return cultivation
+
+
+@pytest.fixture
+def cultivation_crop(barley) -> Cultivation:
+    cultivation = Cultivation(
+        cultivation_type=CultivationType.main_crop,
+        crop_id=barley.id,
+        crop_yield=100,
+        residues=ResidueType.main_stayed,
+        nmin_30=10,
+        nmin_60=10,
+        nmin_90=10,
     )
     return cultivation
 
@@ -382,7 +424,7 @@ def soil_sample(base_field) -> SoilSample:
         k2o=Decimal(1),
         mg=Decimal(1),
         soil_type=SoilType.sand,
-        humus=HumusType.less_8,
+        humus=HumusType.less_4,
     )
     return soil_sample
 
@@ -803,7 +845,22 @@ def guidelines() -> object:
 
         @staticmethod
         def pre_crop_effect():
-            return {CropType.field_grass.value: 10}
+            return {
+                CropType.field_grass.value: 10,
+                CropType.grain.value: 1,
+                CropType.corn.value: 2,
+                CropType.catch_non_legume.value: {
+                    ResidueType.catch_frozen.value: 15,
+                    ResidueType.catch_not_frozen_spring.value: 20,
+                    ResidueType.catch_not_frozen_fall.value: 00,
+                },
+                CropType.catch_legume.value: {
+                    ResidueType.catch_frozen.value: 10,
+                    ResidueType.catch_not_frozen_spring.value: 40,
+                    ResidueType.catch_not_frozen_fall.value: 10,
+                    ResidueType.catch_used.value: 10,
+                },
+            }
 
         @staticmethod
         def legume_delivery():
