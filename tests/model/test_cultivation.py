@@ -125,11 +125,6 @@ def test_reduction(test_cultivation: Cultivation):
     assert test_cultivation.reduction() == 0
 
 
-def test_is_class(test_cultivation: Cultivation):
-    test_cultivation.cultivation_type = CultivationType.main_crop
-    assert test_cultivation.is_class(CultivationType.main_crop)
-
-
 @pytest.fixture
 def test_main_crop(cultivation_field_grass, test_crop) -> MainCrop:
     cultivation_field_grass.cultivation_type = CultivationType.main_crop

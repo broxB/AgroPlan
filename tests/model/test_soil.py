@@ -24,8 +24,7 @@ def soil(soil_sample: SoilSample, field_first_year: Field, guidelines) -> Soil:
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, 0), (FieldType.grassland, 10)],
+    "field_type, expected", [(FieldType.cropland, 0), (FieldType.grassland, 10)]
 )
 def test_reduction_n(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -33,8 +32,7 @@ def test_reduction_n(soil: Soil, field_type, expected):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, -69), (FieldType.grassland, -46)],
+    "field_type, expected", [(FieldType.cropland, -69), (FieldType.grassland, -46)]
 )
 def test_reduction_p2o5(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -47,8 +45,7 @@ def test_reduction_p2o5_without_parametrize(soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, -72), (FieldType.grassland, -48)],
+    "field_type, expected", [(FieldType.cropland, -72), (FieldType.grassland, -48)]
 )
 def test_reduction_k2o(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -61,8 +58,7 @@ def test_reduction_k2o_without_parametrize(soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, -50), (FieldType.grassland, -50)],
+    "field_type, expected", [(FieldType.cropland, -50), (FieldType.grassland, -50)]
 )
 def test_reduction_mg(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -75,8 +71,7 @@ def test_reduction_mg_without_parametrize(soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, -1125), (FieldType.grassland, -750)],
+    "field_type, expected", [(FieldType.cropland, -1125), (FieldType.grassland, -750)]
 )
 def test_reduction_cao(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -96,8 +91,7 @@ def test_reduction_s(soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
+    "field_type, expected", [(FieldType.cropland, "A"), (FieldType.grassland, "A")]
 )
 def test_class_p2o5(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -110,8 +104,7 @@ def test_class_p2o5_without_parametrize(soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
+    "field_type, expected", [(FieldType.cropland, "A"), (FieldType.grassland, "A")]
 )
 def test_class_k2o(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -124,8 +117,7 @@ def test_class_k2o_without_parametrize(soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
+    "field_type, expected", [(FieldType.cropland, "A"), (FieldType.grassland, "A")]
 )
 def test_class_mg(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -138,8 +130,7 @@ def test_class_mg_without_parametrize(soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected",
-    [(FieldType.cropland, "A"), (FieldType.grassland, "A")],
+    "field_type, expected", [(FieldType.cropland, "A"), (FieldType.grassland, "A")]
 )
 def test_class_ph(soil: Soil, field_type, expected):
     soil.field_type = field_type
