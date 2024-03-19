@@ -145,9 +145,8 @@ class Organic(Fertilizer):
         """
         try:
             return Decimal(str(self._org_factor[self.fert_type.value][field_type.value]))
-        except KeyError as e:
-            logger.warning(e)
-            return Decimal()
+        except KeyError:
+            raise KeyError
 
     def __repr__(self) -> str:
         return f"<Org fertilizer: {self.name}>"
