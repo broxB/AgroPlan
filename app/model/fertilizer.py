@@ -7,6 +7,8 @@ from app.database.types import FertClass, FertType, FieldType
 
 from . import guidelines
 
+from loguru import logger
+
 
 def create_fertilizer(
     fertilizer: db.Fertilizer, *, guidelines: guidelines = guidelines
@@ -116,7 +118,11 @@ class Organic(Fertilizer):
         return self.n * self._storage_loss() if netto else self.n
 
     def _storage_loss(self) -> Decimal:
-        return Decimal(str(self._org_factor[self.fert_type.value]["Lagerverluste"]))
+        try:
+            return Decimal(str(self._org_factor[self.fert_type.value]["Lagerverluste"]))
+        except KeyError as e:
+            logger.warning(e)
+            return Decimal()
 
     def n_verf(self, field_type: FieldType) -> Decimal:
         """
@@ -139,8 +145,9 @@ class Organic(Fertilizer):
         """
         try:
             return Decimal(str(self._org_factor[self.fert_type.value][field_type.value]))
-        except KeyError:
-            raise KeyError
+        except KeyError as e:
+            logger.warning(e)
+            return Decimal()
 
     def __repr__(self) -> str:
         return f"<Org fertilizer: {self.name}>"

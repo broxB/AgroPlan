@@ -112,23 +112,20 @@ class Cultivation:
             return Decimal()
         legume_delivery: dict = self._guidelines.legume_delivery()
         if self.crop_type is CropType.permanent_grassland:
-            return Decimal(legume_delivery["Grünland"][self.legume_rate.value])
+            return Decimal(legume_delivery.get("Grünland", {}).get(self.legume_rate.value, 0))
         elif self.crop_type is CropType.alfalfa_grass or self.crop_type is CropType.clover_grass:
             try:
                 rate = int(self.legume_rate.name.split("_")[-1]) / 10
             except ValueError or TypeError:
                 logger.warning(f"{self} has {self.legume_rate} which is not valid.")
                 rate = 0
-            return Decimal(legume_delivery[self.crop_type.value] * rate)
+            return Decimal(legume_delivery.get(self.crop_type.value, 0) * rate)
         elif self.crop_type is CropType.alfalfa or self.crop_type is CropType.clover:
-            return Decimal(legume_delivery[self.crop_type.value])
+            return Decimal(legume_delivery.get(self.crop_type.value, 0))
         return Decimal()
 
     def reduction(self) -> Decimal:
         return Decimal()
-
-    def is_class(self, cultivation_type: CultivationType) -> bool:
-        return self.cultivation_type is cultivation_type if cultivation_type else True
 
 
 class MainCrop(Cultivation):
@@ -171,10 +168,7 @@ class CatchCrop(Cultivation):
 
     def pre_crop_effect(self) -> Decimal:
         pre_crop_effect: dict = self._guidelines.pre_crop_effect()
-        try:
-            return Decimal(pre_crop_effect[self.crop_type.value][self.residues.value])
-        except AttributeError:
-            return Decimal()
+        return Decimal(pre_crop_effect.get(self.crop_type.value, {}).get(self.residues.value, 0))
 
     def __repr__(self) -> str:
         return f"<Catch crop: {self.crop.name}>"

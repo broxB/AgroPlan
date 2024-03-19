@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from loguru import logger
+
 import app.database.model as db
 from app.database.types import CropType, NminType
 
@@ -32,11 +34,7 @@ class Crop:
         self.byp_mgo: Decimal = Crop.byp_mgo
         self._guidelines = guidelines
 
-    def demand_crop(
-        self,
-        crop_yield: Decimal,
-        crop_protein: Decimal,
-    ) -> Balance:
+    def demand_crop(self, crop_yield: Decimal, crop_protein: Decimal) -> Balance:
         """
         Nutrient demand of the crop.
 
@@ -76,7 +74,11 @@ class Crop:
         Sulphur demand of the crop.
         """
         sulfur_needs: dict = self._guidelines.sulfur_needs()
-        return Decimal(str(sulfur_needs.get(self.name, 0)))
+        try:
+            return Decimal(str(sulfur_needs[self.name]))
+        except KeyError as e:
+            logger.warning(e)
+            return Decimal()
 
     def _n_demand(self, crop_yield: Decimal, crop_protein: Decimal) -> Decimal:
         """
