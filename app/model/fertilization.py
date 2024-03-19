@@ -22,8 +22,8 @@ class Fertilization:
         self.fertilizer: Fertilizer = fertilizer
         self.amount: Decimal = fertilization.amount
         self.measure: MeasureType = fertilization.measure
-        self.cultivation_type = cultivation_type
-        self._crop_feedable = crop_feedable
+        self.cultivation_type: CultivationType = cultivation_type
+        self._crop_feedable: bool = crop_feedable
 
     def n_total(
         self, measure_type: MeasureType, cultivation_type: CultivationType, netto: bool
@@ -39,9 +39,15 @@ class Fertilization:
         :param netto:
             If storage losses should be deducted.
         """
-        if self.fertilizer.is_organic:
-            if self._is_measure(measure_type) and self.cultivation_type is cultivation_type:
-                return self.amount * self.fertilizer.n_total(netto)
+        if not self.fertilizer.is_organic:
+            return Decimal()
+        if (
+            self.measure is measure_type
+            or measure_type is None
+            and self.cultivation_type is cultivation_type
+            or cultivation_type is None
+        ):
+            return self.amount * self.fertilizer.n_total(netto)
         return Decimal()
 
     def nutrients(self, field_type: FieldType) -> Balance:
@@ -68,9 +74,6 @@ class Fertilization:
         if self._crop_feedable:
             return self.fertilizer.n_verf(FieldType.grassland)
         return self.fertilizer.n_verf(field_type)
-
-    def _is_measure(self, measure_type: MeasureType) -> bool:
-        return self.measure is measure_type if measure_type else True
 
     def __repr__(self) -> str:
         return f"<Fertilization: {self.cultivation_type.name}>"

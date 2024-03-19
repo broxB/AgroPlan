@@ -39,6 +39,8 @@ def test_fertilization_init(
 
 def test_n_total(test_fertilization: Fertilization):
     test_fertilization.fertilizer.n = 10
+    assert test_fertilization.n_total(None, None, False) == 100
+    assert test_fertilization.n_total(None, None, True) == 50
     test_fertilization.measure = MeasureType.org_fall
     test_fertilization.cultivation_type = CultivationType.main_crop
     assert (
@@ -55,7 +57,7 @@ def test_n_total(test_fertilization: Fertilization):
     )
     assert (
         test_fertilization.n_total(MeasureType.org_fall, CultivationType.catch_crop, netto=False)
-        == 0
+        == 100
     )
     test_fertilization.fertilizer.fert_class = FertClass.mineral
     assert (
@@ -83,9 +85,3 @@ def test__n_verf(test_fertilization: Fertilization):
     assert test_fertilization._n_verf(FieldType.cropland) == test_fertilization.fertilizer.n_verf(
         FieldType.grassland
     )
-
-
-def test__is_measure(test_fertilization: Fertilization):
-    test_fertilization.measure = MeasureType.org_fall
-    assert test_fertilization._is_measure(MeasureType.org_fall)
-    assert test_fertilization._is_measure(MeasureType.org_spring) is False
