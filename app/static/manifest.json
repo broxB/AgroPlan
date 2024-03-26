@@ -1,0 +1,32 @@
+{
+    "name": "Agro Plan",
+    "short_name": "AgroPlan",
+    "description": "Plan your cultivation and fertilizations",
+    "start_url": "/index",
+    "display": "standalone",
+
+    "theme_color": "#afd480",
+    "background_color": "#f2f2f2",
+    "icons": [
+      {
+        "src": "img/favicon-64.png",
+        "sizes": "64x64",
+        "type": "image/png"
+      },
+      {
+        "src": "img/favicon-128.png",
+        "sizes": "128x128",
+        "type": "image/png"
+      },
+      {
+        "src": "img/favicon-256.png",
+        "sizes": "256x256",
+        "type": "image/png"
+      },
+      {
+        "src": "img/favicon-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }

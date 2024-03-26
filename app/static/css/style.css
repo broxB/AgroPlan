@@ -27,6 +27,10 @@ html {
   --green-bs-50: hsl(152, 69%, 40%);
 }
 
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
 main {
   scrollbar-width: thin;
   padding: 1em 1.5em !important;
