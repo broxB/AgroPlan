@@ -3,6 +3,7 @@ import json
 import os
 
 import click
+from loguru import logger
 
 from app.database.setup import setup_database
 from app.utils import load_json, save_json
@@ -13,6 +14,24 @@ def register(app):
     @app.cli.group()
     def seed():
         """Seed database with sample data."""
+
+    @seed.command()
+    @click.argument("path")
+    def new(path: str):
+        """Seed json file into new database."""
+        try:
+            with io.open(path, "r", encoding="utf-8-sig") as f:
+                new_dict: dict = json.load(f)
+        except FileNotFoundError as e:
+            logger.error(e)
+            return
+        reversed_dict = {k: new_dict[k] for k in list(reversed(new_dict.keys()))}
+        fields = renew_dict(reversed_dict)
+        fertilizers = load_json("data/dünger.json")
+        crops = load_json("data/kulturen.json")
+        seed = [fields, fertilizers, crops]
+        logger.info(f"Seeding the years: {', '.join(fields.keys())}")
+        setup_database(seed=seed)
 
     @seed.command()
     @click.argument("path")
