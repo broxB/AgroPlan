@@ -535,7 +535,7 @@ def fill_db(
 def guidelines() -> object:
     class guidelines:
         """
-        Fixture to pull guidelines from.
+        Mockup fixture to pull guidelines from.
         """
 
         @staticmethod

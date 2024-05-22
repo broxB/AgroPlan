@@ -7,12 +7,17 @@ from app.database.types import FieldType, HumusType, SoilType
 from app.model.soil import Soil, create_soil_sample
 
 
-def test_create_soil_sample(field_first_year: Field, soil_sample: SoilSample, fill_db):
+def test_create_soil_sample(field_first_year: Field, guidelines, fill_db):
     soil = create_soil_sample(
-        field_first_year.soil_samples, field_first_year.field_type, field_first_year.year
+        field_first_year.soil_samples,
+        field_first_year.field_type,
+        field_first_year.year,
+        guidelines=guidelines,
     )
     assert isinstance(soil, Soil)
-    soil = create_soil_sample(list(), field_first_year.field_type, field_first_year.year)
+    soil = create_soil_sample(
+        list(), field_first_year.field_type, field_first_year.year, guidelines=guidelines
+    )
     assert soil is None
 
 
@@ -20,7 +25,7 @@ def test_create_soil_sample(field_first_year: Field, soil_sample: SoilSample, fi
 def soil(soil_sample: SoilSample, field_first_year: Field, guidelines) -> Soil:
     soil_sample.humus = HumusType.less_4
     soil_sample.soil_type = SoilType.sand
-    return Soil(soil_sample, field_first_year.field_type, guidelines=guidelines())
+    return Soil(soil_sample, field_first_year.field_type, guidelines=guidelines)
 
 
 @pytest.mark.parametrize(
