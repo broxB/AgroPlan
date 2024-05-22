@@ -326,6 +326,9 @@ def test_sum_fertilizations(test_field: Field):
 def test_sum_modifiers(test_field: Field):
     modifiers = test_field.sum_modifiers()
     assert modifiers.is_empty
+    test_field.modifiers.append(Balance(n=10))
+    modifiers = test_field.sum_modifiers()
+    assert modifiers.n == 10
 
 
 def test_sum_fall_fertilizations(test_field: Field):
@@ -337,3 +340,49 @@ def test_sum_fall_fertilizations(test_field: Field):
     n_total, nh4 = test_field.sum_fall_fertilizations()
     assert n_total == 0
     assert nh4 == 0
+
+
+def test_create_balances(test_field: Field):
+    test_field.create_balances()
+    for cultivation in test_field.cultivations:
+        assert cultivation.balances is not None
+        assert cultivation.balances["cultivation"] is not None
+        assert cultivation.balances["organic"] is not None
+        assert cultivation.balances["mineral"] is not None
+
+
+def test_cultivation_balances(test_field: Field):
+    test_field.modifiers.append(Balance(title="Test modifier", n=10))
+    for cultivation in test_field.cultivations:
+        balances, need = test_field.cultivation_balances(cultivation)
+        assert balances is not None
+        assert isinstance(balances, list)
+        titles = [balance.title for balance in balances]
+        assert "Crop needs" in titles
+        if cultivation.cultivation_type is not CultivationType.catch_crop:
+            assert "Nmin" in titles
+            assert "Pre-crop effect" in titles
+        if cultivation.cultivation_type is CultivationType.main_crop:
+            assert "Soil reductions" in titles
+            assert "Organic redelivery" in titles
+            assert "Residue redelivery" in titles
+            assert "Lime balance" in titles
+            assert "Test modifier" in titles
+        assert "Total crop needs" in titles
+
+        assert need is not None
+        assert isinstance(need, Balance)
+        assert need == balances[-1]
+
+
+def test_fertilization_balances(test_field: Field):
+    for cultivation in test_field.cultivations:
+        organic, mineral = test_field.fertilization_balances(cultivation)
+        organic_titles = [balance.title for balance in organic]
+        mineral_titles = [balance.title for balance in mineral]
+        for fertilization in test_field.fertilizations:
+            if fertilization.cultivation_type is cultivation.cultivation_type:
+                if fertilization.fertilizer.fert_class is FertClass.organic:
+                    assert fertilization.fertilizer.name in organic_titles
+                if fertilization.fertilizer.fert_class is FertClass.mineral:
+                    assert fertilization.fertilizer.name in mineral_titles
