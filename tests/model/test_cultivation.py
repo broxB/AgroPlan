@@ -153,8 +153,8 @@ def catch_crop(cultivation_field_grass, test_crop, guidelines) -> CatchCrop:
 
 
 def test_catch_crop_demand(catch_crop: CatchCrop):
-    assert catch_crop.demand() == Balance("Crop demand", -60, 0, 0, 0, 0, 0)
-    assert catch_crop.demand(negative_output=False) == Balance("Crop demand", 60, 0, 0, 0, 0, 0)
+    assert catch_crop.demand() == Balance("Crop needs", -60, 0, 0, 0, 0, 0)
+    assert catch_crop.demand(negative_output=False) == Balance("Crop needs", 60, 0, 0, 0, 0, 0)
 
 
 @pytest.mark.parametrize(
