@@ -1,9 +1,10 @@
+from copy import deepcopy
 from decimal import Decimal
 
 import pytest
 
 import app.database.model as db
-from app.database.types import CultivationType, DemandType, FertClass, FieldType
+from app.database.types import CultivationType, DemandType, FertClass, FieldType, MeasureType
 from app.model.balance import Balance
 from app.model.crop import Crop
 from app.model.cultivation import create_cultivation
@@ -69,7 +70,7 @@ def test_catch_crop(test_field: Field):
 
 def test_total_balance(test_field: Field):
     balance = test_field.total_balance()
-    assert balance.n == Decimal(-16)
+    assert balance.n == Decimal(-17)
     assert balance.p2o5 == Decimal("-113.2")
     assert balance.k2o == Decimal("-283.6")
     assert balance.mgo == Decimal(-72)
@@ -95,7 +96,7 @@ def test_sum_demands(test_field: Field):
 
 def test_sum_reductions(test_field: Field):
     reductions = test_field.sum_reductions()
-    assert reductions.n == Decimal(53)
+    assert reductions.n == Decimal(52)
     assert reductions.p2o5 == Decimal(-49)
     assert reductions.k2o == Decimal(-52)
     assert reductions.mgo == Decimal(-30)
@@ -178,7 +179,7 @@ def test_soil_reductions_liming(test_field: Field):
 
 def test_redelivery(test_field: Field):
     redelivery = test_field.redelivery()
-    assert redelivery.n == Decimal(11)
+    assert redelivery.n == Decimal(10)
     assert redelivery.p2o5 == Decimal(20)
     assert redelivery.k2o == Decimal(20)
     assert redelivery.mgo == Decimal(20)
@@ -194,25 +195,46 @@ def test_cao_saldo(test_field: Field):
 
 
 def test_fertilization_redelivery(test_field: Field):
+    # only organic fertilization in fall for catch crop
     redelivery = test_field.fertilization_redelivery()
-    assert redelivery.n == 11
+    assert redelivery.n == 10
     assert redelivery.p2o5 == 20
     assert redelivery.k2o == 20
     assert redelivery.mgo == 20
     assert redelivery.s == 20
     assert redelivery.cao == -83
     assert redelivery.nh4 == 0
+    # add organic fertilization in previous spring
+    spring_fertilization = deepcopy(test_field.fertilizations[0])
+    spring_fertilization.cultivation_type = CultivationType.main_crop
+    spring_fertilization.measure = MeasureType.org_spring
+    test_field.field_prev_year.fertilizations.append(spring_fertilization)
+    redelivery = test_field.fertilization_redelivery()
+    assert redelivery.n == 20
+    # add organic fertilization in current spring
+    test_field.fertilizations.append(spring_fertilization)
+    redelivery = test_field.fertilization_redelivery()
+    assert redelivery.n == 20
+    # remove current organic fall fertilization
     test_field.fertilizations[0].amount = 0
     redelivery = test_field.fertilization_redelivery()
-    assert redelivery.n == 1
+    assert redelivery.n == 10
+    # remove previous year
     test_field.field_prev_year = None
     redelivery = test_field.fertilization_redelivery()
     assert redelivery.n == 0
+    assert redelivery.is_empty
 
 
 def test_n_total(test_field: Field):
     total = test_field.n_total()
     assert total == 100
+    spring_fertilization = deepcopy(test_field.fertilizations[0])
+    spring_fertilization.cultivation_type = CultivationType.main_crop
+    spring_fertilization.measure = MeasureType.org_spring
+    test_field.fertilizations.append(spring_fertilization)
+    total = test_field.n_total()
+    assert total == 200
     test_field.fertilizations = []
     total = test_field.n_total()
     assert total == 0

@@ -233,8 +233,8 @@ class Field:
 
     def fertilization_redelivery(self) -> Balance:
         """
-        Returns the delayed nutrients of the organic fertilization in the last year.
-        And the current catch crop.
+        Returns the delayed nitrogen delivery of the organic fertilization in the last calendar year
+        and all non-nitrogen nutrients from the current catch crop fertilization.
         """
         redelivery = Balance("Organic redelivery")
         try:

@@ -41,11 +41,8 @@ class Fertilization:
         """
         if not self.fertilizer.is_organic:
             return Decimal()
-        if (
-            self.measure is measure_type
-            or measure_type is None
-            and self.cultivation_type is cultivation_type
-            or cultivation_type is None
+        if (self.measure is measure_type or measure_type is None) and (
+            self.cultivation_type is cultivation_type or cultivation_type is None
         ):
             return self.amount * self.fertilizer.n_total(netto)
         return Decimal()

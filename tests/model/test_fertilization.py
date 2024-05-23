@@ -37,33 +37,84 @@ def test_fertilization_init(
     assert CultivationType.main_crop.name in str(test_fertilization.__repr__)
 
 
-def test_n_total(test_fertilization: Fertilization):
+@pytest.mark.parametrize(
+    "measure, cultivation_type, expected",
+    [
+        (
+            MeasureType.org_fall,
+            CultivationType.catch_crop,
+            [100, 0, 100, 0, 0, 100, 0, 0, 0, 0, 0],
+        ),
+        (
+            MeasureType.org_spring,
+            CultivationType.catch_crop,
+            [0, 100, 100, 0, 0, 0, 100, 0, 0, 0, 0],
+        ),
+        (MeasureType.org_fall, CultivationType.main_crop, [100, 0, 0, 100, 0, 0, 0, 100, 0, 0, 0]),
+        (
+            MeasureType.org_spring,
+            CultivationType.main_crop,
+            [0, 100, 0, 100, 0, 0, 0, 0, 100, 0, 0],
+        ),
+        (
+            MeasureType.org_fall,
+            CultivationType.second_crop,
+            [100, 0, 0, 0, 100, 0, 0, 0, 0, 100, 0],
+        ),
+        (
+            MeasureType.org_spring,
+            CultivationType.second_crop,
+            [0, 100, 0, 0, 100, 0, 0, 0, 0, 0, 100],
+        ),
+    ],
+)
+def test_n_total(
+    test_fertilization: Fertilization,
+    measure: MeasureType,
+    cultivation_type: CultivationType,
+    expected,
+):
+    test_fertilization.amount = 10
     test_fertilization.fertilizer.n = 10
-    assert test_fertilization.n_total(None, None, False) == 100
-    assert test_fertilization.n_total(None, None, True) == 50
-    test_fertilization.measure = MeasureType.org_fall
-    test_fertilization.cultivation_type = CultivationType.main_crop
+    test_fertilization.fertilizer.fert_class = FertClass.organic
+    test_fertilization.measure = measure
+    test_fertilization.cultivation_type = cultivation_type
+    assert test_fertilization.n_total(MeasureType.org_fall, None, False) == expected[0]
+    assert test_fertilization.n_total(MeasureType.org_spring, None, False) == expected[1]
+    assert test_fertilization.n_total(None, CultivationType.catch_crop, False) == expected[2]
+    assert test_fertilization.n_total(None, CultivationType.main_crop, False) == expected[3]
+    assert test_fertilization.n_total(None, CultivationType.second_crop, False) == expected[4]
     assert (
-        test_fertilization.n_total(MeasureType.org_spring, CultivationType.main_crop, netto=False)
-        == 0
+        test_fertilization.n_total(MeasureType.org_fall, CultivationType.catch_crop, False)
+        == expected[5]
     )
     assert (
-        test_fertilization.n_total(MeasureType.org_fall, CultivationType.main_crop, netto=False)
-        == 100
+        test_fertilization.n_total(MeasureType.org_spring, CultivationType.catch_crop, False)
+        == expected[6]
     )
     assert (
-        test_fertilization.n_total(MeasureType.org_fall, CultivationType.main_crop, netto=True)
-        == 50
+        test_fertilization.n_total(MeasureType.org_fall, CultivationType.main_crop, False)
+        == expected[7]
     )
     assert (
-        test_fertilization.n_total(MeasureType.org_fall, CultivationType.catch_crop, netto=False)
-        == 100
+        test_fertilization.n_total(MeasureType.org_spring, CultivationType.main_crop, False)
+        == expected[8]
     )
+    assert (
+        test_fertilization.n_total(MeasureType.org_fall, CultivationType.second_crop, False)
+        == expected[9]
+    )
+    assert (
+        test_fertilization.n_total(MeasureType.org_spring, CultivationType.second_crop, False)
+        == expected[10]
+    )
+
+
+def test_n_total_mineral(test_fertilization: Fertilization):
+    test_fertilization.amount = 10
+    test_fertilization.fertilizer.n = 10
     test_fertilization.fertilizer.fert_class = FertClass.mineral
-    assert (
-        test_fertilization.n_total(MeasureType.org_fall, CultivationType.main_crop, netto=False)
-        == 0
-    )
+    assert test_fertilization.n_total(None, None, False) == 0
 
 
 def test_nutrients(test_fertilization: Fertilization):
