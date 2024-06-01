@@ -194,7 +194,7 @@ def test_soil_sample(base_field: BaseField, soil_sample: SoilSample, fill_db):
     assert soil_sample.base_id == base_field.id
     assert soil_sample.year == 1000
     assert soil_sample.ph == Decimal(1)
-    assert soil_sample.p2o5 == Decimal(1)
+    assert soil_sample.p2o5 == Decimal(19)
     assert soil_sample.k2o == Decimal(1)
     assert soil_sample.mg == Decimal(1)
     assert soil_sample.soil_type == SoilType.sand

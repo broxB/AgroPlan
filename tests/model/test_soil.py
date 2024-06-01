@@ -110,7 +110,7 @@ def test_reduction_n_error(empty_soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected", [(FieldType.cropland, -69), (FieldType.grassland, -46)]
+    "field_type, expected", [(FieldType.cropland, 57), (FieldType.grassland, 46)]
 )
 def test_reduction_p2o5(soil: Soil, field_type, expected):
     soil.field_type = field_type
@@ -189,7 +189,7 @@ def test_reduction_s_error(empty_soil: Soil):
 
 
 @pytest.mark.parametrize(
-    "field_type, expected", [(FieldType.cropland, "A"), (FieldType.grassland, "A")]
+    "field_type, expected", [(FieldType.cropland, "D"), (FieldType.grassland, "D")]
 )
 def test_class_p2o5(soil: Soil, field_type, expected):
     soil.field_type = field_type

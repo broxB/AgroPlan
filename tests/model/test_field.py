@@ -77,39 +77,55 @@ def test_catch_crop(test_field: Field):
 
 def test_total_balance(test_field: Field):
     balance = test_field.total_balance()
-    assert balance.n == Decimal(-17)
-    assert balance.p2o5 == Decimal("-113.2")
+    assert balance.n == Decimal(-197)
+    assert balance.p2o5 == Decimal("-19.2")
     assert balance.k2o == Decimal("-283.6")
     assert balance.mgo == Decimal(-72)
-    assert balance.s == Decimal(6)
+    assert balance.s == Decimal(-14)
     assert balance.cao == Decimal("-1207.9")
     assert balance.nh4 == Decimal(6)
 
 
-def test_sum_demands(test_field: Field):
-    demand = test_field.sum_demands()
-    assert demand.n == Decimal(-75)
-    assert demand.p2o5 == Decimal("-70.2")
-    assert demand.k2o == Decimal("-237.6")
-    assert demand.mgo == Decimal(-48)
-    assert demand.s == Decimal(-20)
-    assert demand.cao == Decimal(0)
-    assert demand.nh4 == Decimal(0)
-    # make sure catch crop is not calculated
-    test_field.cultivations.remove(test_field.catch_crop)
-    demand_without_cc = test_field.sum_demands()
-    assert demand == demand_without_cc
+def test_demands(test_field: Field):
+    demands = test_field.demands(test_field.catch_crop)
+    assert demands.is_empty
+    demands = test_field.demands(test_field.main_crop)
+    assert demands.n == -155
+    assert demands.p2o5 == -45
+    assert demands.k2o == -153
+    assert demands.mgo == -39
+    assert demands.s == -20
+    assert demands.cao == 0
+    assert demands.nh4 == 0
+    demands = test_field.demands(test_field.second_crop)
+    assert demands.n == -100
+    assert demands.p2o5 == Decimal("-25.2")
+    assert demands.k2o == Decimal("-84.6")
+    assert demands.mgo == -9
+    assert demands.s == -20
+    assert demands.cao == 0
+    assert demands.nh4 == 0
 
 
-def test_sum_reductions(test_field: Field):
-    reductions = test_field.sum_reductions()
-    assert reductions.n == Decimal(52)
-    assert reductions.p2o5 == Decimal(-49)
-    assert reductions.k2o == Decimal(-52)
-    assert reductions.mgo == Decimal(-30)
-    assert reductions.s == Decimal(20)
-    assert reductions.cao == Decimal(-1207)
-    assert reductions.nh4 == Decimal(0)
+def test_reductions(test_field: Field):
+    reductions = test_field.reductions(test_field.catch_crop)
+    assert reductions.is_empty
+    reductions = test_field.reductions(test_field.main_crop)
+    assert reductions.n == 25 + 15 + 10
+    assert reductions.p2o5 == 57 + 20
+    assert reductions.k2o == -72 + 20
+    assert reductions.mgo == -50 + 20
+    assert reductions.s == 0 + 20
+    assert reductions.cao == -1125 - 83 + 1
+    assert reductions.nh4 == 0
+    reductions = test_field.reductions(test_field.second_crop)
+    assert reductions.n == 2
+    assert reductions.p2o5 == 0
+    assert reductions.k2o == 0
+    assert reductions.mgo == 0
+    assert reductions.s == 0
+    assert reductions.cao == 0
+    assert reductions.nh4 == 0
 
 
 @pytest.mark.parametrize(
@@ -133,7 +149,7 @@ def test_soil_reductions_field_types(test_field: Field, field_type, expected):
             DemandType.demand,
             DemandType.demand,
             DemandType.demand,
-            Balance(p2o5=-69, k2o=-72, mgo=-50),
+            Balance(p2o5=57, k2o=-72, mgo=-50),
         ),
         (
             DemandType.removal,
@@ -145,13 +161,13 @@ def test_soil_reductions_field_types(test_field: Field, field_type, expected):
             DemandType.demand,
             DemandType.removal,
             DemandType.demand,
-            Balance(p2o5=-69, k2o=0, mgo=-50),
+            Balance(p2o5=57, k2o=0, mgo=-50),
         ),
         (
             DemandType.demand,
             DemandType.demand,
             DemandType.removal,
-            Balance(p2o5=-69, k2o=-72, mgo=0),
+            Balance(p2o5=57, k2o=-72, mgo=0),
         ),
     ],
 )

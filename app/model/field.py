@@ -157,14 +157,16 @@ class Field:
         return None
 
     def total_balance(self) -> Balance:
-        """Summarize the balances of all crop needs, soil reductions, fertilizations and modifiers."""
-        balance = Balance("Remaining needs")
-        balance += self.sum_demands() + self.sum_reductions()
-        self.adjust_to_demand_option(balance)
+        """Summarize the balances of all crop needs, reductions, fertilizations and modifiers."""
+        balance = Balance("Field balance")
+        for cultivation in self.cultivations:
+            cultivation_balance = self.demands(cultivation) + self.reductions(cultivation)
+            self.adjust_nutritional_needs(cultivation_balance)
+            balance += cultivation_balance
         balance += self.sum_fertilizations() + self.sum_modifiers()
         return balance
 
-    def sum_demands(self, negative_output: bool = True) -> Balance:
+    def demands(self, cultivation: Cultivation, negative_output: bool = True) -> Balance:
         """
         Summarize the balance of all crop `demands`. Catch crop doesn't count towards this sum.
 
@@ -172,23 +174,24 @@ class Field:
             `negative_output`: Specify if demand should be output as negative values.
         """
         demands = Balance("Demands")
-        for cultivation in self.cultivations:
-            if cultivation.cultivation_type is not CultivationType.catch_crop:
-                demands += cultivation.demand(
-                    option_p2o5=self.option_p2o5,
-                    option_k2o=self.option_k2o,
-                    option_mgo=self.option_mgo,
-                    negative_output=negative_output,
-                )
+        if cultivation is not self.catch_crop:
+            demands += cultivation.demand(
+                option_p2o5=self.option_p2o5,
+                option_k2o=self.option_k2o,
+                option_mgo=self.option_mgo,
+                negative_output=negative_output,
+            )
         return demands
 
-    def sum_reductions(self) -> Balance:
+    def reductions(self, cultivation: Cultivation) -> Balance:
         """Summarize the balance of all `reductions` from soil, previous crops and fertilizations."""
         reductions = Balance("Reductions")
-        reductions += self.soil_reductions()
-        reductions += self.redelivery()
-        for cultivation in self.cultivations:
-            reductions += self.crop_reductions(cultivation)
+        if cultivation is self.catch_crop:
+            return reductions
+        if cultivation is self.main_crop:
+            reductions += self.soil_reductions()
+            reductions += self.redelivery()
+        reductions += self.crop_reductions(cultivation)
         return reductions
 
     def soil_reductions(self) -> Balance:
