@@ -12,7 +12,6 @@ from app.database.types import (
     FieldType,
     MeasureType,
     ResidueType,
-    SoilClass,
 )
 
 from . import guidelines
@@ -325,21 +324,18 @@ class Field:
             crop = self.main_crop
         return crop.pre_crop_effect()
 
-    def adjust_to_demand_option(self, balance: Balance) -> Balance:
-        """Reduce nutritional needs to zero if demand option is `demand` and soil class is E."""
-        if self.soil_sample:
-            if (
-                self.soil_sample.class_p2o5() is SoilClass.E
-                and self.option_p2o5 is DemandType.demand
-            ):
-                balance.p2o5 = 0
-            if (
-                self.soil_sample.class_k2o() is SoilClass.E
-                and self.option_k2o is DemandType.demand
-            ):
-                balance.k2o = 0
-            if self.soil_sample.class_mg() is SoilClass.E and self.option_mgo is DemandType.demand:
-                balance.mgo = 0
+    def adjust_nutritional_needs(self, balance: Balance) -> Balance:
+        """Nutritional needs can only be reduced to zero, anything above zero remains zero."""
+        if balance.n > 0:
+            balance.n = 0
+        if balance.p2o5 > 0:
+            balance.p2o5 = 0
+        if balance.k2o > 0:
+            balance.k2o = 0
+        if balance.mgo > 0:
+            balance.mgo = 0
+        if balance.s > 0:
+            balance.s = 0
 
     def sum_fertilizations(self, fert_class: FertClass = None) -> Balance:
         """
@@ -429,7 +425,7 @@ class Field:
                 cult_balances.append(modifier)
         cult_need = Balance("Total crop needs")
         cult_need += sum(cult_balances)
-        self.adjust_to_demand_option(cult_need)
+        self.adjust_nutritional_needs(cult_need)
         cult_balances.append(cult_need)
         return cult_balances, cult_need
 

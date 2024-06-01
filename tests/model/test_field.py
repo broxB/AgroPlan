@@ -334,6 +334,18 @@ def test__s_reduction(test_field: Field, humus_type: HumusType, expected):
     assert s_reduction == expected
 
 
+def test_adjust_nutritional_needs(test_field: Field):
+    balance = Balance(n=1, p2o5=1, k2o=1, mgo=1, s=1, cao=1, nh4=1)
+    test_field.adjust_nutritional_needs(balance)
+    assert balance.n == 0
+    assert balance.p2o5 == 0
+    assert balance.k2o == 0
+    assert balance.mgo == 0
+    assert balance.s == 0
+    assert balance.cao == 1
+    assert balance.nh4 == 1
+
+
 def test_sum_fertilizations(test_field: Field):
     ferts = test_field.sum_fertilizations()
     assert ferts.n == 6
