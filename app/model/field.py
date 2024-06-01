@@ -320,6 +320,8 @@ class Field:
             return Decimal()
         if cultivation.cultivation_type is CultivationType.main_crop:
             crop = self.previous_crop
+            if crop is None:
+                return Decimal()
         else:
             crop = self.main_crop
         return crop.pre_crop_effect()
@@ -410,7 +412,10 @@ class Field:
             cultivation.demand(self.option_p2o5, self.option_k2o, self.option_mgo)
         )
         if cultivation is not self.catch_crop:
-            cult_balances.append(Balance("Nmin", n=cultivation.reduction()))
+            reduction_title = (
+                "Nmin" if self.field_type is FieldType.cropland else "Legume delivery"
+            )
+            cult_balances.append(Balance(reduction_title, n=cultivation.reduction()))
             cult_balances.append(Balance("Pre-crop effect", n=self._pre_crop_effect(cultivation)))
         if cultivation is self.second_crop:
             cult_balances.append(Balance("Soil reductions", s=self._s_reduction(cultivation)))

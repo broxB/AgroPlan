@@ -317,6 +317,11 @@ def test__pre_crop_effect(test_field: Field):
     assert reduction == 15
     reduction = test_field._pre_crop_effect(test_field.second_crop)
     assert reduction == 2
+    # remove all previous crop possiblilities
+    test_field.field_prev_year = None
+    test_field.cultivations.remove(test_field.previous_crop)
+    reduction = test_field._pre_crop_effect(test_field.main_crop)
+    assert reduction == 0
 
 
 @pytest.mark.parametrize(
@@ -396,7 +401,7 @@ def test_cultivation_balances(test_field: Field):
         titles = [balance.title for balance in balances]
         assert "Crop needs" in titles
         if cultivation.cultivation_type is not CultivationType.catch_crop:
-            assert "Nmin" in titles
+            assert "Nmin" in titles or "Legume delivery" in titles
             assert "Pre-crop effect" in titles
         if cultivation.cultivation_type is CultivationType.second_crop:
             assert "Soil reductions" in titles
