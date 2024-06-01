@@ -204,11 +204,6 @@ class Field:
             reductions.k2o = self.soil_sample.reduction_k2o()
         if self.option_mgo is DemandType.demand:
             reductions.mgo = self.soil_sample.reduction_mg()
-        if self.main_crop:
-            reductions.s = self.soil_sample.reduction_s(
-                n_total=self.n_total(cultivation_type=CultivationType.main_crop),
-                s_demand=self.main_crop.crop.s_demand,
-            )
         if self.soil_sample.year + 3 < self.year:
             reductions.cao = self.soil_sample.reduction_cao(preservation=True)
         else:
@@ -304,8 +299,18 @@ class Field:
         """Reductions in nutrient demand left from previous crops and made by the current crop."""
         reductions = Balance("Crop reductions")
         reductions.n += cultivation.reduction()
+        reductions.s += self._s_reduction(cultivation)
         reductions.n += self._pre_crop_effect(cultivation)
         return reductions
+
+    def _s_reduction(self, cultivation: Cultivation) -> Decimal:
+        """Sulphur reduction based on soil sample and used organic fertilizer."""
+        if cultivation is self.catch_crop:
+            return Decimal()
+        return self.soil_sample.reduction_s(
+            n_total=self.n_total(cultivation_type=cultivation.cultivation_type),
+            s_demand=cultivation.crop.s_demand,
+        )
 
     def _pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
         """Calculate pre-crop-effect for specific `cultivation`. Catch crops and grassland have none."""
@@ -411,8 +416,12 @@ class Field:
         if cultivation is not self.catch_crop:
             cult_balances.append(Balance("Nmin", n=cultivation.reduction()))
             cult_balances.append(Balance("Pre-crop effect", n=self._pre_crop_effect(cultivation)))
+        if cultivation is self.second_crop:
+            cult_balances.append(Balance("Soil reductions", s=self._s_reduction(cultivation)))
         if cultivation is self.main_crop:
-            cult_balances.append(self.soil_reductions())
+            soil_reductions = self.soil_reductions()
+            soil_reductions.s = self._s_reduction(cultivation)
+            cult_balances.append(soil_reductions)
             cult_balances.append(self.fertilization_redelivery())
             cult_balances.append(self.crop_residues_redelivery())
             cult_balances.append(Balance("Lime balance", cao=self.cao_saldo()))

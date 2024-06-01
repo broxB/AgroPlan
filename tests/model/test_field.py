@@ -4,7 +4,14 @@ from decimal import Decimal
 import pytest
 
 import app.database.model as db
-from app.database.types import CultivationType, DemandType, FertClass, FieldType, MeasureType
+from app.database.types import (
+    CultivationType,
+    DemandType,
+    FertClass,
+    FieldType,
+    HumusType,
+    MeasureType,
+)
 from app.model.balance import Balance
 from app.model.crop import Crop
 from app.model.cultivation import create_cultivation
@@ -292,12 +299,16 @@ def test_crop_residues_redelivery(
 
 
 def test_crop_reductions(test_field: Field):
+    test_field.soil_sample.humus = HumusType.less_8
     reductions = test_field.crop_reductions(test_field.main_crop)
     assert reductions.n == 40
+    assert reductions.s == 10
     reductions = test_field.crop_reductions(test_field.second_crop)
     assert reductions.n == 2
+    assert reductions.s == 10
     reductions = test_field.crop_reductions(test_field.catch_crop)
     assert reductions.n == 0
+    assert reductions.s == 0
 
 
 def test__pre_crop_effect(test_field: Field):
@@ -309,27 +320,18 @@ def test__pre_crop_effect(test_field: Field):
 
 
 @pytest.mark.parametrize(
-    "option_p2o5, option_k2o, option_mgo, expected",
+    "humus_type, expected",
     [
-        (DemandType.demand, DemandType.demand, DemandType.demand, Balance(p2o5=0, k2o=0, mgo=0)),
-        (DemandType.removal, DemandType.demand, DemandType.demand, Balance(p2o5=1, k2o=0, mgo=0)),
-        (DemandType.demand, DemandType.removal, DemandType.demand, Balance(p2o5=0, k2o=1, mgo=0)),
-        (DemandType.demand, DemandType.demand, DemandType.removal, Balance(p2o5=0, k2o=0, mgo=1)),
+        (HumusType.less_4, 0),
+        (HumusType.less_8, 10),
+        (HumusType.less_15, 20),
+        (HumusType.less_30, 30),
     ],
 )
-def test_adjust_to_demand_option(test_field: Field, option_p2o5, option_k2o, option_mgo, expected):
-    test_field.option_p2o5 = option_p2o5
-    test_field.option_k2o = option_k2o
-    test_field.option_mgo = option_mgo
-    # set soil sample classes to E
-    test_field.soil_sample.p2o5 = 50
-    test_field.soil_sample.k2o = 50
-    test_field.soil_sample.mg = 50
-    balance = Balance(p2o5=1, k2o=1, mgo=1)
-    test_field.adjust_to_demand_option(balance)
-    assert balance.p2o5 == expected.p2o5
-    assert balance.k2o == expected.k2o
-    assert balance.mgo == expected.mgo
+def test__s_reduction(test_field: Field, humus_type: HumusType, expected):
+    test_field.soil_sample.humus = humus_type
+    s_reduction = test_field._s_reduction(test_field.main_crop)
+    assert s_reduction == expected
 
 
 def test_sum_fertilizations(test_field: Field):
@@ -384,6 +386,8 @@ def test_cultivation_balances(test_field: Field):
         if cultivation.cultivation_type is not CultivationType.catch_crop:
             assert "Nmin" in titles
             assert "Pre-crop effect" in titles
+        if cultivation.cultivation_type is CultivationType.second_crop:
+            assert "Soil reductions" in titles
         if cultivation.cultivation_type is CultivationType.main_crop:
             assert "Soil reductions" in titles
             assert "Organic redelivery" in titles

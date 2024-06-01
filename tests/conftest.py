@@ -606,7 +606,12 @@ def guidelines() -> object:
         def sulfur_reductions():
             return {
                 "Grenzwerte": {"Bedarf": [0, 20, 30, 40], "Nges": [0, 100, 201]},
-                "Humusgehalt": {HumusType.less_4.value: [0, 0, 0, 0]},
+                "Humusgehalt": {
+                    HumusType.less_4.value: [0, 0, 0, 0],
+                    HumusType.less_8.value: [0, 10, 10, 10],
+                    HumusType.less_15.value: [0, 20, 20, 20],
+                    HumusType.less_30.value: [0, 30, 30, 30],
+                },
                 "Nges": {"0": [0, 0, 0, 0], "100": [0, 10, 10, 10], "201": [0, 20, 20, 20]},
             }
 
@@ -887,6 +892,7 @@ def guidelines() -> object:
                 "Ackergras 3 Schnitte": 20,
                 "W.-Gerste": 30,
                 "Wiese 4 Schnitte": 30,
+                "Senf (GP)": 20,
             }
 
     return guidelines
