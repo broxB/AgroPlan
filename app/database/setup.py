@@ -120,7 +120,11 @@ def seed_database(data: list[dict]) -> None:
 
     def get_residue_type(remains: str) -> ResidueType:
         try:
-            return ResidueType(remains)
+            match remains:
+                case "verbleiben":
+                    return ResidueType.main_stayed
+                case _:
+                    return ResidueType(remains)
         except ValueError:
             return ResidueType.none
 
@@ -234,11 +238,7 @@ def seed_database(data: list[dict]) -> None:
 
     fields_dict, ferts_dict, crops_dict = data
 
-    user = User(
-        username="Dev-Tester",
-        email="dev@agroplan.de",
-        year=2021,
-    )
+    user = User(username="Dev-Tester", email="dev@agroplan.de", year=list(fields_dict.keys())[-1])
     user.set_password("test")
     update_session(user)
 
@@ -297,8 +297,7 @@ def seed_database(data: list[dict]) -> None:
             fert_data = field_fertilization(field_dict)
 
             base_field = BaseField.query.filter(
-                BaseField.prefix == field_dict["Prefix"],
-                BaseField.suffix == field_dict["Suffix"],
+                BaseField.prefix == field_dict["Prefix"], BaseField.suffix == field_dict["Suffix"]
             ).one_or_none()
             if base_field is None:
                 base_field = BaseField(
