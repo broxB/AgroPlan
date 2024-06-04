@@ -3,16 +3,7 @@ from time import time
 from flask import current_app
 from flask_login import UserMixin
 from jwt import InvalidSignatureError, decode, encode
-from sqlalchemy import (
-    Boolean,
-    Column,
-    Enum,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    UniqueConstraint,
-)
+from sqlalchemy import Boolean, Column, Enum, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import backref, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -95,10 +86,13 @@ class User(UserMixin, Base):
             return None
         return User.query.get(user_id)
 
-    def get_fields(self, year: int = None):
-        if year is None:
-            return BaseField.query.filter(BaseField.user_id == self.id)
-        return BaseField.query.join(Field).filter(BaseField.user_id == self.id, Field.year == year)
+    def get_fields(self, year: int = None, **kwargs):
+        query = BaseField.query.filter_by(user_id=self.id)
+        if kwargs:
+            query = query.filter_by(**kwargs)
+        if year is not None:
+            query = query.join(Field).filter(Field.year == year)
+        return query
 
     def get_years(self):
         fields = (
@@ -145,7 +139,7 @@ class BaseField(Base):
     def __repr__(self):
         return (
             f"BaseField(id='{self.id}', name='{self.prefix:02d}-{self.suffix} {self.name}', "
-            f"fields='{[f'{field.year}: {field.field_type.value}, {field.area:.2f}ha' for field in self.fields]}'"
+            f"years={', '.join([f'{field.year}: {field.field_type.value} - {field.area:.2f}ha' for field in self.fields])})"
         )
 
 
@@ -234,17 +228,19 @@ class Crop(Base):
     target_yield = Column("target_yield", Integer)
     pos_yield = Column("pos_yield", Float(asdecimal=True, decimal_return_scale=2))
     neg_yield = Column("neg_yield", Float(asdecimal=True, decimal_return_scale=2))
-    target_protein = Column("target_protein", Float(asdecimal=True, decimal_return_scale=2))
-    var_protein = Column("var_protein", Float(asdecimal=True, decimal_return_scale=2))
+    target_protein = Column(
+        "target_protein", Float(asdecimal=True, decimal_return_scale=2), default=0
+    )
+    var_protein = Column("var_protein", Float(asdecimal=True, decimal_return_scale=2), default=0)
     p2o5 = Column("p2o5", Float(asdecimal=True, decimal_return_scale=2))
     k2o = Column("k2o", Float(asdecimal=True, decimal_return_scale=2))
     mgo = Column("mgo", Float(asdecimal=True, decimal_return_scale=2))
     byproduct = Column("byproduct", String)
-    byp_ratio = Column("byp_ratio", Float(asdecimal=True, decimal_return_scale=2))
-    byp_n = Column("byp_n", Float(asdecimal=True, decimal_return_scale=2))
-    byp_p2o5 = Column("byp_p2o5", Float(asdecimal=True, decimal_return_scale=2))
-    byp_k2o = Column("byp_k2o", Float(asdecimal=True, decimal_return_scale=2))
-    byp_mgo = Column("byp_mgo", Float(asdecimal=True, decimal_return_scale=2))
+    byp_ratio = Column("byp_ratio", Float(asdecimal=True, decimal_return_scale=2), default=0)
+    byp_n = Column("byp_n", Float(asdecimal=True, decimal_return_scale=2), default=0)
+    byp_p2o5 = Column("byp_p2o5", Float(asdecimal=True, decimal_return_scale=2), default=0)
+    byp_k2o = Column("byp_k2o", Float(asdecimal=True, decimal_return_scale=2), default=0)
+    byp_mgo = Column("byp_mgo", Float(asdecimal=True, decimal_return_scale=2), default=0)
 
     cultivations = relationship("Cultivation", back_populates="crop")
 
