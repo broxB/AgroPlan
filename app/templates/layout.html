@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     {% block head %}
@@ -10,11 +10,14 @@
       <meta name="viewport"
             content="width=device-width, initial-scale=1, shrink-to-fit=yes">
       <link rel="shortcut icon"
-            href="../static/img/favicon.png"
+            href="../static/img/favicon-64.png"
             type="image/x-icon">
+      <!-- PWA -->
+      <link rel="manifest" href="../static/manifest.json" />
       <!-- Bootstrap CSS -->
       {{ bootstrap.load_css() }}
-      <script src="https://kit.fontawesome.com/10e37a19bc.js" crossorigin="anonymous"></script>
+      <script src="https://kit.fontawesome.com/10e37a19bc.js"
+              crossorigin="anonymous"></script>
       <link rel="custom stylesheet"
             href="{{ url_for('static', filename='css/style.css') }}">
       {% block styles %}
