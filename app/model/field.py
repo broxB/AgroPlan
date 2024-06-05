@@ -309,10 +309,12 @@ class Field:
         """Sulphur reduction based on soil sample and used organic fertilizer."""
         if cultivation is self.catch_crop:
             return Decimal()
-        return self.soil_sample.reduction_s(
-            n_total=self.n_total(cultivation_type=cultivation.cultivation_type),
-            s_demand=cultivation.crop.s_demand,
-        )
+        if self.soil_sample:
+            return self.soil_sample.reduction_s(
+                n_total=self.n_total(cultivation_type=cultivation.cultivation_type),
+                s_demand=cultivation.crop.s_demand,
+            )
+        return 0
 
     def _pre_crop_effect(self, cultivation: Cultivation) -> Decimal:
         """Calculate pre-crop-effect for specific `cultivation`. Catch crops and grassland have none."""

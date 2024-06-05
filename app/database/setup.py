@@ -120,11 +120,9 @@ def seed_database(data: list[dict]) -> None:
 
     def get_residue_type(remains: str) -> ResidueType:
         try:
-            match remains:
-                case "verbleiben":
-                    return ResidueType.main_stayed
-                case _:
-                    return ResidueType(remains)
+            if "verbleiben" in remains:
+                return ResidueType.main_stayed
+            return ResidueType(remains)
         except ValueError:
             return ResidueType.none
 
@@ -134,8 +132,8 @@ def seed_database(data: list[dict]) -> None:
         except ValueError:
             return LegumeType.none
 
-    def get_nmin(nmin_value: int) -> int:
-        if nmin_value is not None:
+    def get_nmin(nmin_value: int | None) -> int:
+        if nmin_value and nmin_value is not None:
             return nmin_value
         return 0
 
@@ -392,7 +390,9 @@ def seed_database(data: list[dict]) -> None:
                     )
                 )
                 if soil_sample is None:
-                    sample_year = field_dict["Probedatum"]
+                    sample_year = (
+                        field_dict["Probedatum"] if field_dict["Probedatum"] else field.year
+                    )
                 else:
                     sample_year = field.year
                     logger.info(
