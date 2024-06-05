@@ -20,7 +20,7 @@
     </thead>
     <tbody>
       {% for cult in field.cultivations if cultivation.cultivation_type == cult.cultivation_type %}
-        {% for balance in cult.balances["cultivation"] if not balance.is_empty %}
+        {% for balance in cult.balances["cultivation"] if not balance.is_empty or balance.title == "Crop needs" %}
           <tr>
             <th scope="row">{{ balance.title }}</th>
             <td>{{ balance.n | format_number(".0f") }}</td>
