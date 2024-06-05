@@ -176,7 +176,9 @@
                 {% else %}
                   {{ demand_form.submit(value=demand_option, class="dropdown-item") }}
                 {% endif %}
+              {# djlint:off H025 #}
               </form>
+              {# djlint:on #}
             </li>
           {% endfor %}
         </ul>
