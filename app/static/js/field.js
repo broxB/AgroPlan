@@ -45,7 +45,7 @@ export async function fieldSaldo() {
   for (let elem in data) {
     var element = document.getElementById(elem);
     if (element) {
-      var value = Number(data[elem]).toFixed(0);
+      var value = Number(data[elem]).toFixed(0).replace("-0", "0");
       element.textContent = value;
       if (value > 0) {
         element.classList.add("text-danger");

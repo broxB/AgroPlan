@@ -1,7 +1,7 @@
 from collections import namedtuple
 
-from flask import current_app
 from loguru import logger
+from sqlalchemy import select
 
 from app.database.model import (
     Base,
@@ -75,32 +75,28 @@ def seed_database(data: list[dict]) -> None:
         return DemandType(demand_type)
 
     def get_crop_type(crop_name: str) -> CropType:
-        match crop_name:
-            case "Silomais 32%":
-                return CropType.corn
-            case "So.-Gerste" | "W.-Gerste" | "W.-Roggen" | "W.-Weizen" | "Hafer":
-                return CropType.grain
-            case "Ackergras 3 Schnitte" | "Ackergras 1 Schnitt" | "Grassamen":
-                return CropType.field_grass
-            case "Kleegras 1 Schnitt":
-                return CropType.clover_grass
-            case (
-                "Wiese 3 Schnitte"
-                | "Weide int. (4-5 Nutz.)"
-                | "Mähweide intensiv 20%"
-                | "Mähweide intensiv 60%"
-                | "Mähweide extensiv 20%"
-                | "Mähweide mittle 40%"
-            ):
-                return CropType.permanent_grassland
-            case "Nichtleguminosen" | "Senf (GP)":
-                return CropType.catch_non_legume
-            case "Blühfläche":
-                return CropType.rotating_fallow_with_legume
-            case "AL-Stilllegung" | "GL-Stilllegung":
-                return CropType.rotating_fallow
-            case _:
-                raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
+        if "mais" in crop_name.lower():
+            return CropType.corn
+        if any(
+            True for crop in ("gerste", "roggen", "weizen", "hafer") if crop in crop_name.lower()
+        ):
+            return CropType.grain
+        if "Ackergras" in crop_name or "Grassamen" in crop_name:
+            return CropType.field_grass
+        if "Kleegras" in crop_name:
+            return CropType.clover_grass
+        if "weide" in crop_name.lower() or "wiese" in crop_name.lower():
+            return CropType.permanent_grassland
+        if "Nichtleguminosen" in crop_name or "Senf (GP)" in crop_name:
+            return CropType.catch_non_legume
+        if "Blühfläche" in crop_name:
+            return CropType.rotating_fallow_with_legume
+        if "Stilllegung" in crop_name:
+            return CropType.rotating_fallow
+        if "raps" in crop_name.lower():
+            return CropType.canola
+
+        raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
     def get_crop_class(crop_class: str) -> CropClass:
         if crop_class == "Zweitfrucht" or crop_class is None:
@@ -114,6 +110,8 @@ def seed_database(data: list[dict]) -> None:
 
     def get_residue_type(remains: str) -> ResidueType:
         try:
+            if "verbleiben" in remains:
+                return ResidueType.main_stayed
             return ResidueType(remains)
         except ValueError:
             return ResidueType.none
@@ -124,10 +122,19 @@ def seed_database(data: list[dict]) -> None:
         except ValueError:
             return LegumeType.none
 
-    def get_nmin(nmin_value: int) -> int:
-        if nmin_value is not None:
+    def get_nmin(nmin_value: int | None) -> int:
+        if nmin_value and nmin_value is not None:
             return nmin_value
         return 0
+
+    def get_fert_class(fert_class: str) -> FertClass:
+        match fert_class:
+            case "Organisch":
+                return FertClass.organic
+            case "Mineralisch":
+                return FertClass.mineral
+            case _:
+                raise ValueError(f"FertClass not found. {fert_class=}")
 
     def get_fert_type(fert_name: str) -> FertType:
         if fert_name.startswith("Gärrest"):
@@ -219,13 +226,58 @@ def seed_database(data: list[dict]) -> None:
 
     fields_dict, ferts_dict, crops_dict = data
 
-    user = User(
-        username="Dev-Tester",
-        email="dev@agroplan.de",
-        year=2021,
-    )
+    user = User(username="Dev-Tester", email="dev@agroplan.de", year=list(fields_dict.keys())[-1])
     user.set_password("test")
     update_session(user)
+
+    for name, fert in ferts_dict.items():
+        fertilizer = Fertilizer(
+            user_id=user.id,
+            name=name,
+            year=fert["Jahr"],
+            fert_class=get_fert_class(fert["Art"]),
+            fert_type=FertType(fert["Gruppe"]),
+            active=True,
+            unit=get_fert_unit(fert["Einheit"]),
+            price=fert["Preis"],
+            n=fert["N"],
+            p2o5=fert["P2O5"],
+            k2o=fert["K2O"],
+            mgo=fert["MgO"],
+            s=fert["Schwefel"],
+            cao=fert["CaO"],
+            nh4=fert["NH4"],
+        )
+        update_session(fertilizer)
+
+    for name, crop_dict in crops_dict.items():
+        crop = Crop(
+            user_id=user.id,
+            name=name,
+            field_type=FieldType.cropland,
+            crop_class=get_crop_class(crop_dict.get("Klasse", None)),
+            crop_type=get_crop_type(name),
+            kind=crop_dict.get("Art", None),
+            feedable=crop_dict.get("Feldfutter", None),
+            residue=crop_dict.get("Erntereste", None),
+            nmin_depth=NminType.from_int(crop_dict.get("Nmin_Tiefe", 0)),
+            target_demand=crop_dict.get("Richtbedarf", None),
+            target_yield=crop_dict.get("Richtertrag", None),
+            pos_yield=crop_dict.get("Differenz_Ertrag", [None, None])[1],
+            neg_yield=crop_dict.get("Differenz_Ertrag", [None, None])[0],
+            target_protein=crop_dict.get("Richt_RP", None),
+            var_protein=crop_dict.get("Differenz_RP", None),
+            p2o5=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[1],
+            k2o=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[2],
+            mgo=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[3],
+            byproduct=crop_dict.get("Nebenprodukt", None),
+            byp_ratio=crop_dict.get("HNV", 0),
+            byp_n=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[0],
+            byp_p2o5=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[1],
+            byp_k2o=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[2],
+            byp_mgo=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[3],
+        )
+        update_session(crop)
 
     for year in fields_dict:
         for field_dict in fields_dict[year]:
@@ -233,8 +285,7 @@ def seed_database(data: list[dict]) -> None:
             fert_data = field_fertilization(field_dict)
 
             base_field = BaseField.query.filter(
-                BaseField.prefix == field_dict["Prefix"],
-                BaseField.suffix == field_dict["Suffix"],
+                BaseField.prefix == field_dict["Prefix"], BaseField.suffix == field_dict["Suffix"]
             ).one_or_none()
             if base_field is None:
                 base_field = BaseField(
@@ -250,7 +301,9 @@ def seed_database(data: list[dict]) -> None:
                 year=year,
                 red_region=False,
                 field_type=get_field_type(field_dict["Nutzungsart"]),
-                demand_type=get_demand_type(field_dict["Düngung_Nach"]),
+                demand_p2o5=DemandType(field_dict["Düngung_Nach"]),
+                demand_k2o=DemandType(field_dict["Düngung_Nach"]),
+                demand_mgo=DemandType(field_dict["Düngung_Nach"]),
             )
             field.base_field = base_field
             update_session(field)
@@ -258,38 +311,9 @@ def seed_database(data: list[dict]) -> None:
             for cult in cult_data:
                 crop = Crop.query.filter(Crop.name == cult.name).one_or_none()
                 if crop is None:
-                    try:
-                        crop_dict = crops_dict[cult.name]
-                    except KeyError:
-                        logger.warning(f"{cult.name} nicht vorhanden")
-                        crop_dict = {}
-                    crop = Crop(
-                        user_id=user.id,
-                        name=cult.name,
-                        field_type=field.field_type,
-                        crop_class=get_crop_class(crop_dict.get("Klasse", None)),
-                        crop_type=get_crop_type(cult.name),
-                        kind=crop_dict.get("Art", None),
-                        feedable=crop_dict.get("Feldfutter", None),
-                        residue=crop_dict.get("Erntereste", None),
-                        nmin_depth=NminType.from_int(crop_dict.get("Nmin_Tiefe", 0)),
-                        target_demand=crop_dict.get("Richtbedarf", None),
-                        target_yield=crop_dict.get("Richtertrag", None),
-                        pos_yield=crop_dict.get("Differenz_Ertrag", None)[1],
-                        neg_yield=crop_dict.get("Differenz_Ertrag", None)[0],
-                        target_protein=crop_dict.get("Richt_RP", None),
-                        var_protein=crop_dict.get("Differenz_RP", None),
-                        p2o5=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[1],
-                        k2o=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[2],
-                        mgo=crop_dict.get("Nährwerte_Hauptprodukt", [0 for _ in range(4)])[3],
-                        byproduct=crop_dict.get("Nebenprodukt", None),
-                        byp_ratio=crop_dict.get("HNV", 0),
-                        byp_n=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[0],
-                        byp_p2o5=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[1],
-                        byp_k2o=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[2],
-                        byp_mgo=crop_dict.get("Nährwerte_Nebenprodukt", [0 for _ in range(4)])[3],
-                    )
-                    update_session(crop)
+                    logger.error(f"Crop not found: {cult.name}")
+                crop.field_type = field.field_type
+                update_session(crop)
                 cultivation = Cultivation(
                     field_id=field,
                     cultivation_type=get_cultivation_type(cult.class_),
@@ -309,31 +333,12 @@ def seed_database(data: list[dict]) -> None:
                         continue
                     fert_year = year if fert.class_ == FertClass.organic else 0
                     fertilizer = (
-                        Fertilizer.query.filter(Fertilizer.name == fert.name)
-                        .filter(Fertilizer.year == fert_year)
+                        Fertilizer.query.filter_by(name=fert.name)
+                        .filter_by(year=fert_year)
                         .one_or_none()
                     )
                     if fertilizer is None:
-                        fert_dict = ferts_dict[fert.name]
-                        fertilizer = Fertilizer(
-                            user_id=user.id,
-                            name=fert.name,
-                            year=fert_year,
-                            fert_class=fert.class_,
-                            fert_type=get_fert_type(fert.name),
-                            active=True,
-                            unit=get_fert_unit(fert_dict["Einheit"]),
-                            price=fert_dict["Preis"],
-                            n=fert_dict["N"],
-                            p2o5=fert_dict["P2O5"],
-                            k2o=fert_dict["K2O"],
-                            mgo=fert_dict["MgO"],
-                            s=fert_dict["Schwefel"],
-                            cao=fert_dict["CaO"],
-                            nh4=fert_dict["NH4"],
-                        )
-                    update_session(fertilizer)
-
+                        logger.error(f"Fertilizer not found: {fert.name}")
                     fertilization = Fertilization(
                         cut_timing=CutTiming(fert.cut_timing),
                         measure=MeasureType(fert.measure),
@@ -356,17 +361,35 @@ def seed_database(data: list[dict]) -> None:
                     cao=field_dict["CaO_Saldo"] if field_dict["CaO_Saldo"] else 0,
                     n_total=field_dict["Nges_FD"] if field_dict["Nges_FD"] else 0,
                 )
-                saldo.field = field
+                field.saldo = saldo
 
             if field_dict["Probedatum"] is None:
                 continue
             soil_sample = SoilSample.query.filter(
                 SoilSample.base_id == base_field.id,
-                SoilSample.year == field_dict["Probedatum"],
+                SoilSample.ph == field_dict["pH"],
+                SoilSample.p2o5 == field_dict["P2O5"],
+                SoilSample.k2o == field_dict["K2O"],
+                SoilSample.mg == field_dict["Mg"],
             ).one_or_none()
             if soil_sample is None:
+                soil_sample = db.session.scalar(
+                    select(SoilSample).where(
+                        SoilSample.base_id == base_field.id,
+                        SoilSample.year == field_dict["Probedatum"],
+                    )
+                )
+                if soil_sample is None:
+                    sample_year = (
+                        field_dict["Probedatum"] if field_dict["Probedatum"] else field.year
+                    )
+                else:
+                    sample_year = field.year
+                    logger.info(
+                        f"{field.base_field.name}: {field_dict['Probedatum']} -> {field.year}"
+                    )
                 soil_sample = SoilSample(
-                    year=field_dict["Probedatum"],
+                    year=sample_year,
                     ph=field_dict["pH"],
                     p2o5=field_dict["P2O5"],
                     k2o=field_dict["K2O"],

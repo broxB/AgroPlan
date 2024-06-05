@@ -355,6 +355,12 @@ def test__s_reduction(test_field: Field, humus_type: HumusType, expected):
     assert s_reduction == expected
 
 
+def test__s_reduction_no_sample(test_field: Field):
+    test_field.soil_sample = None
+    s_reduction = test_field._s_reduction(test_field.main_crop)
+    assert s_reduction == 0
+
+
 def test_adjust_nutritional_needs(test_field: Field):
     balance = Balance(n=1, p2o5=1, k2o=1, mgo=1, s=1, cao=1, nh4=1)
     test_field.adjust_nutritional_needs(balance)

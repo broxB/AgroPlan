@@ -18,12 +18,12 @@ def format_number(input: Number, format: str = ".2f", ending: str = "") -> str:
     if ending:
         ending = f" {ending}"
     try:
-        decimal = int(re.findall(f"\.(\d+)\w", format)[0])
+        decimal = int(re.findall("\.(\d+)\w", format)[0])
     except IndexError:
         logger.warning("Invalid format used!")
         decimal = 2
     try:
-        num = round_to_nearest(input, decimal)
+        num = round_to_nearest(input, decimal) + 0  # add 0 to fix -0 values
         return f"{num:{format}}{ending}"
     except InvalidOperation:
         return "E"
