@@ -75,38 +75,28 @@ def seed_database(data: list[dict]) -> None:
         return DemandType(demand_type)
 
     def get_crop_type(crop_name: str) -> CropType:
-        match crop_name:
-            case "Silomais 32%" | "Silomais/Sorghum":
-                return CropType.corn
-            case "So.-Gerste" | "W.-Gerste" | "W.-Roggen" | "W.-Weizen" | "Hafer" | "GPS-Gerste":
-                return CropType.grain
-            case "Ackergras 3 Schnitte" | "Ackergras 1 Schnitt" | "Grassamen":
-                return CropType.field_grass
-            case "Kleegras 1 Schnitt":
-                return CropType.clover_grass
-            case "Kleegras (30:70)":
-                return CropType.clover_grass
-            case (
-                "Wiese 3 Schnitte"
-                | "Weide int. (4-5 Nutz.)"
-                | "Mähweide intensiv 20%"
-                | "Mähweide intensiv 60%"
-                | "Mähweide extensiv 20%"
-                | "Mähweide mittel 40%"
-                | "Weide extensiv"
-                | "Wiese 2 Schnitte"
-            ):
-                return CropType.permanent_grassland
-            case "Nichtleguminosen" | "Senf (GP)":
-                return CropType.catch_non_legume
-            case "Blühfläche":
-                return CropType.rotating_fallow_with_legume
-            case "AL-Stilllegung" | "GL-Stilllegung":
-                return CropType.rotating_fallow
-            case "So.-Raps":
-                return CropType.canola
-            case _:
-                raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
+        if "mais" in crop_name.lower():
+            return CropType.corn
+        if any(
+            True for crop in ("gerste", "roggen", "weizen", "hafer") if crop in crop_name.lower()
+        ):
+            return CropType.grain
+        if "Ackergras" in crop_name or "Grassamen" in crop_name:
+            return CropType.field_grass
+        if "Kleegras" in crop_name:
+            return CropType.clover_grass
+        if "weide" in crop_name.lower() or "wiese" in crop_name.lower():
+            return CropType.permanent_grassland
+        if "Nichtleguminosen" in crop_name or "Senf (GP)" in crop_name:
+            return CropType.catch_non_legume
+        if "Blühfläche" in crop_name:
+            return CropType.rotating_fallow_with_legume
+        if "Stilllegung" in crop_name:
+            return CropType.rotating_fallow
+        if "raps" in crop_name.lower():
+            return CropType.canola
+
+        raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
     def get_crop_class(crop_class: str) -> CropClass:
         if crop_class == "Zweitfrucht" or crop_class is None:
