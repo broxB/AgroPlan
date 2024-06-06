@@ -98,6 +98,16 @@ def seed_database(data: list[dict]) -> None:
 
         raise ValueError(f"CropType nicht vorhanden für {crop_name=}")
 
+    def get_crop_field_type(crop_name: str) -> FieldType:
+        if "weide" in crop_name.lower() or "wiese" in crop_name.lower():
+            return FieldType.grassland
+        elif "AL" in crop_name:
+            return FieldType.fallow_cropland
+        elif "GL" in crop_name:
+            return FieldType.fallow_grassland
+        else:
+            return FieldType.cropland
+
     def get_crop_class(crop_class: str) -> CropClass:
         if crop_class == "Zweitfrucht" or crop_class is None:
             return CropClass.main_crop
@@ -254,7 +264,7 @@ def seed_database(data: list[dict]) -> None:
         crop = Crop(
             user_id=user.id,
             name=name,
-            field_type=FieldType.cropland,
+            field_type=get_crop_field_type(name),
             crop_class=get_crop_class(crop_dict.get("Klasse", None)),
             crop_type=get_crop_type(name),
             kind=crop_dict.get("Art", None),
@@ -312,7 +322,6 @@ def seed_database(data: list[dict]) -> None:
                 crop = Crop.query.filter(Crop.name == cult.name).one_or_none()
                 if crop is None:
                     logger.error(f"Crop not found: {cult.name}")
-                crop.field_type = field.field_type
                 update_session(crop)
                 cultivation = Cultivation(
                     field_id=field,
