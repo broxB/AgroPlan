@@ -10,7 +10,7 @@ repos:
   hooks:
   - id: prettier
     args: [--end-of-line=crlf, --print-width=100]
-    files: \.js$
+    files: ^app/static/js/.*\.js$
 
 - repo: https://github.com/Riverside-Healthcare/djLint
   rev: v1.31.1
