@@ -1,9 +1,16 @@
 import json
 import re
 from decimal import InvalidOperation
+from functools import cmp_to_key
 from numbers import Number
 
 from loguru import logger
+
+from app.database.types import MeasureType
+
+
+def fertilization_sorting(fertilizations):
+    return sorted(fertilizations, key=cmp_to_key(MeasureType.sorting))
 
 
 def handle_error(caller, on_exception="None"):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from functools import cmp_to_key
 
 from loguru import logger
 
@@ -63,7 +64,11 @@ def create_field(
         crop_data = Crop(cultivation.crop, guidelines=guidelines)
         cultivation_data = create_cultivation(cultivation, crop_data, guidelines=guidelines)
         new_field.cultivations.append(cultivation_data)
+        cultivation.fertilizations = sorted(
+            cultivation.fertilizations, key=cmp_to_key(MeasureType.sorting)
+        )
 
+    field.fertilizations = sorted(field.fertilizations, key=cmp_to_key(MeasureType.sorting))
     for fertilization in field.fertilizations:
         fertilizer_data = create_fertilizer(fertilization.fertilizer, guidelines=guidelines)
         crop_data = Crop(fertilization.cultivation.crop, guidelines=guidelines)

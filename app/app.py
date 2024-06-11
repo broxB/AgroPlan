@@ -9,7 +9,7 @@ from app import api, auth, cli, errors, main
 from app.database.model import BaseField, User
 from app.extensions import bootstrap, csrf_protection, db, login, migrate
 from app.model import Soil
-from app.utils import format_number, handle_error
+from app.utils import fertilization_sorting, format_number
 from config import Config
 
 # from app.extensions import mail, moment
@@ -74,6 +74,7 @@ def register_commands(app: Flask):
 def register_custom_filters(app: Flask):
     app.jinja_env.filters["format_number"] = format_number
     app.jinja_env.globals.update(Soil=Soil)
+    app.jinja_env.globals.update(fertilization_sorting=fertilization_sorting)
 
 
 def configure_logger(app: Flask):
