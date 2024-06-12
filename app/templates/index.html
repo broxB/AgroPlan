@@ -1,16 +1,35 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-  <div class="align-left">
-    {% for field in fields %}
-      <details>
-        <summary>
-          <b>{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.prefix, suffix=field.suffix, name=field.name) }}</b>
-        </summary>
-        {% set base_field = field %}
-        {% include "_fields_field.html" %}
-      </details>
-      <br>
-    {% endfor %}
+  <div class="row">
+    {% include "_index_fields.html" %}
+    <div class="center">
+      <img class="htmx-indicator"
+           height="64px"
+           width="64px"
+           aspect="fixed"
+           alt="Spinner for loading."
+           id="page-indicator"
+           src="{{ url_for('static', filename='img/spinner_balls.gif') }}" />
+    </div>
   </div>
 {% endblock app_content %}
+
+{% macro render_card(body='', title='', header='', endpoint='', link_text='') %}
+  <div class="card">
+    {% if header %}
+      <h5 class="card-header">
+        {% if endpoint %}<a href="{{ url_for(endpoint, **kwargs) }}">{% endif %}
+          {{ header }}
+          {% if endpoint %}</a>{% endif %}
+      </h5>
+    {% endif %}
+    <div class="card-body">
+      {% if title %}<h5 class="card-title">{{ title }}</h5>{% endif %}
+      <p class="card-text">{{ body }}</p>
+      {% if not header and endpoint and link_text %}
+        <a href="{{ url_for(endpoint) }}" class="btn btn-primary">{{ link_text }}</a>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}

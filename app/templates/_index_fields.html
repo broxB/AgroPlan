@@ -1,0 +1,31 @@
+
+{% for base_field in page if base_field.fields[0].field_type != "exchanged_land" %}
+  {% set field = base_field.fields[0] %}
+  {% if field.field_type.name == 'grassland' %}
+    {% set bg = "bg-grassland" %}
+  {% elif field.field_type.name == 'cropland' %}
+    {% set bg = "bg-cropland" %}
+  {% elif "fallow" in field.field_type.name %}
+    {% set bg = "bg-fallowland" %}
+  {% endif %}
+  <div class="col-xxl-3 col-xl-4 col-md-6 col-sm-6 mb-3"
+       {% if loop.last and page.has_next %}hx-get="/index?page={{ page.next_num }}" hx-trigger="intersect once" hx-swap="afterend" hx-indicator="#page-indicator"{% endif %}>
+    <div class="card">
+      <h6 class="card-header {{ bg }}">
+        <a class="text-green-95 no-underline stretched-link"
+           href="{{ url_for('main.field', base_field_id=base_field.id) }}">
+          {{- "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) -}}
+        </a>
+      </h6>
+      <ul class="list-group list-group-flush">
+        {% for cultivation in field.cultivations %}
+          <li class="list-group-item bg-green-95">
+            {{- "{name} - {yield} dt/ha".format(name=cultivation.crop.name, yield=cultivation.crop_yield) -}}
+          </li>
+        {% else %}
+          <li class="list-group-item bg-green-95">No cultivation.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endfor %}

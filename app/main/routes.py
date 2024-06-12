@@ -1,8 +1,7 @@
 from dataclasses import asdict
 
-from flask import flash, g, jsonify, redirect, render_template, request, url_for
+from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from loguru import logger
 
 from app.database import BaseField, User
 from app.extensions import db, login
@@ -35,20 +34,16 @@ def home():
 @bp.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
-    # page = request.args.get("page", 1, type=int)
-    fields = current_user.get_fields()  # .paginate(page, 10, False)
-    form = YearForm()
-    # next_url = url_for("main.index", page=fields.next_num) if fields.has_next else None
-    # prev_url = url_for("main.index", page=fields.prev_num) if fields.has_prev else None
-    return render_template(
-        "index.html",
-        title="Home",
-        fields=fields,
-        active_page="home",
-        form=form,
-        # next_url=next_url,
-        # prev_url=prev_url,
-    )
+    page_number = request.args.get("page", 1, type=int)
+    fields = current_user.get_fields()
+    page = db.paginate(fields, page=page_number, per_page=27)
+    if not page.has_prev:
+        form = YearForm()
+        return render_template(
+            "index.html", title="Home", fields=fields, active_page="home", form=form, page=page
+        )
+    else:
+        return render_template("_index_fields.html", page=page)
 
 
 @bp.route("/user/<username>")

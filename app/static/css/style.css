@@ -25,10 +25,11 @@ html {
   --green-bs: hsl(152, 69%, 31%);
   --green-bs-40: hsl(152, 69%, 45%);
   --green-bs-50: hsl(152, 69%, 40%);
+  --grey-95: hsl(0, 0%, 95%);
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 main {
@@ -47,6 +48,12 @@ main {
 /*  */
 /* || general utilities */
 /*  */
+
+.center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .fa-check {
   color: var(--bs-success);
@@ -85,6 +92,14 @@ main {
   background-color: peru !important;
 }
 
+.bg-fallowland {
+  background-color: cadetblue !important;
+}
+
+.bg-exchangeland {
+  background-color: hsl(16, 100%, 66%) !important;
+}
+
 .bg-custom {
   background-color: cadetblue !important;
 }
@@ -97,8 +112,46 @@ main {
   background-color: var(--green-50) !important;
 }
 
+.bg-green-90 {
+  background-color: var(--green-90) !important;
+}
+
+.bg-green-95 {
+  background-color: var(--green-95) !important;
+}
+
+.text-green-95 {
+  color: var(--green-95) !important;
+}
+
+.bg-grey-95 {
+  background-color: var(--grey-95) !important;
+}
+
 .color-green {
   color: var(--green) !important;
+}
+
+.no-underline {
+  text-decoration: none;
+}
+
+/*  */
+/* || htmx styles */
+/*  */
+
+#page-indicator {
+  object-fit: contain;
+}
+
+.htmx-indicator {
+  display: none;
+}
+.htmx-request .htmx-indicator {
+  display: inline;
+}
+.htmx-request.htmx-indicator {
+  display: inline;
 }
 
 /*  */
