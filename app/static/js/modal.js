@@ -137,9 +137,7 @@ class Modal {
         for (let control of this.form) {
           control.setAttribute("disabled", "");
         }
-        document.addEventListener("hidden.bs.modal", () => {
-          window.location.reload();
-        });
+        window.location.reload();
       });
     } else if (response.status == 206) {
       // changed content
