@@ -136,6 +136,14 @@ main {
   text-decoration: none;
 }
 
+.mobile-only {
+  display: none;
+}
+
+.pc-only {
+  display: inline;
+}
+
 /*  */
 /* || htmx styles */
 /*  */
@@ -549,6 +557,12 @@ tr:hover .btn-edit {
   ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
+  }
+  .mobile-only {
+    display: block !important;
+  }
+  .pc-only {
+    display: none !important;
   }
 }
 
