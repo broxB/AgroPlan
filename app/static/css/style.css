@@ -140,6 +140,11 @@ main {
 /* || htmx styles */
 /*  */
 
+tr.htmx-swapping td {
+  opacity: 0;
+  transition: opacity 500ms ease-out;
+}
+
 #page-indicator {
   object-fit: contain;
 }

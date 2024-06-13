@@ -1,0 +1,65 @@
+{% from 'utils.html' import render_icon %}
+{% for base_field in page.items %}
+  <div class="accordion"
+       {% if loop.last and page.has_next %}hx-get="/fields?page={{ page.next_num }}" hx-trigger="intersect once" hx-swap="afterend" hx-indicator="#page-indicator"{% endif %}>
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#field{{ base_field.id }}">
+          <strong>
+            {{ "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) }}
+          </strong>
+          <div class="btn-edit ms-2"
+               data-bs-toggle="modal"
+               data-bs-target="#modal"
+               data-form="base_field"
+               data-modal="edit"
+               data-id="{{ base_field.id }}">{{ render_icon("pencil-square", extra_classes="color-green") }}</div>
+        </button>
+      </h2>
+      <div class="accordion-collapse collapse" id="field{{ base_field.id }}">
+        <div class="accordion-body pt-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col">Sub-suffix</th>
+                  <th scope="col">Area</th>
+                  <th scope="col">Type</th>
+                  <th scope="col" colspan="2">Red region</th>
+                </tr>
+              </thead>
+              <tbody id="basefield_{{ base_field.id }}"
+                     hx-target="closest tr"
+                     hx-swap="outerHTML">
+                {% for field in base_field.fields %}
+                  {% include "_fields_field.html" %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <button class="btn btn-sm btn-success fw-500 d-print-none pc-only"
+                  hx-get="/fields/{{ base_field.id }}/create"
+                  hx-target="previous tbody"
+                  hx-swap="afterbegin">Add cultivation year</button>
+          {# <button class="btn btn-sm btn-success fw-500 d-print-none mobile-only" #}
+          {# hx-get="/modal/fields/{{ base_field.id }}" #}
+          {# hx-target="#modal-content" #}
+          {# hx-trigger="click" #}
+          {# data-bs-toggle="modal" #}
+          {# data-bs-target="#modal">Add cultivation year</button> #}
+          <button class="btn btn-sm btn-success fw-500 d-print-none mobile-only"
+                  type="button"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modal"
+                  data-form="field"
+                  data-modal="new"
+                  data-id="{{ base_field.id }}">Add cultivation year</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endfor %}

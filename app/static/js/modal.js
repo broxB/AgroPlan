@@ -63,7 +63,7 @@ class Modal {
           this.addContent(content);
         });
       } else {
-        if (control.tagName === "SELECT") {
+        if (control.tagName === "SELECT" || control.role == "switch") {
           control.addEventListener("change", () => {
             this.content.querySelector(".btn-success").removeAttribute("hidden");
           });

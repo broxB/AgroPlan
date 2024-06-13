@@ -28,7 +28,6 @@ from app.database.types import (
     CropType,
     CultivationType,
     CutTiming,
-    DemandType,
     FallowCropType,
     FertClass,
     FertType,
@@ -279,13 +278,13 @@ class BaseFieldForm(FormHelper, FlaskForm):
 
 class FieldForm(FormHelper, FlaskForm):
     sub_suffix = IntegerField(
-        "Sub-Partition:", default=0, validators=[InputRequired(), NumberRange(min=0)]
+        "Partition:", default=0, validators=[InputRequired(), NumberRange(min=0)]
     )
-    year = IntegerField("Year:", validators=[InputRequired(), NumberRange(min=2000)])
+    year = IntegerField("Year:", validators=[InputRequired(), NumberRange(min=2020)])
     area = DecimalField("Area in ha:", validators=[InputRequired(), NumberRange(min=0)])
     red_region = SwitchField("Red region?")
     field_type = SelectField(
-        "Select field type:",
+        "Select a field type:",
         choices=[(enum.name, enum.value) for enum in FieldType],
         validators=[InputRequired()],
     )
@@ -295,16 +294,14 @@ class FieldForm(FormHelper, FlaskForm):
         self.base_id = base_field_id
 
     def validate_sub_suffix(self, sub_suffix):
-        if sub_suffix.data:
+        if sub_suffix.data is not None:
             field = Field.query.filter(
                 Field.base_id == self.base_id,
                 Field.sub_suffix == sub_suffix.data,
                 Field.year == self.year.data,
             ).first()
             if field is not None:
-                self.sub_suffix.errors.append(
-                    f"Field with Sub-Suffix:{sub_suffix} already exists."
-                )
+                self.sub_suffix.errors.append(f"Partition {sub_suffix.data} already exists.")
                 return False
 
     def validate_year(self, year):
@@ -317,7 +314,7 @@ class FieldForm(FormHelper, FlaskForm):
             self.year.errors.append(f"Field in {year.data} already exists.")
             return False
 
-    def save(self):
+    def save(self) -> Field:
         field = Field(
             base_id=self.base_id,
             sub_suffix=self.sub_suffix.data,
@@ -330,6 +327,7 @@ class FieldForm(FormHelper, FlaskForm):
         field.base_field = base_field
         db.session.add(field)
         db.session.commit()
+        return field
 
 
 class CultivationForm(FormHelper, FlaskForm):
@@ -350,14 +348,8 @@ class CultivationForm(FormHelper, FlaskForm):
         validators=[InputRequired(), NumberRange(min=0)],
         places=1,
     )
-    residues = SelectField(
-        "Estimated residues:",
-        validators=[InputRequired()],
-    )
-    legume_rate = SelectField(
-        "Share of legumes:",
-        validators=[InputRequired()],
-    )
+    residues = SelectField("Estimated residues:", validators=[InputRequired()])
+    legume_rate = SelectField("Share of legumes:", validators=[InputRequired()])
     nmin_30 = IntegerField("Nmin 30cm:", validators=[InputRequired(), NumberRange(min=0)])
     nmin_60 = IntegerField("Nmin 60cm:", validators=[InputRequired(), NumberRange(min=0)])
     nmin_90 = IntegerField("Nmin 90cm:", validators=[InputRequired(), NumberRange(min=0)])
@@ -750,8 +742,7 @@ class FertilizerForm(FormHelper, FlaskForm):
         # mineral fertilizer with no annual changes
         else:
             fertilizer = Fertilizer.query.filter(
-                Fertilizer.user_id == current_user.id,
-                Fertilizer.name == self.name.data,
+                Fertilizer.user_id == current_user.id, Fertilizer.name == self.name.data
             ).first()
             if fertilizer is not None:
                 self.name.errors.append(f"{self.name.data} already exists.")

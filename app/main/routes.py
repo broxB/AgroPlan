@@ -3,11 +3,16 @@ from dataclasses import asdict
 from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
+from app.api.edit_forms import EditFieldForm
+from app.api.forms import FieldForm
 from app.database import BaseField, User
+from app.database.model import Field
 from app.extensions import db, login
 from app.main import bp
 from app.main.forms import DemandForm, EditProfileForm, YearForm
 from app.model import create_field
+
+current_user: User
 
 
 @login.user_loader
@@ -99,7 +104,12 @@ def set_demand():
 @login_required
 def fields():
     base_fields = current_user.get_fields()
-    return render_template("fields.html", title="Fields", base_fields=base_fields)
+    page_number = request.args.get("page", 1, type=int)
+    page = db.paginate(base_fields, page=page_number, per_page=20)
+    if not page.has_prev:
+        return render_template("fields.html", title="Fields", base_fields=base_fields, page=page)
+    else:
+        return render_template("_fields_base_fields.html", page=page)
 
 
 @bp.route("/field/<base_field_id>", methods=["GET", "POST"])
@@ -165,9 +175,52 @@ def get_fertilizers(fert_class):
     return jsonify(fertilizer_data)
 
 
-@bp.route("/test", methods=["GET", "POST"])
+@bp.route("/fields/<id>", methods=["GET"])
 @login_required
-def test():
-    return render_template("_test.html")
-    # logger.info(f"Received request args: {request.args.to_dict().items()}")
-    # return {"task": "finished"}, 201
+def get_field(id):
+    if request.method == "GET":
+        field = Field.query.get(id)
+        return render_template("_fields_field.html", field=field)
+
+
+@bp.route("/fields/<id>/create", methods=["GET", "POST", "DELETE"])
+@login_required
+def create_field_form(id):
+    if request.method == "GET":
+        form: FieldForm = FieldForm(id)
+        return render_template("_fields_field_create.html", form=form)
+    elif request.method == "POST":
+        form: FieldForm = FieldForm(id)
+        if form.validate_on_submit():
+            field = form.save()
+            return render_template("_fields_field.html", field=field)
+        else:
+            return render_template("_fields_field_create.html", form=form)
+    elif request.method == "DELETE":
+        return ""
+
+
+@bp.route("/fields/<id>/edit", methods=["GET", "PUT"])
+@login_required
+def edit_field(id):
+    form: EditFieldForm = EditFieldForm(id)
+    if request.method == "GET":
+        form.populate(id)
+        return render_template("_fields_field_edit.html", form=form)
+    elif request.method == "PUT":
+        if form.validate_on_submit():
+            form.save()
+            field = form.model_data
+            return render_template("_fields_field.html", field=field)
+        else:
+            return render_template("_fields_field_edit.html", form=form)
+
+
+@bp.route("/fields/<id>/delete", methods=["DELETE"])
+@login_required
+def delete_field(id):
+    if request.method == "DELETE":
+        field = Field.query.get(id)
+        db.session.delete(field)
+        db.session.commit()
+    return ""
