@@ -277,7 +277,7 @@ class BaseFieldForm(FormHelper, FlaskForm):
 
 
 class FieldForm(FormHelper, FlaskForm):
-    sub_suffix = IntegerField(
+    partition = IntegerField(
         "Partition:", default=0, validators=[InputRequired(), NumberRange(min=0)]
     )
     year = IntegerField("Year:", validators=[InputRequired(), NumberRange(min=2020)])
@@ -293,21 +293,21 @@ class FieldForm(FormHelper, FlaskForm):
         super().__init__()
         self.base_id = base_field_id
 
-    def validate_sub_suffix(self, sub_suffix):
-        if sub_suffix.data is not None:
+    def validate_partition(self, partition):
+        if partition.data is not None:
             field = Field.query.filter(
                 Field.base_id == self.base_id,
-                Field.sub_suffix == sub_suffix.data,
+                Field.partition == partition.data,
                 Field.year == self.year.data,
             ).first()
             if field is not None:
-                self.sub_suffix.errors.append(f"Partition {sub_suffix.data} already exists.")
+                self.partition.errors.append(f"Partition {partition.data} already exists.")
                 return False
 
     def validate_year(self, year):
         field = Field.query.filter(
             Field.base_id == self.base_id,
-            Field.sub_suffix == self.sub_suffix.data,
+            Field.partition == self.partition.data,
             Field.year == year.data,
         ).first()
         if field is not None:
@@ -317,7 +317,7 @@ class FieldForm(FormHelper, FlaskForm):
     def save(self) -> Field:
         field = Field(
             base_id=self.base_id,
-            sub_suffix=self.sub_suffix.data,
+            partition=self.partition.data,
             year=self.year.data,
             area=self.area.data,
             red_region=self.red_region.data,

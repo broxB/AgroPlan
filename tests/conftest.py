@@ -83,7 +83,7 @@ def field_first_year(base_field) -> Field:
     field = Field(
         id=1,
         base_id=base_field.id,
-        sub_suffix=1,
+        partition=1,
         area=Decimal("11.11"),
         year=1000,
         red_region=False,
@@ -100,7 +100,7 @@ def field_second_year(base_field) -> Field:
     field = Field(
         id=2,
         base_id=base_field.id,
-        sub_suffix=1,
+        partition=1,
         area=Decimal("11.11"),
         year=1001,
         red_region=False,

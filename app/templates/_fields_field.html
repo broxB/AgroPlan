@@ -2,7 +2,7 @@
 
 <tr>
   <th scope="row">{{ field.year }}</th>
-  <td>{{ field.sub_suffix }}</td>
+  <td>{{ field.partition }}</td>
   <td>{{ field.area }}</td>
   <td>{{ field.field_type.value }}</td>
   <td>
@@ -26,7 +26,7 @@
       {# <button class="btn btn-sm btn-primary mobile-only" #}
       {# hx-get="modal/fields/{{ field.id }}/edit">Edit</button> #}
       <button class="btn btn-sm btn-danger"
-              hx-confirm='Are you sure you want to permanently delete {{ field.year }}-{{ field.sub_suffix }} and all cultivation & fertilization data associated with it?'
+              hx-confirm='Are you sure you want to permanently delete {{ field.year }}-{{ field.partition }} and all cultivation & fertilization data associated with it?'
               hx-target="closest tr"
               hx-swap="outerHTML swap:500ms"
               hx-delete="/fields/{{ field.id }}/delete">Delete</button>

@@ -3,7 +3,7 @@
 <tr hx-trigger="cancel" hx-get="/fields/{{ form.model_data.id }}">
   {{ render_field(form.csrf_token) }}
   <td>{{ render_field(form.year, form_type="floating") }}</td>
-  <td>{{ render_field(form.sub_suffix, form_type="floating") }}</td>
+  <td>{{ render_field(form.partition, form_type="floating") }}</td>
   <td>{{ render_field(form.area, form_type="floating") }}</td>
   <td>{{ render_field(form.field_type, form_type="floating") }}</td>
   <td>{{ render_field(form.red_region, form_type="floating") }}</td>

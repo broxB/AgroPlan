@@ -147,11 +147,11 @@ class BaseField(Base):
 
 class Field(Base):
     __tablename__ = "field"
-    __table_args__ = (UniqueConstraint("base_id", "sub_suffix", "year"),)
+    __table_args__ = (UniqueConstraint("base_id", "partition", "year"),)
 
     id = Column("field_id", Integer, primary_key=True)
     base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
-    sub_suffix = Column("sub_suffix", Integer, default=0)
+    partition = Column("partition", Integer, default=0)
     area = Column("area", Float(asdecimal=True, decimal_return_scale=2))
     year = Column("year", Integer)
     red_region = Column("red_region", Boolean)

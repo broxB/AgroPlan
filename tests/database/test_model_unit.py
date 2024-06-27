@@ -76,7 +76,7 @@ def test_field(
     assert organic_fertilization in field_first_year.fertilizations
     # attributes
     assert field_first_year.base_id == base_field.id
-    assert field_first_year.sub_suffix == 1
+    assert field_first_year.partition == 1
     assert field_first_year.area == Decimal("11.11")
     assert field_first_year.year == 1000
     assert field_first_year.red_region is False
