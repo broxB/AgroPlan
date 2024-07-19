@@ -75,6 +75,8 @@ def register_custom_filters(app: Flask):
     app.jinja_env.filters["format_number"] = format_number
     app.jinja_env.globals.update(Soil=Soil)
     app.jinja_env.globals.update(fertilization_sorting=fertilization_sorting)
+    app.jinja_env.trim_blocks = True
+    app.jinja_env.lstrip_blocks = True
 
 
 def configure_logger(app: Flask):
