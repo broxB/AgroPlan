@@ -89,11 +89,11 @@ class User(UserMixin, Base):
         return User.query.get(user_id)
 
     def get_fields(self, year: int = None, **kwargs) -> Query:
-        query = BaseField.query.filter_by(user_id=self.id)
+        query = Field.query.join(BaseField).filter(BaseField.user_id == self.id)
+        if year is not None:
+            query = query.filter(Field.year == year)
         if kwargs:
             query = query.filter_by(**kwargs)
-        if year is not None:
-            query = query.join(Field).filter(Field.year == year)
         return query
 
     def get_years(self) -> list[int]:

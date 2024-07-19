@@ -9,21 +9,21 @@
     </div>
     <div class="offcanvas-body p-0">
       <div class="list-group list-group-flush">
-        {% for field in fields %}
-          {% if field.fields[0].field_type.name == 'grassland' %}
+        {% for field in sidebar %}
+          {% if field.field_type.name == 'grassland' %}
             {% set bg = "bg-grassland" %}
-          {% elif field.fields[0].field_type.name == 'cropland' %}
+          {% elif field.field_type.name == 'cropland' %}
             {% set bg = "bg-cropland" %}
-          {% elif "fallow" in field.fields[0].field_type.name %}
+          {% elif "fallow" in field.field_type.name %}
             {% set bg = "bg-fallowland" %}
           {% else %}
             {% set bg = "bg-exchangeland" %}
           {% endif %}
-          <a href="{{ url_for('main.field', base_field_id=field.id) }}"
+          <a href="{{ url_for('main.field', id=field.id) }}"
              class="list-group-item list-group-item-action {{ bg }} text-white sidebar-item"
              id="{{ field.id }}">
             <div class="d-flex w-100 justify-content-between">
-              <span class="fw-500 mb-1">{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.prefix, suffix=field.suffix, name=field.name) }}</span>
+              <span class="fw-500 mb-1">{{ "{prefix:02d}-{suffix} {name}".format(prefix=field.base_field.prefix, suffix=field.base_field.suffix, name=field.base_field.name) }}</span>
             </div>
           </a>
         {% endfor %}

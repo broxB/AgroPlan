@@ -25,12 +25,7 @@ from .soil import Soil, create_soil_sample
 
 
 def create_field(
-    user_id: int,
-    base_field_id: int,
-    year: int,
-    first_year: bool = True,
-    *,
-    guidelines: guidelines = guidelines,
+    id: int, first_year: bool = True, *, guidelines: guidelines = guidelines
 ) -> Field | None:
     """Class Factory to create `field` from sqlalchemy database queries.
 
@@ -43,21 +38,13 @@ def create_field(
         Field | None: Field class that contains all `cultivations` and `fertilizations` of the year and basefield.
     """
 
-    field = (
-        db.Field.query.join(db.BaseField)
-        .filter(
-            db.BaseField.id == base_field_id,
-            db.BaseField.user_id == user_id,
-            db.Field.year == year,
-        )
-        .one_or_none()
-    )
+    field = db.Field.query.filter(db.Field.id == id).one_or_none()
 
     if field is None:
         return None
     new_field = Field(field, first_year=first_year, guidelines=guidelines)
     new_field.soil_sample = create_soil_sample(
-        field.base_field.soil_samples, field.field_type, year, guidelines=guidelines
+        field.base_field.soil_samples, field.field_type, field.year, guidelines=guidelines
     )
 
     for cultivation in field.cultivations:
@@ -98,6 +85,7 @@ class Field:
     ):
         self.user_id: int = Field.base_field.user_id
         self.base_id: int = Field.base_id
+        self.partition: int = Field.partition
         self.name: str = Field.base_field.name
         self.area: Decimal = Field.area
         self.year: int = Field.year
@@ -124,9 +112,23 @@ class Field:
         if not first_year:
             return
         year = self.year - 1
-        field = create_field(
-            self.user_id, self.base_id, year, first_year=False, guidelines=guidelines
+        field = (
+            db.BaseField.query.join(db.Field)
+            .filter(
+                db.BaseField.id == self.base_id,
+                db.Field.year == year,
+                db.Field.partition == self.partition,
+            )
+            .one_or_none()
         )
+        if field is None:
+            field = (
+                db.BaseField.query.join(db.Field)
+                .filter(db.BaseField.id == self.base_id, db.Field.year == year)
+                .one_or_none()
+            )
+        if field:
+            field = create_field(field.id, first_year=False, guidelines=guidelines)
         return field
 
     @property

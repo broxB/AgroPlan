@@ -1,3 +1,4 @@
+import re
 from dataclasses import asdict
 
 from flask import flash, jsonify, redirect, render_template, request, url_for
@@ -40,12 +41,12 @@ def home():
 @login_required
 def index():
     page_number = request.args.get("page", 1, type=int)
-    fields = current_user.get_fields()
-    page = db.paginate(fields, page=page_number, per_page=27)
+    sidebar = current_user.get_fields(year=current_user.year)
+    page = db.paginate(sidebar, page=page_number, per_page=27)
     if not page.has_prev:
         form = YearForm()
         return render_template(
-            "index.html", title="Home", fields=fields, active_page="home", form=form, page=page
+            "index.html", title="Home", sidebar=sidebar, active_page="home", form=form, page=page
         )
     else:
         return render_template("_index_fields.html", page=page)
@@ -83,9 +84,32 @@ def set_year():
         current_user.year = year
         db.session.commit()
         flash(f"Cultivation year has been set to {year}.")
+        if match := re.search("\/field\/(\d+)$", request.referrer):
+            field_id = match[1]
+            field = Field.query.get(field_id)
+            new_field = (
+                Field.query.join(BaseField)
+                .filter(
+                    BaseField.id == field.base_id,
+                    Field.year == year,
+                    Field.partition == field.partition,
+                )
+                .one_or_none()
+            )
+            if new_field is None:
+                new_field = (
+                    Field.query.join(BaseField)
+                    .filter(BaseField.id == field.base_id, Field.year == year)
+                    .one_or_none()
+                )
+                if new_field is None:
+                    return redirect(url_for("main.index"))
+            return redirect(url_for("main.field", id=new_field.id))
+        else:
+            return redirect(request.referrer)
     else:
         flash("Invalid year selected.")
-    return redirect(request.referrer)
+        return redirect(request.referrer)
 
 
 @bp.route("/set_demand", methods=["POST"])
@@ -103,31 +127,34 @@ def set_demand():
 @bp.route("/fields", methods=["GET"])
 @login_required
 def fields():
-    base_fields = current_user.get_fields()
+    base_fields = BaseField.query.filter_by(user_id=current_user.id)
+    sidebar = current_user.get_fields(year=current_user.year)
     page_number = request.args.get("page", 1, type=int)
     page = db.paginate(base_fields, page=page_number, per_page=20)
     if not page.has_prev:
-        return render_template("fields.html", title="Fields", base_fields=base_fields, page=page)
+        return render_template(
+            "fields.html", title="Fields", base_fields=base_fields, sidebar=sidebar, page=page
+        )
     else:
-        return render_template("_fields_base_fields.html", page=page)
+        return render_template("_fields_base_fields.html", sidebar=sidebar, page=page)
 
 
-@bp.route("/field/<base_field_id>", methods=["GET", "POST"])
+@bp.route("/field/<id>", methods=["GET", "POST"])
 @login_required
-def field(base_field_id):
+def field(id):
     if request.method == "GET":
-        base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
-        fields = current_user.get_fields(year=current_user.year)
-        field = create_field(current_user.id, base_field_id, current_user.year)
+        db_field = Field.query.filter_by(id=id).first_or_404()
+        sidebar = current_user.get_fields(year=current_user.year)
+        field = create_field(id)
         if field is not None:
             field.create_balances()
         form = YearForm()
         demand_form = DemandForm()
         return render_template(
             "field.html",
-            title=base_field.name,
-            base_field=base_field,
-            fields=fields,
+            title=db_field.base_field.name,
+            db_field=db_field,
+            sidebar=sidebar,
             form=form,
             demand_form=demand_form,
             field=field,
@@ -136,10 +163,10 @@ def field(base_field_id):
         return jsonify("Invalid request."), 503
 
 
-@bp.route("/field/<base_field_id>/data", methods=["GET"])
+@bp.route("/field/<id>/data", methods=["GET"])
 @login_required
-def field_data(base_field_id):
-    field = create_field(current_user.id, base_field_id, current_user.year)
+def field_data(id):
+    field = create_field(id)
     return asdict(field.total_balance())
 
 

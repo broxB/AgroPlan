@@ -1,6 +1,5 @@
 
-{% for base_field in page if base_field.fields[0].field_type != "exchanged_land" %}
-  {% set field = base_field.fields[0] %}
+{% for field in page if field.field_type != "exchanged_land" %}
   {% if field.field_type.name == 'grassland' %}
     {% set bg = "bg-grassland" %}
   {% elif field.field_type.name == 'cropland' %}
@@ -13,8 +12,8 @@
     <div class="card">
       <h6 class="card-header {{ bg }}">
         <a class="text-green-95 no-underline stretched-link"
-           href="{{ url_for('main.field', base_field_id=base_field.id) }}">
-          {{- "{prefix:02}-{suffix} {name}".format(prefix=base_field.prefix, suffix=base_field.suffix, name=base_field.name) -}}
+           href="{{ url_for('main.field', id=field.id) }}">
+          {{- "{prefix:02}-{suffix} {name}".format(prefix=field.base_field.prefix, suffix=field.base_field.suffix, name=field.base_field.name) -}}
         </a>
       </h6>
       <ul class="list-group list-group-flush">
