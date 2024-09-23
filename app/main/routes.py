@@ -1,5 +1,6 @@
 import re
 from dataclasses import asdict
+from functools import cmp_to_key
 
 from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
@@ -7,10 +8,11 @@ from flask_login import current_user, login_required
 from app.api.edit_forms import EditFieldForm
 from app.api.forms import FieldForm
 from app.database import BaseField, User
-from app.database.model import Field
+from app.database.model import Cultivation, Fertilization, Field
+from app.database.types import MeasureType
 from app.extensions import db, login
 from app.main import bp
-from app.main.forms import DemandForm, EditProfileForm, YearForm
+from app.main.forms import DemandForm, EditProfileForm, ListForm, YearForm
 from app.model import create_field
 
 current_user: User
@@ -251,3 +253,37 @@ def delete_field(id):
         db.session.delete(field)
         db.session.commit()
     return ""
+
+
+@bp.route("/lists", methods=["GET", "POST"])
+@login_required
+def lists():
+    form: ListForm = ListForm(current_user.id)
+    form.update_choices()
+    lists = []
+
+    if request.method == "POST":
+        query = db.select(Fertilization)
+        if form.fields.data:
+            query = query.filter(Fertilization.field_id.in_(form.fields.data))
+        if form.fertilizers.data:
+            query = query.filter(Fertilization.fertilizer_id.in_(form.fertilizers.data))
+        else:
+            query = query.filter(
+                Fertilization.fertilizer_id.in_([id for id, _ in form.fertilizers.choices])
+            )
+        if form.crops.data:
+            query = query.join(Cultivation).filter(Cultivation.crop_id.in_(form.crops.data))
+        else:
+            query = query.join(Cultivation).filter(
+                Cultivation.crop_id.in_([id for id, _ in form.crops.choices])
+            )
+        query = query.join(Field).filter(Field.year == form.year.data)
+        lists: list = db.session.execute(query).scalars().all()
+
+        lists.sort(key=lambda x: x.field.base_field.prefix)
+        lists.sort(key=lambda x: x.cultivation.crop.name)
+        lists.sort(key=lambda x: x.fertilizer.name)
+        lists.sort(key=cmp_to_key(MeasureType.sorting))
+
+    return render_template("lists.html", form=form, lists=lists)
