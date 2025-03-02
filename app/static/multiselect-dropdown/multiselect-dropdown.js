@@ -93,7 +93,7 @@ function MultiselectDropdown(options) {
     txtSelected: "selected",
     txtAll: "All",
     txtRemove: "Remove",
-    txtSearch: "search",
+    txtSearch: "Search",
     ...options,
   };
   function newEl(tag, attrs) {
@@ -271,3 +271,7 @@ function MultiselectDropdown(options) {
 window.addEventListener("load", () => {
   MultiselectDropdown(window.MultiselectDropdownOptions);
 });
+
+function handleRadio(Elem) {
+  Elem.form.submit.click()
+}

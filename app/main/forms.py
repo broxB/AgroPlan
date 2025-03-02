@@ -101,14 +101,44 @@ class DemandForm(FlaskForm):
 
 
 class ListForm(FormHelper, FlaskForm):
-    list_type = RadioField("Which type of list do you need?", validators=[InputRequired()])
-    item_type = RadioField("Which type of items do you want to select?")
+    list_type = RadioField(
+        "Which type of list do you need?",
+        validators=[InputRequired()],
+        render_kw={"onclick": "handleRadio(this)"},
+    )
+    # item_type = RadioField("Which type of items do you want to select?")
     year = SelectField("Select the year you need.", validators=[InputRequired()])
     fields = SelectMultipleField(
-        "Select the fields you need.", validators=[InputRequired()], render_kw={"size": 10}
+        "Select the fields you need.",
+        validators=[InputRequired()],
+        render_kw={
+            "multiselect-search": "true",
+            "multiselect-select-all": "true",
+            "multiselect-max-items": "10",
+            "multiselect-hide-x": "true",
+            # "size": 10,
+        },
     )
-    crops = SelectMultipleField("Select the crops you need.", render_kw={"size": 10})
-    fertilizers = SelectMultipleField("Select the fertilizers you need.", render_kw={"size": 10})
+    crops = SelectMultipleField(
+        "Select the crops you need.",
+        render_kw={
+            "multiselect-search": "true",
+            "multiselect-select-all": "true",
+            "multiselect-max-items": "10",
+            "multiselect-hide-x": "false",
+            "size": 10,
+        },
+    )
+    fertilizers = SelectMultipleField(
+        "Select the fertilizers you need.",
+        render_kw={
+            "multiselect-search": "true",
+            "multiselect-select-all": "true",
+            "multiselect-max-items": "10",
+            "multiselect-hide-x": "false",
+            "size": 10,
+        },
+    )
     submit = SubmitField("Show")
 
     def __init__(self, user_id, *args, **kwargs):
@@ -120,7 +150,7 @@ class ListForm(FormHelper, FlaskForm):
             ("crops", "Cultivations"),
             ("fields", "Field balance"),
         ]
-        self.item_type.choices = ["Fields", "Crops", "Fertilizers"]
+        # self.item_type.choices = ["Fields", "Crops", "Fertilizers"]
         self.year.choices = sorted(
             list(set((field.year for field in Field.query.all()))), reverse=True
         )
