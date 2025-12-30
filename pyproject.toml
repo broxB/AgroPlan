@@ -1,40 +1,44 @@
-[tool.poetry]
+[project]
 name = "AgroPlan"
 version = "0.1.0"
-description = "Plan cultivation and fertilization according to german fertilization laws (\"DüV\")."
-authors = ["Philipp Brockmann <philippbrockmann@gmail.com>"]
-license = "MIT"
+description = "Plan cultivation and fertilization according to german fertilization laws (DüV)."
+authors = [{ name = "Philipp Brockmann", email = "philippbrockmann@gmail.com" }]
+requires-python = ">=3.11.4,<4"
 readme = "README.md"
+license = "MIT"
+dependencies = [
+    "Flask==2.3.2",
+    "Flask-SQLAlchemy==3.0.5",
+    "Flask-Login==0.6.2",
+    "Flask-Migrate==4.0.4",
+    "Flask-WTF[email]==1.1.1",
+    "Bootstrap-Flask==2.2.0",
+    "PyJWT==2.7.0",
+    "python-dotenv==1.0.0",
+    "loguru==0.7.0",
+    "flask-mailman==0.3.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11.4"
-Flask = "2.3.2"
-Flask-SQLAlchemy = "3.0.5"
-Flask-Login = "0.6.2"
-Flask-Migrate = "4.0.4"
-Flask-WTF = { extras = ["email"], version = "1.1.1" }
-Bootstrap-Flask = "2.2.0"
-PyJWT = "2.7.0"
-python-dotenv = "1.0.0"
-loguru = "0.7.0"
-flask-mailman = "0.3.0"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "7.4.0"
-pytest-cov = "4.0.0"
-ruff = "^0.1.6"
-pre-commit = "3.3.3"
-djlint = "1.31.1"
+[dependency-groups]
+dev = [
+    "pytest==7.4.0",
+    "pytest-cov==4.0.0",
+    "ruff>=0.14.10",
+    "pre-commit>=4.5.1",
+    "djlint>=1.36.4",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 99
 extend-exclude = ["migrations/env.py"]
-ignore-init-module-imports = true
 # force-exclude = true
+
+[tool.ruff.lint]
+unfixable = ["F401"]
 
 [tool.ruff.format]
 exclude = ["migrations/env.py"]
@@ -68,7 +72,7 @@ skip_empty = true
 # show_missing = true
 
 [tool.djlint]
-indent_size = 2
+indent = 2
 ignore = 'H017,T028'
 profile = "jinja"
 use_gitignore = true
