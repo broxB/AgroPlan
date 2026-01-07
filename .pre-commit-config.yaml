@@ -11,17 +11,11 @@ repos:
   hooks:
   - id: prettier
     args: [--end-of-line=crlf, --print-width=100]
-    files: ^app/static/(js/.*\.js|css/.*\.css)$
+    files: static/(js|css)/.*\.(js|css)$
 
 - repo: https://github.com/Riverside-Healthcare/djLint
   rev: v1.36.4
   hooks:
   - id: djlint-reformat
-    args: [--indent=2]
-    files: \.html$
-  # - id: djlint-jinja
-  #   args: [--indent=2]
-  #   files: \.html$
-  # - id: djlint-reformat-jinja
-  #   args: [--indent=2]
-  #   files: \.html$
+    args: [--indent=2, --profile=jinja]
+    files: templates/.*\.html$
