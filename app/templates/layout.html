@@ -12,15 +12,16 @@
       <link rel="shortcut icon"
             href="../static/img/favicon-64.png"
             type="image/x-icon">
+      <link rel="stylesheet"
+            href="{{ url_for('static', filename='css/style.css') }}">
       <!-- PWA -->
       <link rel="manifest" href="../static/manifest.json" />
       <!-- Bootstrap CSS -->
       {{ bootstrap.load_css() }}
       <!-- HTMX Local distro -->
-      <script src="{{ url_for('static', filename='htmx.org@1.9.12/htmx.min.js')}}"
+      <script src="{{ url_for('static', filename='htmx.org@2.0.8/htmx.min.js')}}"
               crossorigin="anonymous"></script>
-      <link rel="custom stylesheet"
-            href="{{ url_for('static', filename='css/style.css') }}">
+
       {% block styles %}
       {% endblock styles %}
 
