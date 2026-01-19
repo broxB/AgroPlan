@@ -13,10 +13,10 @@ style.innerHTML = `
   background-position: right .75rem center;
   background-size: 16px 12px;
 }
-.multiselect-dropdown span.optext, .multiselect-dropdown span.placeholder{
+.multiselect-dropdown span.optext, .multiselect-dropdown span.placeholder-ms{
   margin-right:0.5em;
   margin-bottom:2px;
-  padding:1px 0;
+  padding:1px 5px;
   border-radius: 4px;
   display:inline-block;
 }
@@ -33,8 +33,8 @@ style.innerHTML = `
   color: #666;
 }
 .multiselect-dropdown span.optext .optdel:hover { color: #c66;}
-.multiselect-dropdown span.placeholder{
-  color:#ced4da;
+.multiselect-dropdown span.placeholder-ms{
+  color:#65727e;
 }
 .multiselect-dropdown-list-wrapper{
   box-shadow: gray 0 3px 8px;
@@ -89,7 +89,7 @@ function MultiselectDropdown(options) {
   var config = {
     search: true,
     height: "15rem",
-    placeholder: "select",
+    placeholder: "Select option(s)",
     txtSelected: "selected",
     txtAll: "All",
     txtRemove: "Remove",
@@ -205,7 +205,7 @@ function MultiselectDropdown(options) {
       div.listEl = listWrap;
 
       div.refresh = () => {
-        div.querySelectorAll("span.optext, span.placeholder").forEach((t) => div.removeChild(t));
+        div.querySelectorAll("span.optext, span.placeholder-ms").forEach((t) => div.removeChild(t));
         var sels = Array.from(el.selectedOptions);
         if (sels.length > (el.attributes["multiselect-max-items"]?.value ?? 5)) {
           div.appendChild(
@@ -237,8 +237,8 @@ function MultiselectDropdown(options) {
         if (0 == el.selectedOptions.length)
           div.appendChild(
             newEl("span", {
-              class: "placeholder",
-              text: el.attributes["placeholder"]?.value ?? config.placeholder,
+              class: "placeholder-ms",
+              text: el.attributes["placeholder-ms"]?.value ?? config.placeholder,
             })
           );
       };
