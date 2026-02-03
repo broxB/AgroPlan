@@ -2,7 +2,7 @@ import re
 from dataclasses import asdict
 from functools import cmp_to_key
 
-from flask import flash, jsonify, redirect, render_template, request, url_for
+from flask import flash, jsonify, make_response, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app.api.edit_forms import EditFieldForm
@@ -258,32 +258,51 @@ def delete_field(id):
 @bp.route("/lists", methods=["GET", "POST"])
 @login_required
 def lists():
+    form: ListForm = ListForm(current_user.id, year=current_user.year)
+    form.update_choices()
+    return render_template("lists.html", form=form)
+
+
+@bp.route("/lists/datatable", methods=["POST"])
+@login_required
+def create_list():
+    list = []
     form: ListForm = ListForm(current_user.id)
     form.update_choices()
-    lists = []
 
-    if request.method == "POST":
-        query = db.select(Fertilization)
-        if form.fields.data:
-            query = query.filter(Fertilization.field_id.in_(form.fields.data))
-        if form.fertilizers.data:
-            query = query.filter(Fertilization.fertilizer_id.in_(form.fertilizers.data))
-        else:
-            query = query.filter(
-                Fertilization.fertilizer_id.in_([id for id, _ in form.fertilizers.choices])
-            )
-        if form.crops.data:
-            query = query.join(Cultivation).filter(Cultivation.crop_id.in_(form.crops.data))
-        else:
-            query = query.join(Cultivation).filter(
-                Cultivation.crop_id.in_([id for id, _ in form.crops.choices])
-            )
-        query = query.join(Field).filter(Field.year == form.year.data)
-        lists: list = db.session.execute(query).scalars().all()
+    query = db.select(Fertilization)
+    if form.fields.data:
+        query = query.filter(Fertilization.field_id.in_(form.fields.data))
+    if form.fertilizers.data:
+        query = query.filter(Fertilization.fertilizer_id.in_(form.fertilizers.data))
+    else:
+        query = query.filter(
+            Fertilization.fertilizer_id.in_([id for id, _ in form.fertilizers.choices])
+        )
+    if form.crops.data:
+        query = query.join(Cultivation).filter(Cultivation.crop_id.in_(form.crops.data))
+    else:
+        query = query.join(Cultivation).filter(
+            Cultivation.crop_id.in_([id for id, _ in form.crops.choices])
+        )
+    query = query.join(Field).filter(Field.year == form.year.data)
+    list: list = db.session.execute(query).scalars().all()
 
-        lists.sort(key=lambda x: x.field.base_field.prefix)
-        lists.sort(key=lambda x: x.cultivation.crop.name)
-        lists.sort(key=lambda x: x.fertilizer.name)
-        lists.sort(key=cmp_to_key(MeasureType.sorting))
+    list.sort(key=lambda x: x.field.base_field.prefix)
+    list.sort(key=lambda x: x.cultivation.crop.name)
+    list.sort(key=lambda x: x.fertilizer.name)
+    list.sort(key=cmp_to_key(MeasureType.sorting))
+    unit = " | ".join(set(entry.fertilizer.unit.value for entry in list))
+    return render_template("_lists_table.html", list=list, unit=unit)
 
-    return render_template("lists.html", form=form, lists=lists)
+
+@bp.route("/lists/form", methods=["POST"])
+@login_required
+def update_listform():
+    form: ListForm = ListForm(current_user.id)
+    form.update_choices()
+    body = render_template("_lists_form.html", form=form)
+    # rebuild multiselect dropdowns after htmx changes have settled
+    response = make_response(body)
+    response.headers["HX-Trigger-After-Settle"] = "reloadMultiSelectDropdown"
+    return response

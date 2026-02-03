@@ -104,9 +104,18 @@ class ListForm(FormHelper, FlaskForm):
     list_type = RadioField(
         "Which type of list do you need?",
         validators=[InputRequired()],
-        render_kw={"onclick": "handleRadio(this)"},
+        # render_kw={"onclick": "handleRadio(this)"},
+        choices=[
+            ("all", "All types"),
+            ("mineral", "Mineral Fertilizations"),
+            ("organic", "Organic Fertilizations"),
+            # ("crops", "Cultivations"),
+            # ("fields", "Field balance"),
+        ],
     )
-    # item_type = RadioField("Which type of items do you want to select?")
+    item_type = RadioField(
+        "Which type of items do you want to select?", choices=["Fields", "Crops", "Fertilizers"]
+    )
     year = SelectField("Select the year you need.", validators=[InputRequired()])
     fields = SelectMultipleField(
         "Select the fields you need.",
@@ -115,8 +124,8 @@ class ListForm(FormHelper, FlaskForm):
             "multiselect-search": "true",
             "multiselect-select-all": "true",
             "multiselect-max-items": "10",
-            "multiselect-hide-x": "true",
-            # "size": 10,
+            "multiselect-hide-x": "false",
+            "size": 100,
         },
     )
     crops = SelectMultipleField(
@@ -144,13 +153,7 @@ class ListForm(FormHelper, FlaskForm):
     def __init__(self, user_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user_id = user_id
-        self.list_type.choices = [
-            ("mineral", "Mineral Fertilizations"),
-            ("organic", "Organic Fertilizations"),
-            ("crops", "Cultivations"),
-            ("fields", "Field balance"),
-        ]
-        # self.item_type.choices = ["Fields", "Crops", "Fertilizers"]
+        # self.list_type.data = "all"
         self.year.choices = sorted(
             list(set((field.year for field in Field.query.all()))), reverse=True
         )
@@ -200,15 +203,25 @@ class ListForm(FormHelper, FlaskForm):
                 fertilizers = fertilizers.filter(Fertilizer.fert_class == FertClass.mineral)
             elif self.list_type.data == "organic":
                 fertilizers = fertilizers.filter(Fertilizer.fert_class == FertClass.organic)
-            elif self.list_type.data == "crops":
-                self.add_render_kw(self.fertilizers, "disabled", "")
-            elif self.list_type.data == "fields":
-                self.add_render_kw(self.crops, "disabled", "")
-                self.add_render_kw(self.fertilizers, "disabled", "")
-            self.fertilizers.choices = sorted(
-                [(fertilizer.id, fertilizer.name) for fertilizer in fertilizers.all()],
-                key=lambda x: x[1],
-            )
+            # elif self.list_type.data == "crops":
+            #     self.add_render_kw(self.fertilizers, "disabled", "")
+            # elif self.list_type.data == "fields":
+            #     self.add_render_kw(self.crops, "disabled", "")
+            #     self.add_render_kw(self.fertilizers, "disabled", "")
+            if self.list_type.data and self.list_type.data != "all":
+                self.fertilizers.choices = sorted(
+                    [(fertilizer.id, fertilizer.name) for fertilizer in fertilizers.all()],
+                    key=lambda x: x[1],
+                )
+            else:
+                # show all used fertilizers in the current year, separate fertilizers by fert_class and then sort by name
+                self.fertilizers.choices = [
+                    (fertilizer.id, fertilizer.name)
+                    for fertilizer in fertilizers.order_by(
+                        Fertilizer.fert_class.desc(), Fertilizer.name
+                    ).all()
+                ]
+
             crops = (
                 Crop.query.join(Cultivation).join(Field).filter(Field.year == self.year.data).all()
             )

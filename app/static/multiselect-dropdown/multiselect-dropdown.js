@@ -104,8 +104,8 @@ function MultiselectDropdown(options) {
           Array.isArray(attrs[k])
             ? attrs[k].forEach((o) => (o !== "" ? e.classList.add(o) : 0))
             : attrs[k] !== ""
-            ? e.classList.add(attrs[k])
-            : 0;
+              ? e.classList.add(attrs[k])
+              : 0;
         } else if (k === "style") {
           Object.keys(attrs[k]).forEach((ks) => {
             e.style[ks] = attrs[k][ks];
@@ -272,6 +272,7 @@ window.addEventListener("load", () => {
   MultiselectDropdown(window.MultiselectDropdownOptions);
 });
 
-function handleRadio(Elem) {
-  Elem.form.submit.click()
-}
+// rebuild multiselect dropdowns after htmx changes have settled
+document.body.addEventListener("reloadMultiSelectDropdown", () => {
+  MultiselectDropdown(window.MultiselectDropdownOptions);
+});
