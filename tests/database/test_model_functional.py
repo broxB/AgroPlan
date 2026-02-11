@@ -3,15 +3,7 @@ from time import time
 import pytest
 from jwt import encode
 
-from app.database.model import (
-    BaseField,
-    Crop,
-    Fertilization,
-    Fertilizer,
-    Field,
-    SoilSample,
-    User,
-)
+from app.database.model import Crop, Fertilization, Fertilizer, Field, SoilSample, User
 from app.database.types import FertClass
 
 
@@ -24,9 +16,13 @@ def test_user_reset_password(user: User, fill_db):
     assert user.verify_reset_password_token(false_token) is None
 
 
-def test_user_get_fields(user: User, base_field: BaseField, field_first_year: Field, fill_db):
-    assert base_field in user.get_fields().all()
-    assert base_field in user.get_fields(year=field_first_year.year).all()
+def test_user_get_fields(user: User, field_first_year: Field, field_second_year: Field, fill_db):
+    assert field_first_year in user.get_fields(year=field_first_year.year).all()
+    assert field_second_year not in user.get_fields(year=field_first_year.year).all()
+    assert (
+        field_first_year in user.get_fields().all()
+        and field_second_year in user.get_fields().all()
+    )
 
 
 def test_user_get_years(user: User, field_first_year: Field, fill_db):

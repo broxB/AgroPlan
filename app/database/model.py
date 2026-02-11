@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from time import time
 
 from flask import current_app
 from flask_login import UserMixin
 from jwt import InvalidSignatureError, decode, encode
 from sqlalchemy import Boolean, Column, Enum, Float, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import Query, backref, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database.types import (
@@ -41,16 +43,16 @@ __all__ = [
 ]
 
 Base = db.Model
-Column: Column = db.Column
-Integer: Integer = db.Integer
-String: String = db.String
-relationship: relationship = db.relationship
-ForeignKey: ForeignKey = db.ForeignKey
-UniqueConstraint: UniqueConstraint = db.UniqueConstraint
-Float: Float = db.Float
-Boolean: Boolean = db.Boolean
-Enum: Enum = db.Enum
-backref: backref = db.backref
+Column: Column = db.Column  # noqa: F811
+Integer: Integer = db.Integer  # noqa: F811
+String: String = db.String  # noqa: F811
+relationship: relationship = db.relationship  # noqa: F811
+ForeignKey: ForeignKey = db.ForeignKey  # noqa: F811
+UniqueConstraint: UniqueConstraint = db.UniqueConstraint  # noqa: F811
+Float: Float = db.Float  # noqa: F811
+Boolean: Boolean = db.Boolean  # noqa: F811
+Enum: Enum = db.Enum  # noqa: F811
+backref: backref = db.backref  # noqa: F811
 
 
 class User(UserMixin, Base):
@@ -86,21 +88,21 @@ class User(UserMixin, Base):
             return None
         return User.query.get(user_id)
 
-    def get_fields(self, year: int = None, **kwargs):
-        query = BaseField.query.filter_by(user_id=self.id)
+    def get_fields(self, year: int = None, **kwargs) -> Query:
+        query = Field.query.join(BaseField).filter(BaseField.user_id == self.id)
+        if year is not None:
+            query = query.filter(Field.year == year)
         if kwargs:
             query = query.filter_by(**kwargs)
-        if year is not None:
-            query = query.join(Field).filter(Field.year == year)
         return query
 
-    def get_years(self):
+    def get_years(self) -> list[int]:
         fields = (
             Field.query.join(BaseField).filter(BaseField.user_id == self.id).group_by(Field.year)
         )
         return [field.year for field in fields]
 
-    def get_crops(self, crop_class: CropClass = None, **kwargs):
+    def get_crops(self, crop_class: CropClass = None, **kwargs) -> list[Crop]:
         query = Crop.query.filter_by(user_id=self.id)
         if crop_class:
             query = query.filter_by(crop_class=crop_class)
@@ -108,7 +110,7 @@ class User(UserMixin, Base):
             query = query.filter_by(**kwargs)
         return query.all()
 
-    def get_fertilizers(self, fert_class: FertClass = None, **kwargs):
+    def get_fertilizers(self, fert_class: FertClass = None, **kwargs) -> list[Fertilizer]:
         query = Fertilizer.query.filter_by(user_id=self.id)
         if fert_class:
             query = query.filter_by(fert_class=fert_class)
@@ -145,11 +147,11 @@ class BaseField(Base):
 
 class Field(Base):
     __tablename__ = "field"
-    __table_args__ = (UniqueConstraint("base_id", "sub_suffix", "year"),)
+    __table_args__ = (UniqueConstraint("base_id", "partition", "year"),)
 
     id = Column("field_id", Integer, primary_key=True)
     base_id = Column("base_id", Integer, ForeignKey("base_field.base_id"))
-    sub_suffix = Column("sub_suffix", Integer, default=0)
+    partition = Column("partition", Integer, default=0)
     area = Column("area", Float(asdecimal=True, decimal_return_scale=2))
     year = Column("year", Integer)
     red_region = Column("red_region", Boolean)

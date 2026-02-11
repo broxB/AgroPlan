@@ -16,7 +16,8 @@
       <link rel="manifest" href="../static/manifest.json" />
       <!-- Bootstrap CSS -->
       {{ bootstrap.load_css() }}
-      <script src="https://kit.fontawesome.com/10e37a19bc.js"
+      <!-- HTMX Local distro -->
+      <script src="{{ url_for('static', filename='htmx.org@1.9.12/htmx.min.js')}}"
               crossorigin="anonymous"></script>
       <link rel="custom stylesheet"
             href="{{ url_for('static', filename='css/style.css') }}">
@@ -60,6 +61,12 @@
       <!-- Optional JavaScript -->
       {{ bootstrap.load_js() }}
       <script type="module" src="{{ url_for('static', filename='js/index.js') }}"></script>
+      <!-- Add csrf token to all htmx requests -->
+      <script type="text/javascript">
+        document.body.addEventListener('htmx:configRequest', (event) => {
+          event.detail.headers['X-CSRFToken'] = '{{ csrf_token() }}';
+        })
+      </script>
     {% endblock scripts %}
   </body>
 </html>

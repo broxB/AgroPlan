@@ -91,16 +91,16 @@ class EditFieldForm(FieldForm):
         super().populate(id)
         self.field_type.data = self.model_data.field_type.name
 
-    def validate_sub_suffix(self, sub_suffix):
-        if sub_suffix.data != self.model_data.sub_suffix:
-            super().validate_sub_suffix(sub_suffix)
+    def validate_partition(self, partition):
+        if partition.data != self.model_data.partition:
+            super().validate_partition(partition)
 
     def validate_year(self, year):
         if year.data != self.model_data.year:
             super().validate_year(year)
 
     def save(self):
-        self.model_data.sub_suffix = self.sub_suffix.data
+        self.model_data.partition = self.partition.data
         self.model_data.year = self.year.data
         self.model_data.area = self.area.data
         self.model_data.red_region = self.red_region.data

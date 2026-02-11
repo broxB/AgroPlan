@@ -1,39 +1,36 @@
 {% from 'utils.html' import render_icon %}
 
-<div class="table-responsive">
-  <table class="table table-sm table-hover">
-    <thead>
-      <tr>
-        <th scope="col">Year</th>
-        <th scope="col">Area</th>
-        <th scope="col">Type</th>
-        <th scope="col" colspan="2">Red region</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for field in base_field.fields %}
-        <tr>
-          <th scope="row" data-field-id="{{ field.id }}">{{ field.year }}</th>
-          <td>{{ field.area }}</td>
-          <td>{{ field.field_type.value }}</td>
-          <td>
-            {% if field.red_region %}
-              {{ render_icon("check-circle", extra_classes="color-green") }}
-            {% else %}
-              {{ render_icon("x-circle", extra_classes="text-danger") }}
-            {% endif %}
-          </td>
-          <td class="table-action d-print-none">
-            <button class="btn btn-link btn-edit"
-                    type="button"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modal"
-                    data-form="field"
-                    data-modal="edit"
-                    data-id="{{ field.id }}">{{ render_icon("pencil-square", extra_classes="color-green") }}</button>
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+<tr>
+  <th scope="row">{{ field.year }}</th>
+  <td>{{ field.partition }}</td>
+  <td>{{ field.area }}</td>
+  <td>{{ field.field_type.value }}</td>
+  <td>
+    {% if field.red_region %}
+      {{ render_icon("check-circle", extra_classes="color-green") }}
+    {% else %}
+      {{ render_icon("x-circle", extra_classes="text-danger") }}
+    {% endif %}
+  </td>
+  <td class="table-action d-print-none">
+    <div class="btn-group">
+      <button class="btn btn-sm btn-primary pc-only"
+              hx-get="/fields/{{ field.id }}/edit">Edit</button>
+      <button class="btn btn-sm btn-primary mobile-only"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#modal"
+              data-form="field"
+              data-modal="edit"
+              data-id="{{ field.id }}">Edit</button>
+      {# <button class="btn btn-sm btn-primary mobile-only" #}
+      {# hx-get="modal/fields/{{ field.id }}/edit">Edit</button> #}
+      <button class="btn btn-sm btn-danger"
+              hx-confirm='Are you sure you want to permanently delete {{ field.year }}-{{ field.partition }} and all cultivation & fertilization data associated with it?'
+              hx-target="closest tr"
+              hx-swap="outerHTML swap:500ms"
+              hx-delete="/fields/{{ field.id }}/delete">Delete</button>
+
+    </div>
+  </td>
+</tr>

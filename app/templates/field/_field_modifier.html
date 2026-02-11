@@ -10,8 +10,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for field in base_field.fields if field.year == current_user.year %}
-        {% for modifier in field.modifiers %}
+        {% for modifier in db_field.modifiers %}
           <tr data-modifier-id="{{ modifier.id }}">
             <th scope="row">{{ modifier.description }}</th>
             <td>{{ modifier.modification.value }}</td>
@@ -29,7 +28,6 @@
             </td>
           </tr>
         {% endfor %}
-      {% endfor %}
     </tbody>
   </table>
 </div>

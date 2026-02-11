@@ -18,7 +18,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for sample in base_field.soil_samples if sample.year <= db.field.year %}
+      {% for sample in db.field.base_field.soil_samples if sample.year <= db.field.year %}
         {% set soil = Soil(sample, db.field.field_type) %}
         <tr data-id="{{ sample.id }}">
           <th scope="row">{{ sample.year }}</th>
@@ -40,7 +40,7 @@
                     data-form="soil"
                     data-modal="edit"
                     data-id="{{ sample.id }}"
-                    data-field-id="{{ base_field.id }}">
+                    data-field-id="{{ db.field.base_field.id }}">
               {{ render_icon("pencil-square", extra_classes="color-green") }}
             </button>
           </td>

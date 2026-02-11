@@ -14,7 +14,8 @@
         </tr>
       </thead>
       <tbody>
-        {% for fertilization in cultivation.fertilizations if fertilization.fertilizer.fert_class.name == fert_class %}
+        {% set fertilizations = fertilization_sorting(cultivation.fertilizations) %}
+        {% for fertilization in fertilizations if fertilization.fertilizer.fert_class.name == fert_class %}
           <tr data-id="{{ fertilization.id }}">
             <th scope="row">{{ loop.index }}</th>
             {% if cultivation.crop.feedable %}<td>{{ fertilization.cut_timing.value }}</td>{% endif %}

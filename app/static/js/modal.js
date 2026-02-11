@@ -63,7 +63,7 @@ class Modal {
           this.addContent(content);
         });
       } else {
-        if (control.tagName === "SELECT") {
+        if (control.tagName === "SELECT" || control.role == "switch") {
           control.addEventListener("change", () => {
             this.content.querySelector(".btn-success").removeAttribute("hidden");
           });
@@ -137,9 +137,7 @@ class Modal {
         for (let control of this.form) {
           control.setAttribute("disabled", "");
         }
-        document.addEventListener("hidden.bs.modal", () => {
-          window.location.reload();
-        });
+        window.location.reload();
       });
     } else if (response.status == 206) {
       // changed content

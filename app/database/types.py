@@ -382,8 +382,7 @@ MineralFertType: enum.Enum = enum.Enum(
 )
 
 NFertType: enum.Enum = enum.Enum(
-    "NFertType",
-    [(e.name, e.value) for e in FertType if e.name.startswith("n") or e.name == "n"],
+    "NFertType", [(e.name, e.value) for e in FertType if e.name.startswith("n") or e.name == "n"]
 )
 BasicFertType: enum.Enum = enum.Enum(
     "BasicFertType",
@@ -422,6 +421,21 @@ class MeasureType(BaseType):
                 return MineralMeasureType
             case _:
                 raise TypeError(f"{fert_class} has no corresponding MeasureType.")
+
+    @classmethod
+    def sorting(cls, item1, item2) -> int:
+        """
+        Sorts fertilizations based on their measure types.
+        Use with fertilizations and not measures directly.
+        """
+        index1 = cls._member_names_.index(item1.measure.name)
+        index2 = cls._member_names_.index(item2.measure.name)
+        if index1 < index2:
+            return -1
+        elif index1 > index2:
+            return 1
+        else:
+            return 0
 
 
 OrganicMeasureType: enum.Enum = enum.Enum(

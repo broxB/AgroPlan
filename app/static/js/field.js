@@ -39,7 +39,7 @@ export function storeTab() {
  * request: field footer saldo
  */
 export async function fieldSaldo() {
-  const fieldId = document.getElementById("field").dataset.baseId;
+  const fieldId = document.getElementById("field").dataset.fieldId;
   const room_url = "/field/" + fieldId + "/data";
   const data = await fetchData(room_url);
   for (let elem in data) {

@@ -1,14 +1,19 @@
+import re
 from dataclasses import asdict
 
-from flask import flash, g, jsonify, redirect, render_template, request, url_for
+from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from loguru import logger
 
+from app.api.edit_forms import EditFieldForm
+from app.api.forms import FieldForm
 from app.database import BaseField, User
+from app.database.model import Field
 from app.extensions import db, login
 from app.main import bp
 from app.main.forms import DemandForm, EditProfileForm, YearForm
 from app.model import create_field
+
+current_user: User
 
 
 @login.user_loader
@@ -35,20 +40,16 @@ def home():
 @bp.route("/index", methods=["GET", "POST"])
 @login_required
 def index():
-    # page = request.args.get("page", 1, type=int)
-    fields = current_user.get_fields()  # .paginate(page, 10, False)
-    form = YearForm()
-    # next_url = url_for("main.index", page=fields.next_num) if fields.has_next else None
-    # prev_url = url_for("main.index", page=fields.prev_num) if fields.has_prev else None
-    return render_template(
-        "index.html",
-        title="Home",
-        fields=fields,
-        active_page="home",
-        form=form,
-        # next_url=next_url,
-        # prev_url=prev_url,
-    )
+    page_number = request.args.get("page", 1, type=int)
+    sidebar = current_user.get_fields(year=current_user.year)
+    page = db.paginate(sidebar, page=page_number, per_page=27)
+    if not page.has_prev:
+        form = YearForm()
+        return render_template(
+            "index.html", title="Home", sidebar=sidebar, active_page="home", form=form, page=page
+        )
+    else:
+        return render_template("_index_fields.html", page=page)
 
 
 @bp.route("/user/<username>")
@@ -83,9 +84,32 @@ def set_year():
         current_user.year = year
         db.session.commit()
         flash(f"Cultivation year has been set to {year}.")
+        if match := re.search("\/field\/(\d+)$", request.referrer):
+            field_id = match[1]
+            field = Field.query.get(field_id)
+            new_field = (
+                Field.query.join(BaseField)
+                .filter(
+                    BaseField.id == field.base_id,
+                    Field.year == year,
+                    Field.partition == field.partition,
+                )
+                .one_or_none()
+            )
+            if new_field is None:
+                new_field = (
+                    Field.query.join(BaseField)
+                    .filter(BaseField.id == field.base_id, Field.year == year)
+                    .one_or_none()
+                )
+                if new_field is None:
+                    return redirect(url_for("main.index"))
+            return redirect(url_for("main.field", id=new_field.id))
+        else:
+            return redirect(request.referrer)
     else:
         flash("Invalid year selected.")
-    return redirect(request.referrer)
+        return redirect(request.referrer)
 
 
 @bp.route("/set_demand", methods=["POST"])
@@ -103,26 +127,34 @@ def set_demand():
 @bp.route("/fields", methods=["GET"])
 @login_required
 def fields():
-    base_fields = current_user.get_fields()
-    return render_template("fields.html", title="Fields", base_fields=base_fields)
+    base_fields = BaseField.query.filter_by(user_id=current_user.id)
+    sidebar = current_user.get_fields(year=current_user.year)
+    page_number = request.args.get("page", 1, type=int)
+    page = db.paginate(base_fields, page=page_number, per_page=20)
+    if not page.has_prev:
+        return render_template(
+            "fields.html", title="Fields", base_fields=base_fields, sidebar=sidebar, page=page
+        )
+    else:
+        return render_template("_fields_base_fields.html", sidebar=sidebar, page=page)
 
 
-@bp.route("/field/<base_field_id>", methods=["GET", "POST"])
+@bp.route("/field/<id>", methods=["GET", "POST"])
 @login_required
-def field(base_field_id):
+def field(id):
     if request.method == "GET":
-        base_field = BaseField.query.filter_by(id=base_field_id).first_or_404()
-        fields = current_user.get_fields(year=current_user.year)
-        field = create_field(current_user.id, base_field_id, current_user.year)
+        db_field = Field.query.filter_by(id=id).first_or_404()
+        sidebar = current_user.get_fields(year=current_user.year)
+        field = create_field(id)
         if field is not None:
             field.create_balances()
         form = YearForm()
         demand_form = DemandForm()
         return render_template(
             "field.html",
-            title=base_field.name,
-            base_field=base_field,
-            fields=fields,
+            title=db_field.base_field.name,
+            db_field=db_field,
+            sidebar=sidebar,
             form=form,
             demand_form=demand_form,
             field=field,
@@ -131,10 +163,10 @@ def field(base_field_id):
         return jsonify("Invalid request."), 503
 
 
-@bp.route("/field/<base_field_id>/data", methods=["GET"])
+@bp.route("/field/<id>/data", methods=["GET"])
 @login_required
-def field_data(base_field_id):
-    field = create_field(current_user.id, base_field_id, current_user.year)
+def field_data(id):
+    field = create_field(id)
     return asdict(field.total_balance())
 
 
@@ -170,9 +202,52 @@ def get_fertilizers(fert_class):
     return jsonify(fertilizer_data)
 
 
-@bp.route("/test", methods=["GET", "POST"])
+@bp.route("/fields/<id>", methods=["GET"])
 @login_required
-def test():
-    return render_template("_test.html")
-    # logger.info(f"Received request args: {request.args.to_dict().items()}")
-    # return {"task": "finished"}, 201
+def get_field(id):
+    if request.method == "GET":
+        field = Field.query.get(id)
+        return render_template("_fields_field.html", field=field)
+
+
+@bp.route("/fields/<id>/create", methods=["GET", "POST", "DELETE"])
+@login_required
+def create_field_form(id):
+    if request.method == "GET":
+        form: FieldForm = FieldForm(id)
+        return render_template("_fields_field_create.html", form=form)
+    elif request.method == "POST":
+        form: FieldForm = FieldForm(id)
+        if form.validate_on_submit():
+            field = form.save()
+            return render_template("_fields_field.html", field=field)
+        else:
+            return render_template("_fields_field_create.html", form=form)
+    elif request.method == "DELETE":
+        return ""
+
+
+@bp.route("/fields/<id>/edit", methods=["GET", "PUT"])
+@login_required
+def edit_field(id):
+    form: EditFieldForm = EditFieldForm(id)
+    if request.method == "GET":
+        form.populate(id)
+        return render_template("_fields_field_edit.html", form=form)
+    elif request.method == "PUT":
+        if form.validate_on_submit():
+            form.save()
+            field = form.model_data
+            return render_template("_fields_field.html", field=field)
+        else:
+            return render_template("_fields_field_edit.html", form=form)
+
+
+@bp.route("/fields/<id>/delete", methods=["DELETE"])
+@login_required
+def delete_field(id):
+    if request.method == "DELETE":
+        field = Field.query.get(id)
+        db.session.delete(field)
+        db.session.commit()
+    return ""
