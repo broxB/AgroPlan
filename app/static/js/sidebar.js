@@ -29,13 +29,14 @@ function saveScrollPosition() {
 
 function scrollToItem() {
   try {
-    const fieldId = document.getElementById("field").dataset.baseId;
+    const fieldId = document.getElementById("field").dataset.fieldId;
     var element = document.getElementById(fieldId);
     element.classList.add("active");
     const scrollPosition = localStorage.getItem("scrollPosition");
     document.getElementById("sidebar").scrollTop = scrollPosition;
     document.querySelector("#sidebarNav .offcanvas-body").scrollTop = scrollPosition;
   } catch (err) {
+    console.error(err);
     document.getElementById("sidebar").scrollTop = 0;
   }
 }
