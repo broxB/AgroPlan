@@ -1,17 +1,22 @@
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from wtforms import HiddenField, StringField, SubmitField
-from wtforms.validators import DataRequired, Email, ValidationError
+from wtforms import (
+    HiddenField,
+    RadioField,
+    SelectField,
+    SelectMultipleField,
+    StringField,
+    SubmitField,
+)
+from wtforms.validators import DataRequired, Email, InputRequired, ValidationError
 
+from app.api.forms import FormHelper
 from app.database import Field, User, confirm_id
-from app.database.types import DemandType, NutrientType
+from app.database.model import BaseField, Crop, Cultivation, Fertilization, Fertilizer
+from app.database.types import DemandType, FertClass, NutrientType
 from app.extensions import db
 
-__all__ = [
-    "EditProfileForm",
-    "EmptyForm",
-    "YearForm",
-]
+__all__ = ["EditProfileForm", "EmptyForm", "YearForm"]
 
 
 class EditProfileForm(FlaskForm):
@@ -93,3 +98,133 @@ class DemandForm(FlaskForm):
         elif self.nutrient.data is NutrientType.mgo:
             field.demand_mgo = self.demand_option.data
         db.session.commit()
+
+
+class ListForm(FormHelper, FlaskForm):
+    list_type = RadioField(
+        "Which type of list do you need?",
+        validators=[InputRequired()],
+        # render_kw={"onclick": "handleRadio(this)"},
+        choices=[
+            ("all", "All types"),
+            ("mineral", "Mineral Fertilizations"),
+            ("organic", "Organic Fertilizations"),
+            # ("crops", "Cultivations"),
+            # ("fields", "Field balance"),
+        ],
+    )
+    item_type = RadioField(
+        "Which type of items do you want to select?", choices=["Fields", "Crops", "Fertilizers"]
+    )
+    year = SelectField("Select the year you need.", validators=[InputRequired()])
+    fields = SelectMultipleField(
+        "Select the fields you need.",
+        validators=[InputRequired()],
+        render_kw={
+            "multiselect-search": "true",
+            "multiselect-select-all": "true",
+            "multiselect-max-items": "10",
+            "multiselect-hide-x": "false",
+            "size": 100,
+        },
+    )
+    crops = SelectMultipleField(
+        "Select the crops you need.",
+        render_kw={
+            "multiselect-search": "true",
+            "multiselect-select-all": "true",
+            "multiselect-max-items": "10",
+            "multiselect-hide-x": "false",
+            "size": 10,
+        },
+    )
+    fertilizers = SelectMultipleField(
+        "Select the fertilizers you need.",
+        render_kw={
+            "multiselect-search": "true",
+            "multiselect-select-all": "true",
+            "multiselect-max-items": "10",
+            "multiselect-hide-x": "false",
+            "size": 10,
+        },
+    )
+    submit = SubmitField("Show")
+
+    def __init__(self, user_id, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_id = user_id
+        # self.list_type.data = "all"
+        self.year.choices = sorted(
+            list(set((field.year for field in Field.query.all()))), reverse=True
+        )
+        fields = (
+            Field.query.join(BaseField)
+            .filter(BaseField.user_id == current_user.id, Field.year == current_user.year)
+            .all()
+        )
+        self.fields.choices = [
+            (
+                field.id,
+                f"{field.base_field.prefix:02}-{field.base_field.suffix} {field.base_field.name}",
+            )
+            for field in fields
+        ]
+        # crops = Crop.query.filter(Crop.user_id == current_user.id).all()
+        crops = (
+            Crop.query.join(Cultivation).join(Field).filter(Field.year == current_user.year).all()
+        )
+        self.crops.choices = sorted([(crop.id, crop.name) for crop in crops], key=lambda x: x[1])
+        fertilizers = Fertilizer.query.filter(
+            Fertilizer.user_id == current_user.id, Fertilizer.year.in_([current_user.year, 0])
+        ).all()
+        self.fertilizers.choices = [(fertilizer.id, fertilizer.name) for fertilizer in fertilizers]
+
+    def update_choices(self):
+        if self.year.data:
+            fields = (
+                Field.query.join(BaseField)
+                .filter(BaseField.user_id == current_user.id, Field.year == self.year.data)
+                .all()
+            )
+            self.fields.choices = [
+                (
+                    field.id,
+                    f"{field.base_field.prefix:02}-{field.base_field.suffix} {field.base_field.name}",
+                )
+                for field in fields
+            ]
+
+            fertilizers = (
+                Fertilizer.query.join(Fertilization)
+                .join(Field)
+                .filter(Field.year == self.year.data)
+            )
+            if self.list_type.data == "mineral":
+                fertilizers = fertilizers.filter(Fertilizer.fert_class == FertClass.mineral)
+            elif self.list_type.data == "organic":
+                fertilizers = fertilizers.filter(Fertilizer.fert_class == FertClass.organic)
+            # elif self.list_type.data == "crops":
+            #     self.add_render_kw(self.fertilizers, "disabled", "")
+            # elif self.list_type.data == "fields":
+            #     self.add_render_kw(self.crops, "disabled", "")
+            #     self.add_render_kw(self.fertilizers, "disabled", "")
+            if self.list_type.data and self.list_type.data != "all":
+                self.fertilizers.choices = sorted(
+                    [(fertilizer.id, fertilizer.name) for fertilizer in fertilizers.all()],
+                    key=lambda x: x[1],
+                )
+            else:
+                # show all used fertilizers in the current year, separate fertilizers by fert_class and then sort by name
+                self.fertilizers.choices = [
+                    (fertilizer.id, fertilizer.name)
+                    for fertilizer in fertilizers.order_by(
+                        Fertilizer.fert_class.desc(), Fertilizer.name
+                    ).all()
+                ]
+
+            crops = (
+                Crop.query.join(Cultivation).join(Field).filter(Field.year == self.year.data).all()
+            )
+            self.crops.choices = sorted(
+                [(crop.id, crop.name) for crop in crops], key=lambda x: x[1]
+            )

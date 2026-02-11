@@ -1,0 +1,11 @@
+{% from "utils.html" import render_field %}
+
+<div class="row" id="list-fields" hx-swap-oob="true">
+  {{ render_field(form.fields, attributes={"multiselect-max-items":15, "multiselect-hide-x":false}) }}
+</div>
+<div class="row" id="list-crops" hx-swap-oob="true">
+  {{ render_field(form.crops, attributes={"multiselect-select-all":false, "multiselect-search":false}) }}
+</div>
+<div class="row" id="list-fertilizers" hx-swap-oob="true">
+  {{ render_field(form.fertilizers, attributes={"multiselect-select-all":false}) }}
+</div>
