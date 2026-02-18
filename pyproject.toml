@@ -3,29 +3,29 @@ name = "AgroPlan"
 version = "0.1.0"
 description = "Plan cultivation and fertilization according to german fertilization laws (DüV)."
 authors = [{ name = "Philipp Brockmann", email = "philippbrockmann@gmail.com" }]
-requires-python = ">=3.11.4,<4"
+requires-python = ">=3.11,<4"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "Flask==2.3.2",
-    "Flask-SQLAlchemy==3.0.5",
-    "Flask-Login==0.6.2",
-    "Flask-Migrate==4.0.4",
-    "Flask-WTF[email]==1.1.1",
-    "Bootstrap-Flask==2.2.0",
-    "PyJWT==2.7.0",
-    "python-dotenv==1.0.0",
-    "loguru==0.7.0",
-    "flask-mailman==0.3.0",
+    "bootstrap-flask>=2.5.0,<3",
+    "flask>=3.1.2,<4",
+    "flask-login>=0.6.3,<1",
+    "flask-mailman>=1.1.1,<2",
+    "flask-migrate>=4.1.0,<5",
+    "flask-sqlalchemy>=3.1.1,<4",
+    "flask-wtf[email]>=1.2.2,<2",
+    "loguru>=0.7.3,<1",
+    "pyjwt>=2.11.0,<3",
+    "python-dotenv>=1.2.1,<2",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest==7.4.0",
-    "pytest-cov==4.0.0",
-    "ruff>=0.14.10",
-    "pre-commit>=4.5.1",
-    "djlint>=1.36.4",
+    "pytest>=9.0.2,<10",
+    "pytest-cov>=7.0.0,<8",
+    "ruff>=0.15.0,<1",
+    "pre-commit>=4.5.1,<5",
+    "djlint>=1.36.4,<2",
 ]
 
 [build-system]
