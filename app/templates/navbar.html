@@ -13,7 +13,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
   {% endif %}
-  <a class="navbar-brand ps-3" href="{{ url_for("main.home") }}">AgroPlan</a>
+  <a class="navbar-brand ps-3" href="{{ url_for('main.home') }}">AgroPlan</a>
   <button class="navbar-toggler"
           type="button"
           data-bs-toggle="collapse"
@@ -31,6 +31,24 @@
         {{ render_nav_item("main.fertilizer", "Fertilizer", _use_li=True) }}
         {{ render_nav_item("main.lists", "Lists", _use_li=True) }}
       {% endif %}
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle"
+           id="docsDropdown"
+           role="button"
+           data-bs-toggle="dropdown"
+           aria-expanded="false">Docs</a>
+        <ul class="dropdown-menu" aria-labelledby="docsDropdown">
+          <li>
+            <a class="dropdown-item" href="{{ url_for('main.sperrzeiten') }}">Sperrzeiten</a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ url_for('main.hinweise') }}">Hinweise</a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ url_for('main.richtwerte') }}">Richtwerte</a>
+          </li>
+        </ul>
+      </li>
     </ul>
     <ul class="navbar-nav ms-auto">
       <!-- display year form if in index or field !-->
@@ -53,7 +71,7 @@
               </li>
               {% for year in current_user.get_years() %}
                 <li>
-                  <form action="{{ url_for("main.set_year") }}", method="post">
+                  <form action="{{ url_for('main.set_year') }}" method="post">
                     {{ form.csrf_token() }}
                     {{ form.year(value=year) }}
                     {% if year == current_user.year %}
