@@ -1,4 +1,5 @@
 # Folders to ignore
+*/static/docs/*.pdf
 exploration/
 data/
 .vscode/

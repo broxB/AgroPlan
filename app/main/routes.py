@@ -306,3 +306,18 @@ def update_listform():
     response = make_response(body)
     response.headers["HX-Trigger-After-Settle"] = "reloadMultiSelectDropdown"
     return response
+
+
+@bp.route("/sperrzeiten")
+def sperrzeiten():
+    return redirect(url_for("static", filename="/docs/Sperrzeiten.pdf"))
+
+
+@bp.route("/hinweise")
+def hinweise():
+    return redirect(url_for("static", filename="/docs/Hinweise.pdf"))
+
+
+@bp.route("/richtwerte")
+def richtwerte():
+    return redirect(url_for("static", filename="/docs/Richtwerte.pdf"))
